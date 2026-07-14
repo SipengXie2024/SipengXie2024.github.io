@@ -6,12 +6,11 @@
 
 ## 站点内容
 
-- 18 节渐进式学习日记；
-- 统一 Agent Runtime 分层地图；
-- 执行链、状态链与信任链；
-- 可搜索、可筛选的课程卡片；
-- 浏览器本地复习进度；
-- 主动回忆卡与快速自测；
+- 18 节默认展开的完整课程讲义；
+- 每课一张可渲染的 Mermaid 架构图；
+- 教学问题、具体知识讲解和 Engineer Takeaway；
+- 左侧课程目录与当前章节定位；
+- 执行链、状态链与信任链统一框架；
 - 固定版本的源码入口。
 
 ## 数据基线
@@ -40,7 +39,7 @@ npm run build
 
 ## 更新课程
 
-课程、复习卡、测试题与源码入口集中在 `src/content.ts`。页面组件位于 `src/App.tsx`，视觉样式位于 `src/styles/`。
+课程正文分别位于 `src/lessons-core.ts`、`src/lessons-runtime.ts` 与 `src/lessons-systems.ts`。页面组件位于 `src/App.tsx`，视觉样式位于 `src/styles/`。
 
 ## 部署
 
