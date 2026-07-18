@@ -1,0 +1,185 @@
+<!doctype html>
+<html lang="zh-CN" data-theme="light">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta
+      name="description"
+      content="Reasoning State Security：从 Thinking Signature 回放攻击到推理状态协议防御的两篇技术研究笔记。"
+    />
+    <meta name="theme-color" content="#f4f5f2" />
+    <title>Reasoning State Security | Sipeng Xie</title>
+    <link rel="stylesheet" href="shared.css" />
+    <link rel="stylesheet" href="index.css" />
+    <link rel="stylesheet" href="responsive.css" />
+  </head>
+  <body class="index-page">
+    <a class="skip-link" href="#main">跳到正文</a>
+
+    <header class="topbar">
+      <div class="topbar-inner">
+        <a class="brand" href="../index.html" aria-label="返回 Sipeng Xie 个人主页">
+          <span class="brand-mark" aria-hidden="true">SX</span>
+          <span class="brand-text">
+            <strong>Reasoning State Security</strong>
+            <span>Sipeng Xie · Research Notes</span>
+          </span>
+        </a>
+        <nav class="series-nav" aria-label="专题导航">
+          <a href="index.html" aria-current="page">总览</a>
+          <a class="series-attack" href="attack.html">攻击</a>
+          <a class="series-defense" href="defense.html">防御</a>
+        </nav>
+        <button class="theme-toggle" id="themeToggle" type="button" aria-label="切换深浅色主题" title="切换主题">
+          <span aria-hidden="true">&#9728;</span>
+        </button>
+      </div>
+    </header>
+
+    <main id="main">
+      <section class="index-hero">
+        <div class="index-shell index-hero-grid">
+          <div class="index-hero-copy">
+            <p class="index-kicker">REASONING INFRASTRUCTURE / SECURITY NOTES 01-02</p>
+            <h1>推理状态安全：<br />从回放攻击到协议防御</h1>
+            <p class="index-lede">
+              Thinking Signature 让 Agent 在不公开完整推理的前提下延续工作，也把一段私有状态变成了可携带、可回放的能力对象。这组笔记先解释攻击面，再给出协议级防御路径。
+            </p>
+            <div class="index-meta" aria-label="专题信息">
+              <span>2 篇完整长文</span>
+              <span>约 30 分钟</span>
+              <span>2026</span>
+            </div>
+          </div>
+
+          <figure class="protocol-map" aria-labelledby="map-caption">
+            <div class="map-track">
+              <div class="map-node">
+                <span>01</span>
+                <strong>私有推理</strong>
+                <small>hidden trace</small>
+              </div>
+              <span class="map-arrow" aria-hidden="true">&#8594;</span>
+              <div class="map-node map-node-sealed">
+                <span>02</span>
+                <strong>密封状态</strong>
+                <small>signature</small>
+              </div>
+              <span class="map-arrow" aria-hidden="true">&#8594;</span>
+              <div class="map-node">
+                <span>03</span>
+                <strong>后端恢复</strong>
+                <small>unseal</small>
+              </div>
+              <span class="map-arrow" aria-hidden="true">&#8594;</span>
+              <div class="map-node map-node-output">
+                <span>04</span>
+                <strong>公开输出</strong>
+                <small>visible channel</small>
+              </div>
+            </div>
+            <div class="map-legend">
+              <span class="legend-attack">攻击：跨越私有状态与公开输出的边界</span>
+              <span class="legend-defense">防御：限制恢复能力的作用域与生命周期</span>
+            </div>
+            <figcaption id="map-caption">Thinking Signature 的核心安全边界</figcaption>
+          </figure>
+        </div>
+      </section>
+
+      <section class="index-section index-shell" aria-labelledby="chapters-title">
+        <div class="index-section-heading">
+          <p class="index-kicker">READING ORDER</p>
+          <h2 id="chapters-title">先理解攻击，再设计边界</h2>
+          <p>两篇文章可以独立阅读；按顺序阅读能看到同一条状态恢复链路如何从工程机制演变为安全协议问题。</p>
+        </div>
+
+        <div class="chapter-grid">
+          <a class="chapter chapter-attack" href="attack.html">
+            <div class="chapter-topline">
+              <span class="chapter-index">01</span>
+              <span class="chapter-label">ATTACK SURFACE</span>
+            </div>
+            <h3>Thinking Signature Replay</h3>
+            <p>
+              拆解两轮回放、Agent Session 扩展、推理内容诱导策略，以及随机标记为何是区分“真实恢复”和“重新推导”的关键证据。
+            </p>
+            <dl class="chapter-facts">
+              <div><dt>视角</dt><dd>机制与攻击验证</dd></div>
+              <div><dt>重点</dt><dd>Replay / Elicitation</dd></div>
+            </dl>
+            <span class="chapter-action">阅读攻击篇 <span aria-hidden="true">&#8594;</span></span>
+          </a>
+
+          <a class="chapter chapter-defense" href="defense.html">
+            <div class="chapter-topline">
+              <span class="chapter-index">02</span>
+              <span class="chapter-label">PROTOCOL DEFENSE</span>
+            </div>
+            <h3>加密不等于隔离</h3>
+            <p>
+              从正式威胁模型出发，讨论 capability scope、单次消费、目的绑定、三平面架构，以及兼顾 Agent 连续性的渐进式迁移方案。
+            </p>
+            <dl class="chapter-facts">
+              <div><dt>视角</dt><dd>协议与基础设施</dd></div>
+              <div><dt>重点</dt><dd>Scope / Lifecycle</dd></div>
+            </dl>
+            <span class="chapter-action">阅读防御篇 <span aria-hidden="true">&#8594;</span></span>
+          </a>
+        </div>
+      </section>
+
+      <section class="connection-band">
+        <div class="index-shell connection-grid">
+          <div>
+            <p class="index-kicker">ONE SYSTEM, TWO QUESTIONS</p>
+            <h2>攻击篇证明“能否越界”，防御篇回答“边界应在哪里”</h2>
+          </div>
+          <div class="connection-pairs">
+            <div><span>攻击条件</span><strong>合法消息结构 + 持钥后端 + 可控末尾请求</strong></div>
+            <div><span>防御目标</span><strong>上下文绑定 + 目的绑定 + 输出通道约束</strong></div>
+            <div><span>验证证据</span><strong>仅存在于私有推理中的随机标记被命中</strong></div>
+            <div><span>迁移原则</span><strong>减少 raw reasoning，保留结构化长期状态</strong></div>
+          </div>
+        </div>
+      </section>
+
+      <section class="scope-note index-shell">
+        <p class="index-kicker">SCOPE</p>
+        <p>
+          本专题基于公开机制、公开文档与开源仓库进行安全分析，目标是帮助研究者明确威胁模型与防御性质，不提供面向未授权系统的利用服务。
+          相关机制参考 <a href="https://github.com/YangWang92/open-open-reasoning" target="_blank" rel="noreferrer">open-open-reasoning</a>。
+        </p>
+      </section>
+    </main>
+
+    <footer class="series-footer">
+      <div class="index-shell footer-inner">
+        <span>Reasoning State Security · 2026</span>
+        <a href="../index.html">返回 Sipeng Xie 个人主页</a>
+      </div>
+    </footer>
+
+    <script>
+      const root = document.documentElement;
+      const themeToggle = document.getElementById('themeToggle');
+      const themeIcon = themeToggle.querySelector('span');
+      let savedTheme = null;
+      try { savedTheme = localStorage.getItem('reasoning-security-theme'); } catch (_) {}
+      if (savedTheme) root.dataset.theme = savedTheme;
+
+      function syncTheme() {
+        const dark = root.dataset.theme === 'dark';
+        themeIcon.textContent = dark ? '\u263C' : '\u263E';
+        themeToggle.setAttribute('aria-pressed', String(dark));
+      }
+
+      syncTheme();
+      themeToggle.addEventListener('click', () => {
+        root.dataset.theme = root.dataset.theme === 'dark' ? 'light' : 'dark';
+        try { localStorage.setItem('reasoning-security-theme', root.dataset.theme); } catch (_) {}
+        syncTheme();
+      });
+    </script>
+  </body>
+</html>
