@@ -44,7 +44,7 @@
   max-width: 760px;
   margin: 0;
   color: var(--muted);
-  font-size: 18px;
+  font-size: 20px;
   line-height: 1.85;
 }
 
@@ -58,7 +58,7 @@
 .action {
   min-height: 42px;
   padding: 0 16px;
-  font-size: 13px;
+  font-size: 14px;
 }
 
 .action.primary {
@@ -83,13 +83,13 @@
 
 .hero-meta dt {
   color: var(--quiet);
-  font-size: 11px;
+  font-size: 12px;
   font-weight: 700;
 }
 
 .hero-meta dd {
   margin: 0;
-  font-size: 27px;
+  font-size: 28px;
   font-weight: 760;
   text-align: right;
 }
@@ -99,13 +99,13 @@
   margin-top: 2px;
   color: var(--quiet);
   font-family: "JetBrains Mono", Consolas, monospace;
-  font-size: 9px;
+  font-size: 11px;
   font-weight: 500;
 }
 
 .course-shell {
   display: grid;
-  grid-template-columns: 252px minmax(0, 1fr);
+  grid-template-columns: 272px minmax(0, 1fr);
   gap: 72px;
   align-items: start;
   padding-block: 78px 124px;
@@ -135,13 +135,13 @@
 .sidebar-title span {
   color: var(--accent);
   font-family: "JetBrains Mono", Consolas, monospace;
-  font-size: 8px;
+  font-size: 11px;
   font-weight: 760;
 }
 
 .sidebar-title strong {
   margin-top: 4px;
-  font-size: 15px;
+  font-size: 16px;
 }
 
 .sidebar-progress {
@@ -154,19 +154,19 @@
 
 .sidebar-progress > span {
   color: var(--quiet);
-  font-size: 10px;
+  font-size: 11px;
 }
 
 .sidebar-progress strong {
   color: var(--accent);
   font-family: "JetBrains Mono", Consolas, monospace;
-  font-size: 18px;
+  font-size: 20px;
 }
 
 .sidebar-progress small {
   margin-left: 4px;
   color: var(--quiet);
-  font-size: 9px;
+  font-size: 11px;
 }
 
 .desktop-course-index section {
@@ -179,7 +179,7 @@
   gap: 8px;
   margin-bottom: 8px;
   color: var(--quiet);
-  font-size: 9px;
+  font-size: 11px;
 }
 
 .desktop-course-index section header span {
@@ -203,7 +203,7 @@
   padding: 4px 8px;
   border-radius: 4px;
   color: var(--muted);
-  font-size: 10px;
+  font-size: 13px;
   text-decoration: none;
   transition: background-color 140ms ease, color 140ms ease;
 }
@@ -211,7 +211,7 @@
 .desktop-course-index li a span {
   color: var(--quiet);
   font-family: "JetBrains Mono", Consolas, monospace;
-  font-size: 8px;
+  font-size: 11px;
 }
 
 .desktop-course-index li.active a {
@@ -239,7 +239,7 @@
 
 .course-intro h2 {
   margin: 12px 0 17px;
-  font-size: 46px;
+  font-size: 48px;
   line-height: 1.12;
   letter-spacing: 0;
 }
@@ -248,7 +248,7 @@
   max-width: 730px;
   margin: 0;
   color: var(--muted);
-  font-size: 16px;
+  font-size: 18px;
   line-height: 1.85;
 }
 
@@ -276,11 +276,11 @@
 .chapter-overview small {
   color: var(--quiet);
   font-family: "JetBrains Mono", Consolas, monospace;
-  font-size: 9px;
+  font-size: 11px;
 }
 
 .chapter-overview strong {
-  font-size: 13px;
+  font-size: 14px;
 }
 
 .source-section {
@@ -291,7 +291,7 @@
 
 .source-section h2 {
   margin: 11px 0 12px;
-  font-size: 36px;
+  font-size: 38px;
   letter-spacing: 0;
 }
 
@@ -299,7 +299,7 @@
   max-width: 700px;
   margin: 0;
   color: var(--muted);
-  font-size: 14px;
+  font-size: 16px;
   line-height: 1.8;
 }
 
@@ -324,7 +324,7 @@
 .baseline-grid dt {
   margin-bottom: 6px;
   color: var(--quiet);
-  font-size: 9px;
+  font-size: 11px;
 }
 
 .baseline-grid dd {
@@ -336,7 +336,7 @@
   display: block;
   overflow: hidden;
   color: var(--body);
-  font-size: 10px;
+  font-size: 11px;
   text-overflow: ellipsis;
 }
 
@@ -356,7 +356,7 @@
   border: 1px solid var(--line);
   border-radius: 6px;
   color: var(--muted);
-  font-size: 10px;
+  font-size: 12px;
   text-decoration: none;
   transition: transform 140ms var(--ease-out), border-color 160ms ease, background-color 160ms ease, color 160ms ease;
 }
@@ -384,7 +384,7 @@
   }
 
   .course-shell {
-    grid-template-columns: 220px minmax(0, 1fr);
+    grid-template-columns: 240px minmax(0, 1fr);
     gap: 42px;
   }
 }
@@ -445,7 +445,7 @@
 
   .mobile-course-picker > span {
     color: var(--quiet);
-    font-size: 10px;
+    font-size: 11px;
   }
 
   .mobile-course-picker select {
@@ -456,7 +456,7 @@
     border-radius: 6px;
     background: var(--surface);
     color: var(--ink);
-    font-size: 12px;
+    font-size: 14px;
   }
 }
 
@@ -470,7 +470,7 @@
   }
 
   .hero-copy > p {
-    font-size: 16px;
+    font-size: 18px;
   }
 
   .hero-meta {
@@ -501,7 +501,7 @@
   }
 
   .course-intro h2 {
-    font-size: 36px;
+    font-size: 38px;
   }
 
   .chapter-overview {

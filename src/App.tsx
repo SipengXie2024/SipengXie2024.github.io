@@ -23,7 +23,7 @@ function loadMermaid() {
         noteTextColor: "#282b29",
         noteBorderColor: "#a84321",
         fontFamily: 'Inter, "Segoe UI", "Microsoft YaHei", sans-serif',
-        fontSize: "15px",
+        fontSize: "16px",
       },
       flowchart: { curve: "basis", htmlLabels: true },
       sequence: { useMaxWidth: true, wrap: true },

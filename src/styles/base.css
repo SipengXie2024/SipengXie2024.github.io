@@ -2,6 +2,7 @@
   color-scheme: light;
   font-family: Inter, "Segoe UI", "PingFang SC", "Microsoft YaHei", sans-serif;
   font-synthesis: none;
+  font-optical-sizing: auto;
   text-rendering: optimizeLegibility;
   --page: #f4f5f2;
   --surface: #ffffff;
@@ -40,6 +41,8 @@ body {
   min-height: 100vh;
   background: var(--page);
   color: var(--ink);
+  font-size: 18px;
+  line-height: 1.6;
 }
 
 a {
@@ -170,14 +173,14 @@ pre {
 }
 
 .brand strong {
-  font-size: 14px;
+  font-size: 15px;
 }
 
 .brand small {
   margin-top: 1px;
   color: var(--quiet);
   font-family: "JetBrains Mono", Consolas, monospace;
-  font-size: 9px;
+  font-size: 11px;
   text-transform: uppercase;
 }
 
@@ -191,7 +194,7 @@ pre {
 .site-header nav a {
   position: relative;
   color: var(--muted);
-  font-size: 12px;
+  font-size: 13px;
   font-weight: 650;
   text-decoration: none;
 }
@@ -219,7 +222,7 @@ pre {
 .header-position {
   color: var(--quiet);
   font-family: "JetBrains Mono", Consolas, monospace;
-  font-size: 9px;
+  font-size: 11px;
   font-weight: 700;
 }
 
@@ -240,7 +243,7 @@ pre {
   min-height: 34px;
   padding: 0 12px;
   background: var(--surface);
-  font-size: 11px;
+  font-size: 12px;
 }
 
 .github-link:active,
@@ -253,7 +256,7 @@ pre {
 .eyebrow {
   color: var(--accent);
   font-family: "JetBrains Mono", Consolas, monospace;
-  font-size: 10px;
+  font-size: 11px;
   font-weight: 760;
   text-transform: uppercase;
 }
@@ -296,13 +299,13 @@ pre {
 }
 
 .site-footer strong {
-  font-size: 13px;
+  font-size: 14px;
 }
 
 .site-footer small {
   margin-top: 3px;
   color: var(--muted);
-  font-size: 11px;
+  font-size: 12px;
 }
 
 .footer-links {
@@ -312,7 +315,7 @@ pre {
 
 .footer-links a {
   color: var(--muted);
-  font-size: 11px;
+  font-size: 12px;
 }
 
 @media (hover: hover) and (pointer: fine) {
