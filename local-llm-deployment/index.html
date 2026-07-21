@@ -1,0 +1,341 @@
+<!doctype html>
+<html lang="zh-CN" data-theme="light">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta
+      name="description"
+      content="一份从容量评估、运行时选型到 API 与 Claude Code 集成的本地大模型部署交互式总结笔记。"
+    />
+    <meta name="theme-color" content="#f4f5f2" />
+    <title>本地大模型部署工作台 | Sipeng Xie</title>
+    <link rel="stylesheet" href="styles.css" />
+    <link rel="stylesheet" href="course.css" />
+    <link rel="stylesheet" href="tools.css" />
+    <link rel="stylesheet" href="responsive.css" />
+  </head>
+  <body>
+    <a class="skip-link" href="#main">跳到正文</a>
+
+    <header class="app-header">
+      <div class="header-inner">
+        <a class="brand" href="../index.html" aria-label="返回 Sipeng Xie 个人主页">
+          <span class="brand-mark" aria-hidden="true">SX</span>
+          <span class="brand-copy">
+            <strong>Local LLM Deployment Lab</strong>
+            <span>Interactive field guide</span>
+          </span>
+        </a>
+        <nav class="top-nav" aria-label="页面导航">
+          <a href="#course">课程</a>
+          <a href="#capacity">容量</a>
+          <a href="#verification">验收</a>
+          <a href="#troubleshooting">排障</a>
+        </nav>
+        <div class="header-actions">
+          <a class="source-link" href="course.md" download>讲义 .md</a>
+          <button class="icon-button" id="themeToggle" type="button" aria-label="切换深浅色主题" title="切换主题">
+            <span aria-hidden="true">&#9728;</span>
+          </button>
+        </div>
+      </div>
+    </header>
+
+    <main id="main">
+      <section class="overview" id="top">
+        <div class="shell overview-grid">
+          <div class="overview-copy">
+            <p class="eyebrow">12 HOURS / DELIVERY-DRIVEN COURSE</p>
+            <h1>本地大模型部署工作台</h1>
+            <p class="overview-lede">
+              从实际制品与硬件预算出发，把模型一路推进到常驻服务、Messages API、真实工具调用和 Claude Code。这里强调可复现的证据链，不把“进程启动”误当成部署完成。
+            </p>
+            <div class="overview-actions">
+              <a class="button primary" href="#course">开始学习</a>
+              <a class="button" href="course.md">阅读完整讲义</a>
+            </div>
+            <dl class="overview-facts">
+              <div><dt>课程</dt><dd>8 个模块</dd></div>
+              <div><dt>方法</dt><dd>数据 + 验收</dd></div>
+              <div><dt>终点</dt><dd>真实工具闭环</dd></div>
+            </dl>
+          </div>
+
+          <aside class="case-study" aria-labelledby="case-title">
+            <div class="case-heading">
+              <div>
+                <p>REAL DEPLOYMENT CASE</p>
+                <h2 id="case-title">DeepSeek V4 Flash / M3 Ultra</h2>
+              </div>
+              <span class="case-status">实测</span>
+            </div>
+            <dl class="metric-grid">
+              <div><dt>统一内存</dt><dd>256 <span>GiB</span></dd></div>
+              <div><dt>GGUF Q4_K</dt><dd>153 <span>GiB</span></dd></div>
+              <div><dt>上下文配置</dt><dd>1M <span>tokens</span></dd></div>
+              <div><dt>磁盘 KV 预算</dt><dd>64 <span>GiB</span></dd></div>
+              <div><dt>长提示预填</dt><dd>360-400 <span>tok/s</span></dd></div>
+              <div><dt>短交互解码</dt><dd>34 <span>tok/s</span></dd></div>
+            </dl>
+            <p class="case-note">153GiB 是二进制单位显示值；报告 GB 与 GiB 时必须明确单位。</p>
+          </aside>
+        </div>
+      </section>
+
+      <section class="section shell" id="course">
+        <div class="section-heading">
+          <div>
+            <p class="eyebrow">COURSE MAP</p>
+            <h2>八个模块，一条完整交付链</h2>
+          </div>
+          <p>选择模块查看核心方法、交付物和验收条件。完成状态保存在当前浏览器。</p>
+        </div>
+
+        <div class="learning-workspace">
+          <aside class="module-rail" aria-label="课程模块">
+            <div class="rail-progress">
+              <div>
+                <span>学习进度</span>
+                <strong id="courseProgressText">0 / 8</strong>
+              </div>
+              <div class="progress-track" aria-hidden="true"><span id="courseProgressBar"></span></div>
+            </div>
+            <div class="module-nav" id="moduleNav"></div>
+          </aside>
+
+          <article class="module-panel" aria-live="polite">
+            <header class="module-header">
+              <div>
+                <p class="module-index" id="moduleIndex">MODULE 01 / 60 MIN</p>
+                <h3 id="moduleTitle">需求、边界与风险</h3>
+              </div>
+              <label class="completion-toggle">
+                <input id="moduleComplete" type="checkbox" />
+                <span>已完成</span>
+              </label>
+            </header>
+            <p class="module-summary" id="moduleSummary"></p>
+            <div class="module-output">
+              <span>核心产出</span>
+              <strong id="moduleOutput"></strong>
+            </div>
+            <div class="module-columns">
+              <div>
+                <h4>关键方法</h4>
+                <ul id="modulePoints"></ul>
+              </div>
+              <div>
+                <h4>验收条件</h4>
+                <ul class="check-list" id="moduleChecks"></ul>
+              </div>
+            </div>
+            <footer class="module-footer">
+              <button class="text-button" id="previousModule" type="button">&#8592; 上一模块</button>
+              <button class="text-button" id="nextModule" type="button">下一模块 &#8594;</button>
+            </footer>
+          </article>
+        </div>
+      </section>
+
+      <section class="section section-band" id="capacity">
+        <div class="shell">
+          <div class="section-heading">
+            <div>
+              <p class="eyebrow">CAPACITY BUDGET</p>
+              <h2>先算容量，再谈模型大小</h2>
+            </div>
+            <p>计算使用实际权重、运行时、活跃 KV、系统保留和磁盘预算。所有输入都是预算假设，需要用实测日志替换。</p>
+          </div>
+
+          <div class="calculator-layout">
+            <form class="capacity-form" id="capacityForm">
+              <div class="preset-row">
+                <span>预设</span>
+                <div class="segmented-control" aria-label="容量预算预设">
+                  <button type="button" data-preset="student" aria-pressed="true">32GiB 学生机</button>
+                  <button type="button" data-preset="case" aria-pressed="false">256GiB 案例机</button>
+                </div>
+              </div>
+
+              <fieldset>
+                <legend>内存预算 / GiB</legend>
+                <div class="input-grid">
+                  <label>总内存<input id="ramTotal" type="number" min="1" step="1" value="32" /></label>
+                  <label>实际权重<input id="weights" type="number" min="0" step="0.1" value="5" /></label>
+                  <label>运行时开销<input id="runtimeOverhead" type="number" min="0" step="0.1" value="3" /></label>
+                  <label>活跃 KV<input id="activeKv" type="number" min="0" step="0.1" value="4" /></label>
+                  <label>系统保留<input id="systemReserve" type="number" min="0" step="0.1" value="6" /></label>
+                </div>
+              </fieldset>
+
+              <fieldset>
+                <legend>磁盘预算 / GiB</legend>
+                <div class="input-grid disk-inputs">
+                  <label>可用空间<input id="diskFree" type="number" min="1" step="1" value="100" /></label>
+                  <label>下载、构建与日志余量<input id="diskOverhead" type="number" min="0" step="0.1" value="10" /></label>
+                  <label>磁盘 KV 上限<input id="diskKv" type="number" min="0" step="0.1" value="8" /></label>
+                </div>
+              </fieldset>
+            </form>
+
+            <aside class="capacity-result" aria-live="polite">
+              <div class="result-heading">
+                <div>
+                  <span>预算结论</span>
+                  <strong id="capacityStatus">可以进入验证</strong>
+                </div>
+                <span class="status-badge" id="capacityBadge">可行</span>
+              </div>
+              <div class="budget-row">
+                <div class="budget-label"><span>内存</span><strong id="memoryNumbers">18 / 32 GiB</strong></div>
+                <div class="budget-track"><span id="memoryBar"></span></div>
+                <p id="memoryDetail">保留 14GiB 预算余量。</p>
+              </div>
+              <div class="budget-row">
+                <div class="budget-label"><span>磁盘</span><strong id="diskNumbers">23 / 100 GiB</strong></div>
+                <div class="budget-track"><span id="diskBar"></span></div>
+                <p id="diskDetail">保留 77GiB 可用空间。</p>
+              </div>
+              <div class="formula-note">
+                <code>内存 = 权重 + 运行时 + 活跃 KV + 系统保留</code>
+                <code>磁盘 = 权重 + 下载/构建/日志余量 + 磁盘 KV</code>
+              </div>
+              <p class="result-advice" id="capacityAdvice"></p>
+            </aside>
+          </div>
+
+          <div class="runtime-advisor">
+            <div class="runtime-intro">
+              <p class="eyebrow">RUNTIME ROUTE</p>
+              <h3>按平台缩小运行时范围</h3>
+              <p>文件格式能读取，不代表运行时支持模型架构、量化内核或目标上下文。</p>
+            </div>
+            <div class="runtime-tool">
+              <div class="runtime-tabs" role="tablist" aria-label="硬件平台">
+                <button role="tab" aria-selected="true" aria-controls="runtimeResult" data-platform="apple">Apple Silicon</button>
+                <button role="tab" aria-selected="false" aria-controls="runtimeResult" data-platform="nvidia">NVIDIA</button>
+                <button role="tab" aria-selected="false" aria-controls="runtimeResult" data-platform="cpu">CPU</button>
+              </div>
+              <div class="runtime-result" id="runtimeResult" role="tabpanel" aria-live="polite">
+                <span>优先核实</span>
+                <h4 id="runtimePriority"></h4>
+                <ul id="runtimeQuestions"></ul>
+                <p><strong>退路：</strong><span id="runtimeFallback"></span></p>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <section class="section shell" id="verification">
+        <div class="section-heading">
+          <div>
+            <p class="eyebrow">END-TO-END ACCEPTANCE</p>
+            <h2>验收必须走到真实客户端</h2>
+          </div>
+          <p>PID 只是第一层。逐项勾选，直到 Messages API、工具调用与 Claude Code 全部闭环。</p>
+        </div>
+
+        <div class="verification-grid">
+          <div class="acceptance-ladder">
+            <div class="ladder-heading">
+              <div>
+                <span>分层验收</span>
+                <strong id="verificationProgressText">0 / 8</strong>
+              </div>
+              <button class="icon-button compact" id="resetVerification" type="button" aria-label="重置验收清单" title="重置验收清单">&#8634;</button>
+            </div>
+            <div class="progress-track verification-track" aria-hidden="true"><span id="verificationProgressBar"></span></div>
+            <ol class="ladder-list">
+              <li><label><input type="checkbox" data-verification="process" /><span><strong>进程存在</strong><small>守护进程已启动且日志路径正确</small></span></label></li>
+              <li><label><input type="checkbox" data-verification="port" /><span><strong>端口监听</strong><small>绑定地址与预期一致，默认 127.0.0.1</small></span></label></li>
+              <li><label><input type="checkbox" data-verification="models" /><span><strong>/v1/models</strong><small>服务返回实际加载的模型标识</small></span></label></li>
+              <li><label><input type="checkbox" data-verification="generation" /><span><strong>文本生成</strong><small>固定短提示能稳定得到输出</small></span></label></li>
+              <li><label><input type="checkbox" data-verification="stream" /><span><strong>流式生成</strong><small>流不中断且结束事件正确</small></span></label></li>
+              <li><label><input type="checkbox" data-verification="messages" /><span><strong>Anthropic Messages</strong><small>/v1/messages 路径与协议兼容</small></span></label></li>
+              <li><label><input type="checkbox" data-verification="tool" /><span><strong>真实工具调用</strong><small>tool_use、工具结果与第二轮生成闭环</small></span></label></li>
+              <li><label><input type="checkbox" data-verification="client" /><span><strong>Claude Code</strong><small>新终端会话确认模型、窗口与输出上限</small></span></label></li>
+            </ol>
+          </div>
+
+          <div class="api-lab">
+            <div class="api-heading">
+              <div>
+                <span>API 速查</span>
+                <strong id="snippetTitle">Messages 冒烟测试</strong>
+              </div>
+              <button class="icon-button compact" id="copySnippet" type="button" aria-label="复制代码" title="复制代码">&#10697;</button>
+            </div>
+            <div class="snippet-tabs" role="tablist" aria-label="API 代码片段">
+              <button role="tab" aria-selected="true" aria-controls="snippetPanel" data-snippet="probe">Probe</button>
+              <button role="tab" aria-selected="false" aria-controls="snippetPanel" data-snippet="config">Claude Code</button>
+              <button role="tab" aria-selected="false" aria-controls="snippetPanel" data-snippet="gate">Tool Gate</button>
+            </div>
+            <pre id="snippetPanel" role="tabpanel"><code id="snippetCode"></code></pre>
+            <p class="snippet-note" id="snippetNote"></p>
+            <p class="copy-status" id="copyStatus" role="status" aria-live="polite"></p>
+          </div>
+        </div>
+      </section>
+
+      <section class="section section-band" id="troubleshooting">
+        <div class="shell">
+          <div class="section-heading troubleshooting-heading">
+            <div>
+              <p class="eyebrow">TROUBLESHOOTING INDEX</p>
+              <h2>按症状定位证据链</h2>
+            </div>
+            <label class="search-box">
+              <span class="search-icon" aria-hidden="true">/</span>
+              <input id="troubleSearch" type="search" placeholder="搜索：404、换页、登录、工具调用…" autocomplete="off" />
+            </label>
+          </div>
+
+          <div class="table-wrap">
+            <table class="trouble-table">
+              <thead><tr><th>症状</th><th>先检查</th><th>常见原因</th></tr></thead>
+              <tbody id="troubleRows">
+                <tr><td>模型无法加载</td><td>文件大小、格式、运行时架构支持</td><td>下载不完整、量化不支持</td></tr>
+                <tr><td>系统严重换页</td><td>权重 RSS、KV、系统余量</td><td>容量只按文件大小计算</td></tr>
+                <tr><td>首 token 很慢</td><td>冷启动、预填速度、上下文长度</td><td>未预热、提示过长、磁盘 KV</td></tr>
+                <tr><td>页面能打开但权重极慢</td><td>重定向后的 CDN 路由</td><td>所有 Hugging Face 域名走同一代理</td></tr>
+                <tr><td>API 404</td><td>完整请求路径</td><td>Base URL 多一层或少一层</td></tr>
+                <tr><td>Claude Code 要求登录</td><td>AUTH_TOKEN 与配置来源</td><td>配置未加载或被其他设置覆盖</td></tr>
+                <tr><td>Claude Code 提前压缩</td><td>客户端识别的上下文</td><td>未设置自定义模型窗口</td></tr>
+                <tr><td>只能聊天不能编码</td><td>工具调用测试</td><td>后端未兼容 Anthropic tool_use</td></tr>
+                <tr><td>PID 存在但请求失败</td><td>端口和健康接口</td><td>服务卡死、错误监听地址</td></tr>
+              </tbody>
+            </table>
+          </div>
+          <p class="result-count" id="troubleCount">显示 9 条</p>
+        </div>
+      </section>
+
+      <section class="principles shell" aria-labelledby="principles-title">
+        <div class="principles-heading">
+          <p class="eyebrow">FIVE WORKING PRINCIPLES</p>
+          <h2 id="principles-title">真正可迁移的是方法，不是某一组命令</h2>
+        </div>
+        <ol class="principle-list">
+          <li><span>01</span><p>用实际制品和实测日志，替代对参数量的想象。</p></li>
+          <li><span>02</span><p>把上下文能力拆成模型、运行时、KV 与客户端四层。</p></li>
+          <li><span>03</span><p>按真实下载链路分流，不做粗暴的全局直连或代理。</p></li>
+          <li><span>04</span><p>把服务验收推进到真实工具调用，不停在 PID 或聊天回复。</p></li>
+          <li><span>05</span><p>配置必须可启动、可观察、可回滚，而非一次性终端会话。</p></li>
+        </ol>
+      </section>
+    </main>
+
+    <footer class="site-footer">
+      <div class="shell footer-inner">
+        <span>Local LLM Deployment Lab · 2026</span>
+        <div>
+          <a href="course.md">完整课程讲义</a>
+          <a href="../index.html">返回个人主页</a>
+        </div>
+      </div>
+    </footer>
+
+    <script src="app.js"></script>
+  </body>
+</html>

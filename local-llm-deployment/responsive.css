@@ -1,0 +1,272 @@
+@media (hover: hover) and (pointer: fine) {
+  .top-nav a:hover {
+    color: var(--ink);
+    background: var(--surface-muted);
+  }
+
+  .source-link:hover,
+  .icon-button:hover,
+  .button:not(.primary):hover {
+    border-color: var(--line-strong);
+    background: var(--surface-muted);
+    transform: translateY(-1px);
+  }
+
+  .button.primary:hover {
+    border-color: var(--accent);
+    background: var(--accent);
+    transform: translateY(-1px);
+  }
+
+  .module-nav button:hover:not([aria-current="step"]) {
+    color: var(--ink);
+    background: var(--surface-muted);
+  }
+
+  .text-button:not(:disabled):hover {
+    color: var(--accent);
+  }
+
+  .segmented-control button:hover,
+  .runtime-tabs button:hover,
+  .snippet-tabs button:hover {
+    color: var(--ink);
+  }
+}
+
+@media (max-width: 1020px) {
+  .overview-grid,
+  .calculator-layout,
+  .verification-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .overview-grid {
+    gap: 44px;
+  }
+
+  .case-study {
+    max-width: 760px;
+  }
+
+  .learning-workspace {
+    grid-template-columns: 250px minmax(0, 1fr);
+  }
+
+  .input-grid {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+
+  .capacity-result {
+    min-height: 400px;
+  }
+}
+
+@media (max-width: 820px) {
+  .top-nav {
+    display: none;
+  }
+
+  .header-actions {
+    margin-left: auto;
+  }
+
+  .section-heading,
+  .principles,
+  .runtime-advisor {
+    grid-template-columns: 1fr;
+  }
+
+  .section-heading {
+    align-items: start;
+    flex-direction: column;
+    gap: 12px;
+  }
+
+  .learning-workspace {
+    grid-template-columns: 1fr;
+  }
+
+  .module-rail {
+    position: static;
+  }
+
+  .module-nav {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .module-nav button:nth-child(odd) {
+    border-right: 1px solid var(--line);
+  }
+
+  .module-nav button:nth-last-child(-n + 2) {
+    border-bottom: 0;
+  }
+
+  .runtime-advisor,
+  .principles {
+    gap: 34px;
+  }
+}
+
+@media (max-width: 620px) {
+  .shell,
+  .header-inner {
+    width: min(100% - 28px, var(--shell));
+  }
+
+  .brand-copy {
+    display: none;
+  }
+
+  .source-link {
+    padding: 7px 8px;
+  }
+
+  .overview {
+    padding: 48px 0 44px;
+  }
+
+  .overview h1 {
+    font-size: 40px;
+  }
+
+  .overview-lede {
+    font-size: 16px;
+  }
+
+  .overview-facts,
+  .metric-grid,
+  .module-columns,
+  .input-grid,
+  .disk-inputs {
+    grid-template-columns: 1fr;
+  }
+
+  .overview-facts div {
+    padding-top: 10px;
+  }
+
+  .metric-grid {
+    border-top: 0;
+  }
+
+  .section {
+    padding-top: 56px;
+    padding-bottom: 62px;
+  }
+
+  .section-heading h2,
+  .principles h2 {
+    font-size: 28px;
+  }
+
+  .module-nav {
+    grid-template-columns: 1fr;
+  }
+
+  .module-nav button:nth-child(odd) {
+    border-right: 0;
+  }
+
+  .module-nav button:nth-last-child(2) {
+    border-bottom: 1px solid var(--line);
+  }
+
+  .module-panel,
+  .capacity-form,
+  .capacity-result,
+  .acceptance-ladder,
+  .api-lab,
+  .runtime-advisor {
+    padding: 20px;
+  }
+
+  .module-header,
+  .preset-row {
+    align-items: flex-start;
+    flex-direction: column;
+    gap: 14px;
+  }
+
+  .module-header h3 {
+    font-size: 24px;
+  }
+
+  .module-output {
+    grid-template-columns: 1fr;
+    gap: 4px;
+  }
+
+  .segmented-control,
+  .runtime-tabs,
+  .snippet-tabs {
+    width: 100%;
+  }
+
+  .segmented-control button,
+  .runtime-tabs button,
+  .snippet-tabs button {
+    min-width: 0;
+    flex: 1 1 0;
+  }
+
+  .api-lab pre {
+    min-height: 230px;
+  }
+
+  .footer-inner {
+    min-height: 108px;
+    padding: 20px 0;
+    align-items: flex-start;
+    flex-direction: column;
+    justify-content: center;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  html {
+    scroll-behavior: auto;
+  }
+
+  .skip-link,
+  .source-link,
+  .icon-button,
+  .button,
+  .text-button,
+  .segmented-control button,
+  .runtime-tabs button,
+  .snippet-tabs button {
+    transition-duration: 0ms;
+  }
+}
+
+@media print {
+  .app-header,
+  .overview-actions,
+  .completion-toggle,
+  .module-footer,
+  .preset-row,
+  .runtime-tabs,
+  .snippet-tabs,
+  .icon-button,
+  .search-box {
+    display: none;
+  }
+
+  .section-band {
+    background: transparent;
+  }
+
+  .learning-workspace,
+  .calculator-layout,
+  .verification-grid,
+  .runtime-advisor,
+  .principles {
+    grid-template-columns: 1fr;
+  }
+
+  .module-rail {
+    display: none;
+  }
+}
