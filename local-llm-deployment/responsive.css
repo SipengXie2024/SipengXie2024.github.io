@@ -23,6 +23,11 @@
     background: var(--surface-muted);
   }
 
+  .concept-tabs button:hover:not([aria-selected="true"]) {
+    color: var(--ink);
+    background: var(--surface-muted);
+  }
+
   .text-button:not(:disabled):hover {
     color: var(--accent);
   }
@@ -45,7 +50,8 @@
     gap: 44px;
   }
 
-  .case-study {
+  .case-study,
+  .first-goal {
     max-width: 760px;
   }
 
@@ -73,7 +79,9 @@
 
   .section-heading,
   .principles,
-  .runtime-advisor {
+  .runtime-advisor,
+  .beginner-route,
+  .advanced-case .case-study {
     grid-template-columns: 1fr;
   }
 
@@ -88,6 +96,10 @@
   }
 
   .module-rail {
+    position: static;
+  }
+
+  .route-status {
     position: static;
   }
 
@@ -106,6 +118,11 @@
   .runtime-advisor,
   .principles {
     gap: 34px;
+  }
+
+  .advanced-case .case-note {
+    grid-column: auto;
+    margin-top: 0;
   }
 }
 
@@ -159,6 +176,45 @@
   .section-heading h2,
   .principles h2 {
     font-size: 28px;
+  }
+
+  .concept-lab,
+  .advanced-gate {
+    grid-template-columns: 1fr;
+  }
+
+  .concept-tabs {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .concept-tabs button:nth-child(odd) {
+    border-right: 1px solid var(--line);
+  }
+
+  .concept-tabs button:nth-last-child(-n + 2) {
+    border-bottom: 0;
+  }
+
+  .concept-panel {
+    min-height: 380px;
+    padding: 22px;
+  }
+
+  .concept-panel h3 {
+    font-size: 25px;
+  }
+
+  .route-list label {
+    grid-template-columns: 18px 27px minmax(0, 1fr);
+    padding: 14px;
+  }
+
+  .advanced-gate {
+    gap: 18px;
+  }
+
+  .advanced-gate .button {
+    justify-self: start;
   }
 
   .module-nav {

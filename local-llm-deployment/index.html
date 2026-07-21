@@ -5,11 +5,12 @@
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <meta
       name="description"
-      content="一份从容量评估、运行时选型到 API 与 Claude Code 集成的本地大模型部署交互式总结笔记。"
+      content="零基础本地大模型部署交互课程：先用人话理解模型、量化、运行时、上下文、KV 缓存与 API，再用六步跑通 Claude Code。"
     />
     <meta name="theme-color" content="#f4f5f2" />
-    <title>本地大模型部署工作台 | Sipeng Xie</title>
+    <title>零基础本地大模型部署 | Sipeng Xie</title>
     <link rel="stylesheet" href="styles.css" />
+    <link rel="stylesheet" href="beginner.css" />
     <link rel="stylesheet" href="course.css" />
     <link rel="stylesheet" href="tools.css" />
     <link rel="stylesheet" href="responsive.css" />
@@ -23,14 +24,13 @@
           <span class="brand-mark" aria-hidden="true">SX</span>
           <span class="brand-copy">
             <strong>Local LLM Deployment Lab</strong>
-            <span>Interactive field guide</span>
+            <span>Beginner-first field guide</span>
           </span>
         </a>
         <nav class="top-nav" aria-label="页面导航">
-          <a href="#course">课程</a>
-          <a href="#capacity">容量</a>
-          <a href="#verification">验收</a>
-          <a href="#troubleshooting">排障</a>
+          <a href="#basics">先看懂</a>
+          <a href="#path">六步路线</a>
+          <a href="#advanced">完整课程</a>
         </nav>
         <div class="header-actions">
           <a class="source-link" href="course.md" download>讲义 .md</a>
@@ -45,26 +45,132 @@
       <section class="overview" id="top">
         <div class="shell overview-grid">
           <div class="overview-copy">
-            <p class="eyebrow">12 HOURS / DELIVERY-DRIVEN COURSE</p>
-            <h1>本地大模型部署工作台</h1>
+            <p class="eyebrow">BEGINNER MODE / 从零开始</p>
+            <h1>把大模型装进自己的电脑，并让 Claude Code 用上它</h1>
             <p class="overview-lede">
-              从实际制品与硬件预算出发，把模型一路推进到常驻服务、Messages API、真实工具调用和 Claude Code。这里强调可复现的证据链，不把“进程启动”误当成部署完成。
+              先别管 153GiB、百万上下文和 KV 缓存。第一次学习只做一件事：找一个电脑带得动的小模型，让它说出一句话，再让 Claude Code 成功调用它。
             </p>
             <div class="overview-actions">
-              <a class="button primary" href="#course">开始学习</a>
-              <a class="button" href="course.md">阅读完整讲义</a>
+              <a class="button primary" href="#basics">先看懂六个词</a>
+              <a class="button" href="#path">直接看六步路线</a>
             </div>
             <dl class="overview-facts">
-              <div><dt>课程</dt><dd>8 个模块</dd></div>
-              <div><dt>方法</dt><dd>数据 + 验收</dd></div>
-              <div><dt>终点</dt><dd>真实工具闭环</dd></div>
+              <div><dt>第一次用</dt><dd>3B-8B Q4 小模型</dd></div>
+              <div><dt>先做到</dt><dd>本机成功生成一句话</dd></div>
+              <div><dt>最终做到</dt><dd>Claude Code 调用一次工具</dd></div>
             </dl>
           </div>
 
-          <aside class="case-study" aria-labelledby="case-title">
+          <aside class="first-goal" aria-labelledby="first-goal-title">
+            <div class="first-goal-heading">
+              <p>这门课到底在做什么？</p>
+              <h2 id="first-goal-title">把四样东西接起来</h2>
+            </div>
+            <ol class="first-goal-flow">
+              <li><span>1</span><div><strong>模型文件</strong><small>下载到电脑里的“知识包”</small></div></li>
+              <li><span>2</span><div><strong>运行程序</strong><small>负责把知识包真正跑起来</small></div></li>
+              <li><span>3</span><div><strong>本地 API</strong><small>让其他软件能向模型提问</small></div></li>
+              <li><span>4</span><div><strong>Claude Code</strong><small>通过 API 使用这个本地模型</small></div></li>
+            </ol>
+            <div class="first-goal-test">
+              <span>第一次的及格线</span>
+              <strong>Claude Code 调用一次 <code>pwd</code>，再返回路径。</strong>
+            </div>
+          </aside>
+        </div>
+      </section>
+
+      <section class="section shell" id="basics">
+        <div class="section-heading beginner-heading">
+          <div>
+            <p class="eyebrow">SIX WORDS FIRST</p>
+            <h2>先用生活中的东西理解六个词</h2>
+          </div>
+          <p>点击一个词，只记住“它像什么”和“为什么与你有关”。公式和参数放到完整课程再学。</p>
+        </div>
+
+        <div class="concept-lab">
+          <div class="concept-tabs" role="tablist" aria-label="本地模型基础概念">
+            <button role="tab" aria-selected="true" aria-controls="conceptPanel" data-concept="model">模型文件</button>
+            <button role="tab" aria-selected="false" aria-controls="conceptPanel" data-concept="quantization">量化</button>
+            <button role="tab" aria-selected="false" aria-controls="conceptPanel" data-concept="runtime">运行时</button>
+            <button role="tab" aria-selected="false" aria-controls="conceptPanel" data-concept="context">上下文</button>
+            <button role="tab" aria-selected="false" aria-controls="conceptPanel" data-concept="kv">KV 缓存</button>
+            <button role="tab" aria-selected="false" aria-controls="conceptPanel" data-concept="api">API</button>
+          </div>
+          <article class="concept-panel" id="conceptPanel" role="tabpanel" aria-live="polite">
+            <p id="conceptLabel">它像什么</p>
+            <h3 id="conceptAnalogy"></h3>
+            <p class="concept-explanation" id="conceptExplanation"></p>
+            <div class="concept-takeaway">
+              <span>第一次只需要记住</span>
+              <strong id="conceptTakeaway"></strong>
+            </div>
+          </article>
+        </div>
+      </section>
+
+      <section class="section section-band" id="path">
+        <div class="shell">
+          <div class="section-heading beginner-heading">
+            <div>
+              <p class="eyebrow">YOUR FIRST SUCCESS</p>
+              <h2>第一次部署，只走这六步</h2>
+            </div>
+            <p>每一步只问“有没有看到成功信号”。先闭环，再回头学习容量、性能和运维。</p>
+          </div>
+
+          <div class="beginner-route">
+            <ol class="route-list">
+              <li>
+                <label><input type="checkbox" data-beginner-step="audit" /><span class="route-number">01</span><span class="route-copy"><strong>看清自己的电脑</strong><small>只记录系统、内存和剩余磁盘，不需要理解硬件术语。</small><em>成功信号：你能说出“我有多少 GiB 内存”。</em></span></label>
+              </li>
+              <li>
+                <label><input type="checkbox" data-beginner-step="model" /><span class="route-number">02</span><span class="route-copy"><strong>选一个小模型</strong><small>课堂练习先用 3B-8B 的 Q4 模型，不要从 153GiB 案例开始。</small><em>成功信号：模型文件明显小于可用内存。</em></span></label>
+              </li>
+              <li>
+                <label><input type="checkbox" data-beginner-step="run" /><span class="route-number">03</span><span class="route-copy"><strong>让模型说一句话</strong><small>先用最保守的配置启动，只问一个很短的问题。</small><em>成功信号：终端里出现完整回答。</em></span></label>
+              </li>
+              <li>
+                <label><input type="checkbox" data-beginner-step="serve" /><span class="route-number">04</span><span class="route-copy"><strong>把它开成本地服务</strong><small>让程序监听 <code>127.0.0.1</code>，只供自己的电脑访问。</small><em>成功信号：浏览器或命令能访问 <code>/v1/models</code>。</em></span></label>
+              </li>
+              <li>
+                <label><input type="checkbox" data-beginner-step="api" /><span class="route-number">05</span><span class="route-copy"><strong>测试 Messages API</strong><small>确认服务能听懂 Claude Code 使用的请求格式。</small><em>成功信号：<code>/v1/messages</code> 返回模型回答。</em></span></label>
+              </li>
+              <li>
+                <label><input type="checkbox" data-beginner-step="client" /><span class="route-number">06</span><span class="route-copy"><strong>接入 Claude Code</strong><small>配置本地地址，再让它只调用一次 <code>pwd</code>。</small><em>成功信号：模型调用工具并返回真实路径。</em></span></label>
+              </li>
+            </ol>
+
+            <aside class="route-status" aria-live="polite">
+              <span>当前进度</span>
+              <strong id="beginnerProgressText">0 / 6</strong>
+              <div class="progress-track"><span id="beginnerProgressBar"></span></div>
+              <p id="beginnerNextStep">下一步：先看清自己的电脑。</p>
+              <div class="route-rule">
+                <strong>遇到问题时</strong>
+                <p>停在失败的这一步找证据，不要把模型、运行时、网络和客户端全部重装。</p>
+              </div>
+            </aside>
+          </div>
+        </div>
+      </section>
+
+      <section class="advanced-gate shell" id="advanced">
+        <div>
+          <p class="eyebrow">ADVANCED COURSE</p>
+          <h2>六步能跑通之后，再进入完整课程</h2>
+          <p>下面才会讲容量公式、量化选择、CDN 分流、性能测试、常驻服务和故障演练。</p>
+        </div>
+        <button class="button" id="toggleAdvanced" type="button" aria-expanded="false" aria-controls="advancedCourse">展开完整课程</button>
+      </section>
+
+      <div class="advanced-course" id="advancedCourse" hidden>
+        <section class="advanced-case shell" aria-labelledby="case-title">
+          <div class="case-study">
             <div class="case-heading">
               <div>
-                <p>REAL DEPLOYMENT CASE</p>
+                <p>进阶案例 / 不是新手起点</p>
                 <h2 id="case-title">DeepSeek V4 Flash / M3 Ultra</h2>
               </div>
               <span class="case-status">实测</span>
@@ -77,18 +183,17 @@
               <div><dt>长提示预填</dt><dd>360-400 <span>tok/s</span></dd></div>
               <div><dt>短交互解码</dt><dd>34 <span>tok/s</span></dd></div>
             </dl>
-            <p class="case-note">153GiB 是二进制单位显示值；报告 GB 与 GiB 时必须明确单位。</p>
-          </aside>
-        </div>
-      </section>
+            <p class="case-note">它用于说明同一套方法如何扩展到大型部署，不是第一次练习需要达到的配置。</p>
+          </div>
+        </section>
 
       <section class="section shell" id="course">
         <div class="section-heading">
           <div>
-            <p class="eyebrow">COURSE MAP</p>
-            <h2>八个模块，一条完整交付链</h2>
+            <p class="eyebrow">FULL COURSE MAP</p>
+            <h2>进阶：八个模块的完整交付链</h2>
           </div>
-          <p>选择模块查看核心方法、交付物和验收条件。完成状态保存在当前浏览器。</p>
+          <p>这里默认你已经跑通上面的六步。选择模块查看工程方法、交付物和验收条件。</p>
         </div>
 
         <div class="learning-workspace">
@@ -324,11 +429,12 @@
           <li><span>05</span><p>配置必须可启动、可观察、可回滚，而非一次性终端会话。</p></li>
         </ol>
       </section>
+      </div>
     </main>
 
     <footer class="site-footer">
       <div class="shell footer-inner">
-        <span>Local LLM Deployment Lab · 2026</span>
+        <span>Beginner-first Local LLM Deployment Lab · 2026</span>
         <div>
           <a href="course.md">完整课程讲义</a>
           <a href="../index.html">返回个人主页</a>

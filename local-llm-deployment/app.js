@@ -33,6 +33,116 @@ themeToggle.addEventListener('click', () => {
   syncTheme();
 });
 
+const concepts = {
+  model: {
+    analogy: '模型文件像一套下载到电脑里的“知识包”',
+    explanation: '它包含模型学到的大量数字。文件越大，通常需要的内存越多。下载完成不代表它会自己运行，就像电影文件不会自己播放。',
+    takeaway: '先选电脑带得动的 3B-8B 小模型，不要从 153GiB 大案例起步。'
+  },
+  quantization: {
+    analogy: '量化像把一张超高清照片压缩成较小文件',
+    explanation: 'Q8、Q6、Q5、Q4 表示不同压缩程度。压得越小，越省内存，但可能损失一些质量。Q4 通常是本地练习的实用起点。',
+    takeaway: '第一次看到一堆量化名字时，优先找 Q4，不必追求最小或最高精度。'
+  },
+  runtime: {
+    analogy: '运行时像播放器，模型文件像电影',
+    explanation: '运行时负责读取模型、使用 CPU 或 GPU 计算，并把回答生成出来。播放器不支持某种格式时，电影文件再完整也播不了。',
+    takeaway: '先确认运行时明确支持这个模型架构，不要只看它能否打开 GGUF 文件。'
+  },
+  context: {
+    analogy: '上下文像模型面前的一张工作桌',
+    explanation: '桌面越大，一次能摊开的对话、代码和资料越多。但大桌面更占空间，处理长内容也会更慢。',
+    takeaway: '第一次先用短上下文跑通；“支持 100 万”不等于每次都应该开到 100 万。'
+  },
+  kv: {
+    analogy: 'KV 缓存像模型阅读时留下的临时笔记',
+    explanation: '模型为了记住已经读过的内容，会保存一批中间结果。对话越长，这些笔记通常越多，会继续消耗内存或磁盘。',
+    takeaway: '权重能放进内存还不够，长对话需要额外给 KV 缓存留空间。'
+  },
+  api: {
+    analogy: 'API 像模型服务对外提供的插座',
+    explanation: '模型能在终端聊天之后，还要通过一个固定地址接收其他软件的请求。Claude Code 就是通过这个地址找到本地模型。',
+    takeaway: '本地练习默认使用 127.0.0.1，先不要把服务开放到公网。'
+  }
+};
+
+const conceptAnalogy = document.getElementById('conceptAnalogy');
+const conceptExplanation = document.getElementById('conceptExplanation');
+const conceptTakeaway = document.getElementById('conceptTakeaway');
+
+function selectConcept(name) {
+  const concept = concepts[name];
+  conceptAnalogy.textContent = concept.analogy;
+  conceptExplanation.textContent = concept.explanation;
+  conceptTakeaway.textContent = concept.takeaway;
+  document.querySelectorAll('[data-concept]').forEach((button) => {
+    const selected = button.dataset.concept === name;
+    button.setAttribute('aria-selected', String(selected));
+    button.tabIndex = selected ? 0 : -1;
+  });
+}
+
+document.querySelectorAll('[data-concept]').forEach((button) => {
+  button.addEventListener('click', () => selectConcept(button.dataset.concept));
+});
+selectConcept('model');
+
+const beginnerBoxes = [...document.querySelectorAll('[data-beginner-step]')];
+const beginnerProgressText = document.getElementById('beginnerProgressText');
+const beginnerProgressBar = document.getElementById('beginnerProgressBar');
+const beginnerNextStep = document.getElementById('beginnerNextStep');
+const savedBeginnerSteps = new Set(readStorage('local-llm-beginner-steps', []));
+const beginnerStepNames = [
+  '先看清自己的电脑。',
+  '选择一个 3B-8B Q4 小模型。',
+  '让模型在终端里说出一句话。',
+  '把模型开成只监听本机的服务。',
+  '测试 /v1/messages。',
+  '让 Claude Code 调用一次 pwd。'
+];
+
+function updateBeginnerProgress() {
+  const completed = beginnerBoxes.filter((box) => box.checked).length;
+  beginnerProgressText.textContent = `${completed} / ${beginnerBoxes.length}`;
+  beginnerProgressBar.style.width = `${(completed / beginnerBoxes.length) * 100}%`;
+  const nextIndex = beginnerBoxes.findIndex((box) => !box.checked);
+  beginnerNextStep.textContent = nextIndex === -1
+    ? '入门闭环已经完成，可以展开完整课程。'
+    : `下一步：${beginnerStepNames[nextIndex]}`;
+  writeStorage('local-llm-beginner-steps', beginnerBoxes.filter((box) => box.checked).map((box) => box.dataset.beginnerStep));
+}
+
+beginnerBoxes.forEach((box) => {
+  box.checked = savedBeginnerSteps.has(box.dataset.beginnerStep);
+  box.addEventListener('change', updateBeginnerProgress);
+});
+updateBeginnerProgress();
+
+const advancedCourse = document.getElementById('advancedCourse');
+const toggleAdvanced = document.getElementById('toggleAdvanced');
+const advancedGate = document.getElementById('advanced');
+const advancedHashes = new Set(['#course', '#capacity', '#verification', '#troubleshooting']);
+
+function setAdvancedVisibility(visible, returnToGate = false) {
+  advancedCourse.hidden = !visible;
+  toggleAdvanced.setAttribute('aria-expanded', String(visible));
+  toggleAdvanced.textContent = visible ? '收起完整课程' : '展开完整课程';
+  if (!visible && returnToGate) advancedGate.scrollIntoView({ block: 'start' });
+}
+
+toggleAdvanced.addEventListener('click', () => {
+  setAdvancedVisibility(advancedCourse.hidden, !advancedCourse.hidden);
+});
+
+function revealAdvancedHash() {
+  if (!advancedHashes.has(location.hash)) return;
+  setAdvancedVisibility(true);
+  requestAnimationFrame(() => document.querySelector(location.hash)?.scrollIntoView({ block: 'start' }));
+}
+
+addEventListener('hashchange', revealAdvancedHash);
+revealAdvancedHash();
+
 const modules = [
   {
     title: '需求、边界与风险',
@@ -514,6 +624,7 @@ function bindArrowNavigation(selector) {
 
 bindArrowNavigation('[data-platform]');
 bindArrowNavigation('[data-snippet]');
+bindArrowNavigation('[data-concept]');
 
 const troubleSearch = document.getElementById('troubleSearch');
 const troubleRows = [...document.querySelectorAll('#troubleRows tr')];
