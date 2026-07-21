@@ -120,25 +120,42 @@
             <p>每一步只问“有没有看到成功信号”。先闭环，再回头学习容量、性能和运维。</p>
           </div>
 
+          <div class="route-toolbar">
+            <div class="route-environment">
+              <span class="route-toolbar-label">命令环境</span>
+              <div class="route-os-tabs" role="tablist" aria-label="选择命令所用的操作系统">
+                <button id="routeOsUnix" type="button" role="tab" aria-selected="true" aria-controls="routeList" data-route-os="unix">macOS / Linux / WSL</button>
+                <button id="routeOsWindows" type="button" role="tab" aria-selected="false" aria-controls="routeList" data-route-os="windows" tabindex="-1">Windows PowerShell</button>
+              </div>
+            </div>
+            <p>课堂开始前需安装 Python 3、curl、Claude Code 和 llama.cpp；模型路径请替换为教师提供的 GGUF 文件。</p>
+          </div>
+
           <div class="beginner-route">
-            <ol class="route-list">
+            <ol class="route-list" id="routeList">
               <li>
                 <label><input type="checkbox" data-beginner-step="audit" /><span class="route-number">01</span><span class="route-copy"><strong>看清自己的电脑</strong><small>只记录系统、内存和剩余磁盘，不需要理解硬件术语。</small><em>成功信号：你能说出“我有多少 GiB 内存”。</em></span></label>
+                <div class="route-lab-mount" data-route-lab="audit"></div>
               </li>
               <li>
                 <label><input type="checkbox" data-beginner-step="model" /><span class="route-number">02</span><span class="route-copy"><strong>选一个小模型</strong><small>课堂练习先用 3B-8B 的 Q4 模型，不要从 153GiB 案例开始。</small><em>成功信号：模型文件明显小于可用内存。</em></span></label>
+                <div class="route-lab-mount" data-route-lab="model"></div>
               </li>
               <li>
                 <label><input type="checkbox" data-beginner-step="run" /><span class="route-number">03</span><span class="route-copy"><strong>让模型说一句话</strong><small>先用最保守的配置启动，只问一个很短的问题。</small><em>成功信号：终端里出现完整回答。</em></span></label>
+                <div class="route-lab-mount" data-route-lab="run"></div>
               </li>
               <li>
                 <label><input type="checkbox" data-beginner-step="serve" /><span class="route-number">04</span><span class="route-copy"><strong>把它开成本地服务</strong><small>让程序监听 <code>127.0.0.1</code>，只供自己的电脑访问。</small><em>成功信号：浏览器或命令能访问 <code>/v1/models</code>。</em></span></label>
+                <div class="route-lab-mount" data-route-lab="serve"></div>
               </li>
               <li>
                 <label><input type="checkbox" data-beginner-step="api" /><span class="route-number">05</span><span class="route-copy"><strong>测试 Messages API</strong><small>确认服务能听懂 Claude Code 使用的请求格式。</small><em>成功信号：<code>/v1/messages</code> 返回模型回答。</em></span></label>
+                <div class="route-lab-mount" data-route-lab="api"></div>
               </li>
               <li>
                 <label><input type="checkbox" data-beginner-step="client" /><span class="route-number">06</span><span class="route-copy"><strong>接入 Claude Code</strong><small>配置本地地址，再让它只调用一次 <code>pwd</code>。</small><em>成功信号：模型调用工具并返回真实路径。</em></span></label>
+                <div class="route-lab-mount" data-route-lab="client"></div>
               </li>
             </ol>
 
@@ -443,5 +460,6 @@
     </footer>
 
     <script src="app.js"></script>
+    <script src="route-labs.js"></script>
   </body>
 </html>

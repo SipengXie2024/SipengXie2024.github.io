@@ -98,6 +98,68 @@
   max-width: 500px;
 }
 
+.route-toolbar {
+  margin: -2px 0 16px;
+  display: flex;
+  gap: 28px;
+  align-items: end;
+  justify-content: space-between;
+}
+
+.route-environment {
+  min-width: 0;
+  display: grid;
+  gap: 6px;
+}
+
+.route-toolbar-label {
+  color: var(--quiet);
+  font-size: 10px;
+  font-weight: 760;
+}
+
+.route-os-tabs {
+  display: flex;
+  overflow: hidden;
+  border: 1px solid var(--line-strong);
+  border-radius: var(--radius-sm);
+  background: var(--surface);
+}
+
+.route-os-tabs button {
+  min-height: 38px;
+  padding: 8px 13px;
+  border: 0;
+  border-right: 1px solid var(--line);
+  color: var(--muted);
+  background: transparent;
+  font-size: 11px;
+  font-weight: 650;
+  cursor: pointer;
+  transition: color 140ms ease, background-color 140ms ease, transform 140ms var(--ease-out);
+}
+
+.route-os-tabs button:last-child {
+  border-right: 0;
+}
+
+.route-os-tabs button[aria-selected="true"] {
+  color: var(--accent);
+  background: var(--accent-soft);
+}
+
+.route-os-tabs button:active {
+  transform: scale(0.98);
+}
+
+.route-toolbar > p {
+  max-width: 510px;
+  margin: 0 0 2px;
+  color: var(--quiet);
+  font-size: 11px;
+  text-align: right;
+}
+
 .concept-lab {
   display: grid;
   grid-template-columns: 250px minmax(0, 1fr);
@@ -257,6 +319,115 @@
   color: var(--quiet);
   text-decoration: line-through;
   text-decoration-thickness: 1px;
+}
+
+.route-lab-mount:empty {
+  display: none;
+}
+
+.route-command {
+  margin: 0 17px 15px 80px;
+  border-top: 1px solid var(--line);
+}
+
+.route-command summary {
+  padding: 11px 1px;
+  color: var(--muted);
+  font-size: 11px;
+  font-weight: 680;
+  cursor: pointer;
+}
+
+.route-command[open] summary {
+  color: var(--accent);
+}
+
+.route-platform-name {
+  float: right;
+  margin-top: 1px;
+  color: var(--quiet);
+  font-family: "SFMono-Regular", Consolas, monospace;
+  font-size: 9px;
+  font-weight: 500;
+}
+
+.route-command-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  overflow: hidden;
+  border: 1px solid var(--line);
+  border-radius: var(--radius-sm);
+  background: var(--line);
+  gap: 1px;
+}
+
+.route-command-section {
+  min-width: 0;
+  padding: 12px;
+  background: var(--surface);
+}
+
+.route-command-heading {
+  min-height: 32px;
+  display: flex;
+  gap: 10px;
+  align-items: center;
+  justify-content: space-between;
+  color: var(--ink);
+  font-size: 10px;
+  font-weight: 760;
+}
+
+.route-copy-button.icon-button.compact {
+  width: 28px;
+  height: 28px;
+  flex-basis: 28px;
+  font-size: 13px;
+}
+
+.route-command-note {
+  min-height: 34px;
+  margin: 3px 0 9px;
+  color: var(--quiet);
+  font-size: 10px;
+}
+
+.route-code,
+.route-output {
+  margin: 0;
+  padding: 12px;
+  overflow-x: auto;
+  border: 1px solid var(--line);
+  border-radius: 4px;
+  color: var(--ink);
+  background: var(--surface-muted);
+  font-family: "SFMono-Regular", Consolas, monospace;
+  font-size: 12px;
+  line-height: 1.55;
+  tab-size: 2;
+}
+
+.route-output {
+  color: var(--blue);
+  background: var(--blue-soft);
+}
+
+.route-code code,
+.route-output samp {
+  font: inherit;
+}
+
+.route-criterion {
+  margin: 11px 0 0;
+  padding-left: 10px;
+  border-left: 2px solid var(--accent);
+  color: var(--muted);
+  font-size: 10px;
+}
+
+.route-criterion strong {
+  color: var(--accent);
+  font-size: 9px;
 }
 
 .route-status {

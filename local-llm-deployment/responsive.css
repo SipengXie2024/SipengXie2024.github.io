@@ -28,6 +28,11 @@
     background: var(--surface-muted);
   }
 
+  .route-os-tabs button:hover:not([aria-selected="true"]) {
+    color: var(--ink);
+    background: var(--surface-muted);
+  }
+
   .text-button:not(:disabled):hover {
     color: var(--accent);
   }
@@ -101,6 +106,10 @@
 
   .route-status {
     position: static;
+  }
+
+  .route-command-grid {
+    grid-template-columns: 1fr;
   }
 
   .module-nav {
@@ -209,6 +218,34 @@
     padding: 14px;
   }
 
+  .route-toolbar {
+    align-items: stretch;
+    flex-direction: column;
+    gap: 12px;
+  }
+
+  .route-toolbar > p {
+    max-width: none;
+    text-align: left;
+  }
+
+  .route-os-tabs {
+    width: 100%;
+  }
+
+  .route-os-tabs button {
+    min-width: 0;
+    flex: 1 1 0;
+  }
+
+  .route-command {
+    margin: 0 14px 14px;
+  }
+
+  .route-command-note {
+    min-height: 0;
+  }
+
   .advanced-gate {
     gap: 18px;
   }
@@ -291,6 +328,7 @@
   .button,
   .text-button,
   .segmented-control button,
+  .route-os-tabs button,
   .runtime-tabs button,
   .snippet-tabs button {
     transition-duration: 0ms;
@@ -305,6 +343,7 @@
   .preset-row,
   .runtime-tabs,
   .snippet-tabs,
+  .route-os-tabs,
   .icon-button,
   .search-box {
     display: none;
