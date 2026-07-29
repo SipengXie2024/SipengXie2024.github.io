@@ -98,7 +98,7 @@
   display: block;
   margin-top: 2px;
   color: var(--quiet);
-  font-family: "JetBrains Mono", Consolas, monospace;
+  font-family: "IBM Plex Mono", ui-monospace, Consolas, monospace;
   font-size: 11px;
   font-weight: 500;
 }
@@ -134,7 +134,7 @@
 
 .sidebar-title span {
   color: var(--accent);
-  font-family: "JetBrains Mono", Consolas, monospace;
+  font-family: "IBM Plex Mono", ui-monospace, Consolas, monospace;
   font-size: 11px;
   font-weight: 760;
 }
@@ -159,7 +159,7 @@
 
 .sidebar-progress strong {
   color: var(--accent);
-  font-family: "JetBrains Mono", Consolas, monospace;
+  font-family: "IBM Plex Mono", ui-monospace, Consolas, monospace;
   font-size: 20px;
 }
 
@@ -184,7 +184,7 @@
 
 .desktop-course-index section header span {
   color: var(--accent);
-  font-family: "JetBrains Mono", Consolas, monospace;
+  font-family: "IBM Plex Mono", ui-monospace, Consolas, monospace;
 }
 
 .desktop-course-index ol {
@@ -210,7 +210,7 @@
 
 .desktop-course-index li a span {
   color: var(--quiet);
-  font-family: "JetBrains Mono", Consolas, monospace;
+  font-family: "IBM Plex Mono", ui-monospace, Consolas, monospace;
   font-size: 11px;
 }
 
@@ -275,7 +275,7 @@
 .chapter-overview span,
 .chapter-overview small {
   color: var(--quiet);
-  font-family: "JetBrains Mono", Consolas, monospace;
+  font-family: "IBM Plex Mono", ui-monospace, Consolas, monospace;
   font-size: 11px;
 }
 
@@ -367,7 +367,7 @@
 
 @media (hover: hover) and (pointer: fine) {
   .desktop-course-index li a:hover {
-    background: rgba(17, 97, 73, 0.07);
+    background: rgba(76, 175, 125, 0.12);
     color: var(--ink);
   }
 

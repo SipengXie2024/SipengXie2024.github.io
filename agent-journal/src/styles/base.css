@@ -1,27 +1,27 @@
 :root {
-  color-scheme: light;
-  font-family: Inter, "Segoe UI", "PingFang SC", "Microsoft YaHei", sans-serif;
+  color-scheme: dark;
+  font-family: "IBM Plex Sans", "Segoe UI", "PingFang SC", "Microsoft YaHei", sans-serif;
   font-synthesis: none;
   font-optical-sizing: auto;
   text-rendering: optimizeLegibility;
-  --page: #f4f5f2;
-  --surface: #ffffff;
-  --surface-muted: #e9ece8;
-  --ink: #171918;
-  --body: #3f4541;
-  --muted: #68706b;
-  --quiet: #8b918d;
-  --line: rgba(23, 25, 24, 0.14);
-  --line-strong: rgba(23, 25, 24, 0.3);
-  --accent: #116149;
-  --accent-dark: #084a36;
-  --accent-soft: #e1eee8;
-  --warm: #a84321;
-  --warm-soft: #f4e6df;
-  --danger: #a22f36;
-  --code: #171b19;
-  --code-text: #dce8e1;
-  --shadow: 0 18px 52px rgba(23, 25, 24, 0.09);
+  --page: #10140f;
+  --surface: #171c15;
+  --surface-muted: #1c221a;
+  --ink: #e9ede6;
+  --body: #c2c8bf;
+  --muted: #a9b0a6;
+  --quiet: #767d72;
+  --line: rgba(233, 237, 230, 0.14);
+  --line-strong: rgba(233, 237, 230, 0.32);
+  --accent: #4caf7d;
+  --accent-dark: #6cc79a;
+  --accent-soft: rgba(76, 175, 125, 0.16);
+  --warm: #d0622a;
+  --warm-soft: rgba(208, 98, 42, 0.16);
+  --danger: #e08181;
+  --code: #0b0e0a;
+  --code-text: #d5e8dd;
+  --shadow: 0 24px 56px rgba(0, 0, 0, 0.5);
   --ease-out: cubic-bezier(0.23, 1, 0.32, 1);
   --max: 1240px;
 }
@@ -65,16 +65,16 @@ select {
 
 code,
 pre {
-  font-family: "JetBrains Mono", "Cascadia Code", Consolas, monospace;
+  font-family: "IBM Plex Mono", ui-monospace, "Cascadia Code", Consolas, monospace;
 }
 
 ::selection {
-  background: rgba(17, 97, 73, 0.2);
+  background: rgba(76, 175, 125, 0.32);
   color: var(--ink);
 }
 
 :focus-visible {
-  outline: 3px solid rgba(17, 97, 73, 0.3);
+  outline: 3px solid rgba(76, 175, 125, 0.35);
   outline-offset: 3px;
 }
 
@@ -106,7 +106,7 @@ pre {
   top: 0;
   z-index: 30;
   border-bottom: 1px solid var(--line);
-  background: rgba(244, 245, 242, 0.92);
+  background: rgba(16, 20, 15, 0.85);
   backdrop-filter: blur(16px);
 }
 
@@ -157,7 +157,7 @@ pre {
   border-radius: 6px;
   background: var(--ink);
   color: var(--surface);
-  font-family: Georgia, serif;
+  font-family: "Fraunces", Georgia, serif;
   font-size: 21px;
 }
 
@@ -179,7 +179,7 @@ pre {
 .brand small {
   margin-top: 1px;
   color: var(--quiet);
-  font-family: "JetBrains Mono", Consolas, monospace;
+  font-family: "IBM Plex Mono", ui-monospace, Consolas, monospace;
   font-size: 11px;
   text-transform: uppercase;
 }
@@ -221,7 +221,7 @@ pre {
 
 .header-position {
   color: var(--quiet);
-  font-family: "JetBrains Mono", Consolas, monospace;
+  font-family: "IBM Plex Mono", ui-monospace, Consolas, monospace;
   font-size: 11px;
   font-weight: 700;
 }
@@ -255,7 +255,7 @@ pre {
 .section-label,
 .eyebrow {
   color: var(--accent);
-  font-family: "JetBrains Mono", Consolas, monospace;
+  font-family: "IBM Plex Mono", ui-monospace, Consolas, monospace;
   font-size: 11px;
   font-weight: 760;
   text-transform: uppercase;
