@@ -20,6 +20,9 @@
   --max: 1180px;
   --ease-out: cubic-bezier(0.23, 1, 0.32, 1);
   --ease-in-out: cubic-bezier(0.77, 0, 0.175, 1);
+  --font-display: "Fraunces", Georgia, "Times New Roman", serif;
+  --font-body: "IBM Plex Sans", ui-sans-serif, system-ui, -apple-system, "Segoe UI", "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", sans-serif;
+  --font-mono: "IBM Plex Mono", ui-monospace, "SFMono-Regular", Menlo, Consolas, monospace;
   color-scheme: light;
 }
 
@@ -44,22 +47,22 @@ html[data-theme="light"] {
 }
 
 html[data-theme="dark"] {
-  --page: #111512;
-  --surface: #181d19;
-  --surface-muted: #202621;
-  --ink: #edf1ee;
-  --muted: #aeb7b1;
-  --quiet: #7f8982;
-  --line: #303832;
-  --line-strong: #48534b;
-  --green: #68c6a1;
-  --green-soft: #18362c;
-  --warm: #e28b66;
-  --warm-soft: #3b251d;
-  --blue: #79a9bd;
-  --blue-soft: #20343d;
-  --purple: #ae97c1;
-  --yellow: #d2ad62;
+  --page: #10140f;
+  --surface: #171c15;
+  --surface-muted: #1c221a;
+  --ink: #e9ede6;
+  --muted: #a9b0a6;
+  --quiet: #767d72;
+  --line: rgba(233, 237, 230, 0.14);
+  --line-strong: rgba(233, 237, 230, 0.32);
+  --green: #4caf7d;
+  --green-soft: rgba(76, 175, 125, 0.16);
+  --warm: #d0622a;
+  --warm-soft: rgba(208, 98, 42, 0.16);
+  --blue: #6ba8c4;
+  --blue-soft: rgba(107, 168, 196, 0.16);
+  --purple: #b39cc9;
+  --yellow: #d8b25e;
   color-scheme: dark;
 }
 
@@ -80,7 +83,7 @@ body,
   overflow-x: hidden;
   color: var(--ink);
   background: var(--page);
-  font-family: Inter, ui-sans-serif, -apple-system, BlinkMacSystemFont, "Segoe UI", "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", sans-serif;
+  font-family: var(--font-body);
   line-height: 1.72;
 }
 

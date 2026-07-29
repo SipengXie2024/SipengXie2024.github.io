@@ -26,25 +26,25 @@
 }
 
 html[data-theme="dark"] {
-  --page: #111512;
-  --surface: #181d19;
-  --surface-muted: #202621;
-  --ink: #edf1ee;
-  --muted: #adb6b0;
-  --quiet: #7f8982;
-  --line: #303832;
-  --line-strong: #49544c;
-  --accent: #67c49e;
-  --accent-dark: #8ad4b6;
-  --accent-soft: #19362c;
-  --warm: #e18b67;
-  --warm-soft: #3c261e;
-  --blue: #7aa9bd;
-  --blue-soft: #20343d;
-  --warning: #d0ad63;
-  --warning-soft: #392f1c;
+  --page: #10140f;
+  --surface: #171c15;
+  --surface-muted: #1c221a;
+  --ink: #e9ede6;
+  --muted: #a9b0a6;
+  --quiet: #767d72;
+  --line: rgba(233, 237, 230, 0.14);
+  --line-strong: rgba(233, 237, 230, 0.32);
+  --accent: #4caf7d;
+  --accent-dark: #6cc79a;
+  --accent-soft: rgba(76, 175, 125, 0.16);
+  --warm: #d0622a;
+  --warm-soft: rgba(208, 98, 42, 0.16);
+  --blue: #6ba8c4;
+  --blue-soft: rgba(107, 168, 196, 0.16);
+  --warning: #d8b25e;
+  --warning-soft: rgba(216, 178, 94, 0.16);
   --danger: #e08181;
-  --danger-soft: #3d2424;
+  --danger-soft: rgba(224, 129, 129, 0.14);
   color-scheme: dark;
 }
 
@@ -63,7 +63,7 @@ body {
   min-width: 320px;
   color: var(--ink);
   background: var(--page);
-  font-family: Inter, ui-sans-serif, -apple-system, BlinkMacSystemFont, "Segoe UI", "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", sans-serif;
+  font-family: "IBM Plex Sans", ui-sans-serif, -apple-system, BlinkMacSystemFont, "Segoe UI", "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", sans-serif;
   line-height: 1.7;
 }
 
