@@ -1,0 +1,294 @@
+@media (max-width: 980px) {
+  .hero-grid,
+  .scope-grid,
+  .selector-layout {
+    grid-template-columns: 1fr;
+  }
+
+  .hero-grid {
+    gap: 54px;
+  }
+
+  .method-map {
+    max-width: 720px;
+  }
+
+  .responsible-note {
+    grid-column: 1;
+  }
+
+  .article-layout {
+    grid-template-columns: 1fr;
+  }
+
+  .toc {
+    display: none;
+  }
+
+  .format-grid,
+  .reference-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .format-grid pre {
+    max-height: none;
+  }
+
+  .decision-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .decision-proof {
+    grid-column: 1 / -1;
+  }
+}
+
+@media (max-width: 720px) {
+  .guide-shell,
+  .topbar-inner {
+    width: min(100% - 28px, 1120px);
+  }
+
+  .brand-text {
+    display: none;
+  }
+
+  .series-nav {
+    margin-left: auto;
+  }
+
+  .series-nav a {
+    min-width: 42px;
+    padding: 6px;
+    font-size: 11px;
+  }
+
+  .guide-hero {
+    padding: 56px 0 48px;
+  }
+
+  .hero-copy h1 {
+    font-size: 42px;
+  }
+
+  .hero-lede {
+    margin-top: 22px;
+    font-size: 16px;
+  }
+
+  .hero-meta span + span::before {
+    margin-right: 12px;
+  }
+
+  .hero-meta {
+    gap: 8px 12px;
+  }
+
+  .method-map li {
+    grid-template-columns: 32px minmax(0, 1fr);
+  }
+
+  .method-map li small {
+    grid-column: 2;
+  }
+
+  .article-strip .guide-shell {
+    gap: 18px;
+  }
+
+  .scope-band {
+    padding: 46px 0;
+  }
+
+  .scope-grid {
+    gap: 24px;
+  }
+
+  .scope-grid h2,
+  .section-heading h2,
+  .decision-section h2,
+  .reference-section h2,
+  .closing h2 {
+    font-size: 27px;
+  }
+
+  .selector-section {
+    padding-top: 60px;
+    padding-bottom: 68px;
+  }
+
+  .section-heading {
+    margin-bottom: 24px;
+    align-items: start;
+    flex-direction: column;
+    gap: 12px;
+  }
+
+  .selector-controls,
+  .recommendation {
+    padding: 20px;
+  }
+
+  .goal-options {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .goal-options button {
+    border-bottom: 1px solid var(--line);
+  }
+
+  .goal-options button:nth-child(2) {
+    border-right: 0;
+  }
+
+  .goal-options button:nth-last-child(-n + 2) {
+    border-bottom: 0;
+  }
+
+  .article-layout {
+    padding-bottom: 72px;
+  }
+
+  .method {
+    padding: 68px 0 72px;
+  }
+
+  .method-header {
+    grid-template-columns: 34px minmax(0, 1fr);
+    gap: 10px;
+  }
+
+  .method-header h2 {
+    font-size: 34px;
+  }
+
+  .method-header p:last-child {
+    font-size: 14px;
+  }
+
+  .step-list {
+    margin-left: 44px;
+  }
+
+  .code-shell pre {
+    padding: 14px;
+    font-size: 11px;
+  }
+
+  .evidence-grid,
+  .observation-band,
+  .decision-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .evidence-grid > div {
+    border-right: 0;
+    border-bottom: 1px solid var(--line);
+  }
+
+  .evidence-grid > div:last-child {
+    border-bottom: 0;
+  }
+
+  .observation-band > div:first-child {
+    border-right: 0;
+    border-bottom: 1px solid var(--line);
+  }
+
+  .decision-proof {
+    grid-column: auto;
+  }
+
+  .turns article {
+    grid-template-columns: 58px minmax(0, 1fr);
+    gap: 10px;
+  }
+
+  .decision-section,
+  .reference-section {
+    padding: 68px 0;
+  }
+
+  .known-issues li {
+    grid-template-columns: 1fr;
+    gap: 4px;
+  }
+
+  .closing {
+    padding: 30px 24px;
+  }
+
+  .guide-footer .guide-shell {
+    min-height: 112px;
+    padding: 20px 0;
+    align-items: flex-start;
+    flex-direction: column;
+    justify-content: center;
+  }
+}
+
+@media (max-width: 480px) {
+  .series-nav a:nth-child(3) {
+    display: none;
+  }
+
+  .hero-copy h1 {
+    font-size: 37px;
+  }
+
+  .map-axis {
+    display: none;
+  }
+
+  .method-header {
+    grid-template-columns: 1fr;
+  }
+
+  .method-index {
+    padding: 0;
+  }
+
+  .step-list {
+    margin-left: 0;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  html {
+    scroll-behavior: auto;
+  }
+
+  .segmented button,
+  .copy-button,
+  .skip-link {
+    transition-duration: 0ms;
+  }
+}
+
+@media print {
+  .topbar,
+  .article-strip,
+  .selector-section,
+  .toc,
+  .copy-button {
+    display: none;
+  }
+
+  .guide-hero {
+    padding-top: 32px;
+  }
+
+  .article-layout,
+  .format-grid,
+  .reference-grid,
+  .decision-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .method,
+  .decision-section,
+  .reference-section {
+    break-inside: avoid;
+  }
+}
