@@ -1,0 +1,345 @@
+.lesson {
+  max-width: 900px;
+  padding: 88px 0 96px;
+  border-top: 1px solid var(--line);
+  scroll-margin-top: 72px;
+}
+
+.lesson:first-of-type {
+  border-top: 2px solid var(--ink);
+}
+
+.lesson-kicker {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  color: var(--quiet);
+  font-family: "JetBrains Mono", Consolas, monospace;
+  font-size: 11px;
+  font-weight: 700;
+  text-transform: uppercase;
+}
+
+.lesson-kicker span {
+  color: var(--accent);
+}
+
+.lesson-kicker i {
+  width: 20px;
+  height: 1px;
+  background: var(--line-strong);
+}
+
+.lesson-header h2 {
+  max-width: 850px;
+  margin: 17px 0 19px;
+  font-size: 50px;
+  line-height: 1.16;
+  letter-spacing: 0;
+}
+
+.lesson-lead {
+  max-width: 790px;
+  margin: 0;
+  color: var(--muted);
+  font-size: 20px;
+  line-height: 1.85;
+}
+
+.teaching-question {
+  display: grid;
+  grid-template-columns: 90px minmax(0, 1fr);
+  gap: 20px;
+  margin: 38px 0 50px;
+  padding: 21px 23px;
+  border-left: 3px solid var(--warm);
+  border-radius: 0 6px 6px 0;
+  background: var(--warm-soft);
+}
+
+.teaching-question span {
+  padding-top: 4px;
+  color: var(--warm);
+  font-family: "JetBrains Mono", Consolas, monospace;
+  font-size: 11px;
+  font-weight: 760;
+  text-transform: uppercase;
+}
+
+.teaching-question strong {
+  font-size: 18px;
+  line-height: 1.65;
+}
+
+.lesson-body {
+  display: grid;
+  gap: 48px;
+}
+
+.knowledge-section {
+  display: grid;
+  grid-template-columns: 50px minmax(0, 1fr);
+  gap: 24px;
+}
+
+.knowledge-index {
+  padding-top: 7px;
+  color: var(--quiet);
+  font-family: "JetBrains Mono", Consolas, monospace;
+  font-size: 11px;
+}
+
+.knowledge-section h3 {
+  margin: 0 0 15px;
+  font-size: 24px;
+  line-height: 1.35;
+  letter-spacing: 0;
+}
+
+.knowledge-section p {
+  margin: 0 0 14px;
+  color: var(--body);
+  font-size: 18px;
+  line-height: 1.95;
+}
+
+.knowledge-section p:last-child {
+  margin-bottom: 0;
+}
+
+.knowledge-section ul {
+  margin: 20px 0 0;
+  padding: 0;
+  list-style: none;
+}
+
+.knowledge-section li {
+  position: relative;
+  padding: 12px 4px 12px 22px;
+  border-top: 1px solid var(--line);
+  color: var(--body);
+  font-size: 16px;
+  line-height: 1.7;
+}
+
+.knowledge-section li:last-child {
+  border-bottom: 1px solid var(--line);
+}
+
+.knowledge-section li::before {
+  position: absolute;
+  top: 21px;
+  left: 3px;
+  width: 5px;
+  height: 5px;
+  background: var(--accent);
+  content: "";
+}
+
+.code-block {
+  overflow-x: auto;
+  margin: 22px 0 0;
+  padding: 20px;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 6px;
+  background: var(--code);
+  color: var(--code-text);
+  font-size: 13px;
+  line-height: 1.75;
+  tab-size: 2;
+}
+
+.diagram-block {
+  overflow: hidden;
+  margin: 58px 0 0;
+  border: 1px solid var(--line-strong);
+  border-radius: 6px;
+  background: var(--surface);
+  box-shadow: var(--shadow);
+}
+
+.diagram-block figcaption {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  min-height: 50px;
+  padding: 10px 16px;
+  border-bottom: 1px solid var(--line);
+  color: var(--body);
+  font-size: 13px;
+  font-weight: 700;
+}
+
+.diagram-block figcaption span {
+  padding: 4px 6px;
+  border-radius: 4px;
+  background: var(--accent-soft);
+  color: var(--accent-dark);
+  font-family: "JetBrains Mono", Consolas, monospace;
+  font-size: 11px;
+  font-weight: 760;
+}
+
+.mermaid-output {
+  display: grid;
+  min-height: 300px;
+  overflow-x: auto;
+  padding: 30px;
+  place-items: center;
+  background: var(--surface);
+}
+
+.mermaid-output svg {
+  display: block;
+  width: auto;
+  min-width: 620px;
+  max-width: 100%;
+  height: auto;
+  max-height: 630px;
+}
+
+.diagram-loading,
+.diagram-error {
+  display: grid;
+  min-height: 280px;
+  padding: 30px;
+  place-items: center;
+  color: var(--muted);
+  font-size: 13px;
+}
+
+.diagram-error {
+  align-content: center;
+  gap: 18px;
+}
+
+.diagram-error strong {
+  color: var(--danger);
+}
+
+.diagram-error pre {
+  width: 100%;
+  max-height: 260px;
+  overflow: auto;
+  padding: 16px;
+  border-radius: 6px;
+  background: var(--code);
+  color: var(--code-text);
+  font-size: 11px;
+  white-space: pre-wrap;
+}
+
+.engineer-takeaway {
+  margin-top: 30px;
+  padding: 22px 24px;
+  border-block: 1px solid rgba(17, 97, 73, 0.24);
+  background: var(--accent-soft);
+}
+
+.engineer-takeaway span,
+.engineer-takeaway strong {
+  display: block;
+}
+
+.engineer-takeaway span {
+  margin-bottom: 7px;
+  color: var(--accent);
+  font-family: "JetBrains Mono", Consolas, monospace;
+  font-size: 11px;
+  font-weight: 760;
+}
+
+.engineer-takeaway strong {
+  color: var(--accent-dark);
+  font-size: 18px;
+  line-height: 1.75;
+}
+
+.lesson-sources {
+  display: grid;
+  grid-template-columns: 120px minmax(0, 1fr);
+  gap: 18px;
+  margin-top: 24px;
+  padding-top: 20px;
+  border-top: 1px dashed var(--line-strong);
+}
+
+.lesson-sources > span {
+  padding-top: 5px;
+  color: var(--quiet);
+  font-size: 11px;
+}
+
+.lesson-sources > div {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 7px;
+}
+
+.lesson-sources code {
+  padding: 5px 7px;
+  border: 1px solid var(--line);
+  border-radius: 4px;
+  background: var(--surface);
+  color: var(--muted);
+  font-size: 11px;
+  overflow-wrap: anywhere;
+}
+
+@media (max-width: 900px) {
+  .lesson {
+    max-width: none;
+    padding-block: 74px 86px;
+  }
+}
+
+@media (max-width: 600px) {
+  .lesson {
+    padding-block: 64px 76px;
+  }
+
+  .lesson-header h2 {
+    font-size: 40px;
+  }
+
+  .lesson-lead {
+    font-size: 18px;
+  }
+
+  .teaching-question {
+    grid-template-columns: 1fr;
+    gap: 8px;
+    padding: 18px;
+  }
+
+  .knowledge-section {
+    grid-template-columns: 1fr;
+    gap: 8px;
+  }
+
+  .knowledge-index {
+    padding-top: 0;
+  }
+
+  .knowledge-section h3 {
+    font-size: 22px;
+  }
+
+  .knowledge-section p {
+    font-size: 17px;
+  }
+
+  .mermaid-output {
+    justify-content: start;
+    padding: 20px;
+  }
+
+  .mermaid-output svg {
+    min-width: 680px;
+  }
+
+  .lesson-sources {
+    grid-template-columns: 1fr;
+    gap: 9px;
+  }
+}
