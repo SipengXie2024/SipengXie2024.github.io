@@ -1,4 +1,8 @@
 @media (hover: hover) and (pointer: fine) {
+  .nav a:hover {
+    color: var(--ink);
+  }
+
   .nav a:hover::after {
     transform: scaleX(1);
     transform-origin: left;
@@ -7,43 +11,61 @@
   .header-cta:hover,
   .button:not(.primary):hover {
     border-color: var(--ink);
-    background: var(--surface);
-    color: var(--ink);
+    background: var(--ink);
+    color: var(--page);
     text-decoration: none;
+    transform: translateY(-1px);
   }
 
   .button.primary:hover {
-    border-color: var(--accent-dark);
-    background: var(--accent-dark);
-    color: var(--surface);
+    border-color: var(--accent-bright);
+    background: var(--accent-bright);
+    color: var(--page);
     text-decoration: none;
+    transform: translateY(-1px);
+    box-shadow: 0 12px 28px -8px rgba(108, 199, 154, 0.5);
+  }
+
+  .research-item:hover {
+    transform: translateY(-5px);
+    border-color: var(--line-strong);
+    background: var(--surface-raised);
+    box-shadow: 0 28px 52px -28px rgba(0, 0, 0, 0.65);
+  }
+
+  .featured-research:hover {
+    border-color: var(--accent);
+  }
+
+  .publication:hover {
+    background: rgba(233, 237, 230, 0.03);
   }
 
   .portrait-frame:hover img {
-    transform: scale(1.025);
+    transform: scale(1.035);
   }
 }
 
 @media (max-width: 940px) {
   .nav {
-    gap: 18px;
+    gap: 20px;
   }
 
   .hero {
-    grid-template-columns: minmax(0, 1fr) 240px;
+    grid-template-columns: minmax(0, 1fr) 250px;
     gap: 48px;
   }
 
   h1 {
-    font-size: 72px;
+    font-size: 78px;
   }
 
   .hero-statement {
-    font-size: 21px;
+    font-size: 23px;
   }
 
   .featured-paper {
-    grid-template-columns: 110px minmax(0, 1fr);
+    grid-template-columns: 118px minmax(0, 1fr);
   }
 
   .featured-paper-action {
@@ -51,18 +73,18 @@
   }
 
   .section-heading {
-    grid-template-columns: 260px minmax(0, 1fr);
+    grid-template-columns: 270px minmax(0, 1fr);
   }
 
   .background-grid,
   .ip-grid {
-    gap: 38px;
+    gap: 40px;
   }
 }
 
 @media (max-width: 760px) {
   html {
-    scroll-padding-top: 118px;
+    scroll-padding-top: 122px;
   }
 
   .shell,
@@ -73,7 +95,7 @@
   .header-inner {
     grid-template-columns: 1fr auto;
     gap: 10px 20px;
-    padding-block: 10px;
+    padding-block: 12px;
   }
 
   .nav {
@@ -81,7 +103,7 @@
     grid-row: 2;
     justify-content: flex-start;
     overflow-x: auto;
-    padding-bottom: 2px;
+    padding-bottom: 4px;
     scrollbar-width: none;
   }
 
@@ -91,21 +113,21 @@
 
   .hero {
     grid-template-columns: 1fr;
-    gap: 40px;
+    gap: 44px;
     min-height: auto;
-    padding-block: 54px;
+    padding-block: 56px;
   }
 
   .portrait-block {
-    width: min(100%, 300px);
+    width: min(100%, 320px);
   }
 
   h1 {
-    font-size: 58px;
+    font-size: 62px;
   }
 
   .section {
-    padding-block: 58px;
+    padding-block: 62px;
   }
 
   .section-heading,
@@ -115,8 +137,8 @@
   }
 
   .section-heading {
-    gap: 18px;
-    margin-bottom: 34px;
+    gap: 14px;
+    margin-bottom: 38px;
   }
 
   .research-grid,
@@ -126,7 +148,7 @@
   }
 
   .research-grid {
-    gap: 40px;
+    gap: 22px;
   }
 
   .research-item {
@@ -140,7 +162,7 @@
 
   .background-grid,
   .ip-grid {
-    gap: 48px;
+    gap: 52px;
   }
 }
 
@@ -150,7 +172,7 @@
   }
 
   .nav {
-    gap: 17px;
+    gap: 18px;
   }
 
   .nav a {
@@ -158,11 +180,11 @@
   }
 
   h1 {
-    font-size: 48px;
+    font-size: 50px;
   }
 
   .hero-statement {
-    font-size: 19px;
+    font-size: 20px;
   }
 
   .hero-actions .button {
@@ -175,7 +197,7 @@
 
   .profile-facts div,
   .profile-facts div + div {
-    padding: 11px 0;
+    padding: 12px 0;
     border-left: 0;
   }
 
@@ -185,15 +207,23 @@
 
   .featured-paper {
     grid-template-columns: 1fr;
-    gap: 7px;
+    gap: 8px;
   }
 
   .section-heading h2 {
-    font-size: 27px;
+    font-size: 33px;
   }
 
   .section-heading > p {
     font-size: 15px;
+  }
+
+  .research-item {
+    padding: 22px 20px 24px;
+  }
+
+  .research-item::before {
+    margin: -22px 0 16px;
   }
 
   .item-meta {
@@ -212,7 +242,7 @@
 
   .skill-groups div {
     grid-template-columns: 1fr;
-    gap: 5px;
+    gap: 6px;
   }
 
   .footer {
@@ -235,12 +265,15 @@
   .nav a::after,
   .header-cta,
   .button,
-  .portrait-frame img {
+  .research-item,
+  .portrait-frame img,
+  .featured-paper {
     transition-duration: 0ms;
   }
 
   .header-cta:active,
   .button:active,
+  .research-item:hover,
   .portrait-frame:hover img {
     transform: none;
   }
