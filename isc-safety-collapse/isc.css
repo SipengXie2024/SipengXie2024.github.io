@@ -1,0 +1,623 @@
+/* ISC 专题专属样式：在 shared.css 的设计语言上做正文排版与图示组件。
+   语义色：--warm（攻击）/ --green（防御）/ --blue（机制/中性）。 */
+
+.article-shell {
+  width: min(880px, calc(100% - 40px));
+  margin: 0 auto;
+}
+
+/* ---------- 文章头 ---------- */
+.article-hero {
+  padding: 64px 0 40px;
+}
+
+.article-hero .eyebrow {
+  display: inline-block;
+  margin: 0 0 6px;
+  padding-left: 10px;
+  border-left: 2px solid var(--mode, var(--blue));
+  color: var(--mode, var(--blue));
+  font-size: 12px;
+  font-weight: 760;
+  text-transform: uppercase;
+}
+
+.article-hero h1 {
+  margin: 16px 0 18px;
+  color: var(--ink);
+  font-size: 46px;
+  font-weight: 780;
+  line-height: 1.16;
+}
+
+.article-hero .lede {
+  max-width: 760px;
+  margin: 0;
+  color: var(--muted);
+  font-size: 18px;
+  line-height: 1.72;
+}
+
+.article-hero .meta {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px 18px;
+  margin-top: 24px;
+  color: var(--quiet);
+  font-size: 12px;
+}
+
+.article-hero .meta span + span::before {
+  content: "/";
+  margin-right: 18px;
+  color: var(--line-strong);
+}
+
+/* ---------- 正文章节 ---------- */
+.article-body section {
+  padding: 40px 0;
+  border-top: 1px solid var(--line);
+}
+
+.article-body h2 {
+  margin: 0 0 8px;
+  color: var(--ink);
+  font-size: 30px;
+  font-weight: 760;
+  line-height: 1.28;
+}
+
+.article-body h2 .sec-index {
+  margin-right: 12px;
+  color: var(--mode, var(--blue));
+  font-family: var(--font-mono);
+  font-size: 15px;
+  font-weight: 600;
+  vertical-align: 6px;
+}
+
+.article-body h3 {
+  margin: 32px 0 12px;
+  color: var(--ink);
+  font-size: 21px;
+  font-weight: 700;
+}
+
+.article-body p {
+  margin: 14px 0;
+  color: var(--ink);
+}
+
+.article-body .section-intro {
+  margin-top: 0;
+  color: var(--muted);
+  font-size: 17px;
+}
+
+.article-body ul,
+.article-body ol {
+  margin: 14px 0;
+  padding-left: 22px;
+}
+
+.article-body li {
+  margin: 8px 0;
+}
+
+.article-body strong {
+  color: var(--ink);
+  font-weight: 650;
+}
+
+.article-body code {
+  padding: 2px 6px;
+  border: 1px solid var(--line);
+  border-radius: 5px;
+  color: var(--ink);
+  background: var(--surface-muted);
+  font-family: var(--font-mono);
+  font-size: 0.88em;
+}
+
+.article-body a {
+  color: var(--mode, var(--blue));
+  text-underline-offset: 3px;
+}
+
+/* ---------- 重点提示框 ---------- */
+.callout {
+  margin: 22px 0;
+  padding: 18px 20px;
+  border: 1px solid color-mix(in srgb, var(--callout, var(--blue)) 34%, var(--line));
+  border-left: 3px solid var(--callout, var(--blue));
+  border-radius: var(--radius);
+  background: color-mix(in srgb, var(--callout, var(--blue)) 8%, var(--surface));
+}
+
+.callout .callout-tag {
+  display: block;
+  margin-bottom: 8px;
+  color: var(--callout, var(--blue));
+  font-size: 11px;
+  font-weight: 780;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+
+.callout p:last-child {
+  margin-bottom: 0;
+}
+
+.callout-warn { --callout: var(--warm); }
+.callout-defense { --callout: var(--green); }
+.callout-note { --callout: var(--blue); }
+
+/* ---------- TVD 三件套图示 ---------- */
+.tvd-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 12px;
+  margin: 24px 0;
+}
+
+.tvd-card {
+  padding: 18px 16px;
+  border: 1px solid var(--line);
+  border-top: 3px solid var(--tvd, var(--blue));
+  border-radius: var(--radius);
+  background: var(--surface);
+}
+
+.tvd-card .tvd-letter {
+  font-family: var(--font-mono);
+  font-size: 22px;
+  font-weight: 700;
+  color: var(--tvd, var(--blue));
+}
+
+.tvd-card h4 {
+  margin: 10px 0 6px;
+  color: var(--ink);
+  font-size: 16px;
+}
+
+.tvd-card p {
+  margin: 0;
+  color: var(--muted);
+  font-size: 13px;
+  line-height: 1.6;
+}
+
+.tvd-task { --tvd: var(--blue); }
+.tvd-validator { --tvd: var(--warm); }
+.tvd-data { --tvd: var(--green); }
+
+/* ---------- 机制对比（三通道） ---------- */
+.channel-list {
+  display: grid;
+  gap: 10px;
+  margin: 22px 0;
+}
+
+.channel {
+  display: grid;
+  grid-template-columns: 132px 1fr;
+  gap: 16px;
+  padding: 15px 18px;
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  background: var(--surface);
+}
+
+.channel .channel-name {
+  color: var(--ink);
+  font-weight: 700;
+  font-size: 14px;
+}
+
+.channel .channel-name small {
+  display: block;
+  margin-top: 4px;
+  color: var(--quiet);
+  font-family: var(--font-mono);
+  font-weight: 500;
+  font-size: 11px;
+}
+
+.channel p {
+  margin: 0;
+  color: var(--muted);
+  font-size: 14px;
+  line-height: 1.62;
+}
+
+.channel.featured {
+  border-color: color-mix(in srgb, var(--warm) 44%, var(--line));
+  background: var(--warm-soft);
+}
+
+.channel.featured .channel-name {
+  color: var(--warm);
+}
+
+.channel.featured p {
+  color: var(--ink);
+}
+
+/* ---------- 数据表格 ---------- */
+.data-table {
+  width: 100%;
+  margin: 22px 0;
+  border-collapse: collapse;
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  overflow: hidden;
+  font-size: 14px;
+  background: var(--surface);
+}
+
+.data-table caption {
+  caption-side: top;
+  padding: 0 0 10px;
+  color: var(--quiet);
+  font-size: 12px;
+  text-align: left;
+}
+
+.data-table th,
+.data-table td {
+  padding: 11px 14px;
+  border-bottom: 1px solid var(--line);
+  text-align: left;
+  vertical-align: top;
+}
+
+.data-table thead th {
+  color: var(--ink);
+  background: var(--surface-muted);
+  font-size: 12px;
+  font-weight: 760;
+  letter-spacing: 0.02em;
+}
+
+.data-table tbody tr:last-child td {
+  border-bottom: 0;
+}
+
+.data-table td:first-child {
+  color: var(--ink);
+  font-weight: 600;
+  white-space: nowrap;
+}
+
+.data-table td.num {
+  color: var(--mode, var(--warm));
+  font-family: var(--font-mono);
+  font-weight: 600;
+}
+
+/* ---------- 自循环流程 ---------- */
+.loop-flow {
+  margin: 24px 0;
+  padding: 22px;
+  border: 1px solid var(--line-strong);
+  border-radius: var(--radius);
+  background: var(--surface);
+}
+
+.loop-steps {
+  display: grid;
+  gap: 0;
+}
+
+.loop-step {
+  display: grid;
+  grid-template-columns: 34px 1fr;
+  gap: 14px;
+  padding: 10px 0;
+}
+
+.loop-step .step-dot {
+  width: 30px;
+  height: 30px;
+  display: grid;
+  place-items: center;
+  border: 1px solid var(--line-strong);
+  border-radius: 50%;
+  color: var(--mode, var(--warm));
+  background: var(--surface-muted);
+  font-family: var(--font-mono);
+  font-size: 13px;
+  font-weight: 700;
+}
+
+.loop-step .step-body strong {
+  display: block;
+  color: var(--ink);
+  font-size: 14px;
+}
+
+.loop-step .step-body span {
+  color: var(--muted);
+  font-size: 13px;
+}
+
+.loop-step .step-link {
+  width: 1px;
+  height: 14px;
+  margin-left: 15px;
+  background: var(--line-strong);
+}
+
+.loop-back {
+  margin-top: 12px;
+  padding: 10px 14px;
+  border: 1px dashed color-mix(in srgb, var(--warm) 50%, var(--line));
+  border-radius: var(--radius-sm);
+  color: var(--warm);
+  background: var(--warm-soft);
+  font-size: 12px;
+  text-align: center;
+}
+
+/* ---------- 失效链 → 防御点 映射 ---------- */
+.chain-map {
+  display: grid;
+  gap: 0;
+  margin: 24px 0;
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  overflow: hidden;
+}
+
+.chain-row {
+  display: grid;
+  grid-template-columns: 1fr 44px 1fr;
+  align-items: stretch;
+}
+
+.chain-row + .chain-row {
+  border-top: 1px solid var(--line);
+}
+
+.chain-row .chain-attack,
+.chain-row .chain-defense {
+  padding: 14px 16px;
+}
+
+.chain-row .chain-attack {
+  background: var(--warm-soft);
+}
+
+.chain-row .chain-defense {
+  background: var(--green-soft);
+}
+
+.chain-row .chain-tag {
+  display: block;
+  margin-bottom: 4px;
+  font-size: 10px;
+  font-weight: 780;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+
+.chain-row .chain-attack .chain-tag { color: var(--warm); }
+.chain-row .chain-defense .chain-tag { color: var(--green); }
+
+.chain-row strong {
+  color: var(--ink);
+  font-size: 14px;
+}
+
+.chain-row .chain-arrow {
+  display: grid;
+  place-items: center;
+  color: var(--quiet);
+  background: var(--surface);
+  font-size: 16px;
+}
+
+/* ---------- 判定逻辑代码卡 ---------- */
+.code-card {
+  margin: 22px 0;
+  border: 1px solid var(--line-strong);
+  border-radius: var(--radius);
+  overflow: hidden;
+  background: var(--surface);
+}
+
+.code-card .code-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 9px 16px;
+  border-bottom: 1px solid var(--line);
+  color: var(--quiet);
+  background: var(--surface-muted);
+  font-family: var(--font-mono);
+  font-size: 12px;
+}
+
+.code-card pre {
+  margin: 0;
+  padding: 18px 20px;
+  overflow-x: auto;
+  color: var(--ink);
+  font-family: var(--font-mono);
+  font-size: 13px;
+  line-height: 1.66;
+}
+
+.code-card .c-kw { color: var(--purple); }
+.code-card .c-str { color: var(--green); }
+.code-card .c-com { color: var(--quiet); font-style: italic; }
+.code-card .c-fn { color: var(--blue); }
+
+/* ---------- 攻防一体翻转 ---------- */
+.flip-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
+  margin: 22px 0;
+}
+
+.flip-card {
+  padding: 18px;
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  background: var(--surface);
+}
+
+.flip-card .flip-tag {
+  display: inline-block;
+  margin-bottom: 10px;
+  padding: 3px 9px;
+  border-radius: 5px;
+  font-size: 11px;
+  font-weight: 760;
+}
+
+.flip-card pre {
+  margin: 10px 0 0;
+  padding: 12px;
+  overflow-x: auto;
+  border-radius: var(--radius-sm);
+  background: var(--surface-muted);
+  font-family: var(--font-mono);
+  font-size: 12px;
+  line-height: 1.6;
+}
+
+.flip-offense .flip-tag { color: var(--warm); background: var(--warm-soft); }
+.flip-defense .flip-tag { color: var(--green); background: var(--green-soft); }
+
+/* ---------- 同构签名清单 ---------- */
+.signature-list {
+  margin: 20px 0;
+  padding: 0;
+  list-style: none;
+  counter-reset: sig;
+}
+
+.signature-list li {
+  counter-increment: sig;
+  position: relative;
+  margin: 10px 0;
+  padding: 14px 16px 14px 52px;
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  background: var(--surface);
+}
+
+.signature-list li::before {
+  content: counter(sig, decimal-leading-zero);
+  position: absolute;
+  left: 16px;
+  top: 15px;
+  color: var(--mode, var(--warm));
+  font-family: var(--font-mono);
+  font-size: 14px;
+  font-weight: 700;
+}
+
+.signature-list strong {
+  display: block;
+  color: var(--ink);
+  font-size: 14px;
+}
+
+.signature-list span {
+  color: var(--muted);
+  font-size: 13px;
+}
+
+/* ---------- 事实 / 推断 标注 ---------- */
+.tag-fact,
+.tag-infer {
+  display: inline-block;
+  padding: 1px 7px;
+  border-radius: 4px;
+  font-size: 11px;
+  font-weight: 700;
+  vertical-align: 1px;
+}
+
+.tag-fact {
+  color: var(--green);
+  background: var(--green-soft);
+}
+
+.tag-infer {
+  color: var(--yellow);
+  background: color-mix(in srgb, var(--yellow) 14%, var(--surface));
+}
+
+/* ---------- 防御部署架构 ---------- */
+.arch-diagram {
+  margin: 24px 0;
+  padding: 22px;
+  border: 1px solid var(--line-strong);
+  border-radius: var(--radius);
+  background: var(--surface);
+  font-family: var(--font-mono);
+  font-size: 12.5px;
+  line-height: 1.7;
+  white-space: pre;
+  overflow-x: auto;
+  color: var(--ink);
+}
+
+.arch-diagram .a-danger { color: var(--warm); }
+.arch-diagram .a-safe { color: var(--green); }
+.arch-diagram .a-dim { color: var(--quiet); }
+
+/* ---------- 页脚下一篇导航 ---------- */
+.next-nav {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
+  padding: 40px 0 64px;
+}
+
+.next-nav a {
+  padding: 18px 20px;
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  color: var(--ink);
+  background: var(--surface);
+  text-decoration: none;
+  transition: border-color 160ms ease, transform 160ms var(--ease-out);
+}
+
+.next-nav a:hover {
+  border-color: var(--line-strong);
+  transform: translateY(-2px);
+}
+
+.next-nav .next-dir {
+  display: block;
+  color: var(--quiet);
+  font-size: 11px;
+}
+
+.next-nav strong {
+  display: block;
+  margin-top: 6px;
+  font-size: 15px;
+}
+
+.next-nav .next-defense strong { color: var(--green); }
+.next-nav .next-attack strong { color: var(--warm); }
+
+/* ---------- 响应式 ---------- */
+@media (max-width: 720px) {
+  .article-hero h1 { font-size: 34px; }
+  .article-body h2 { font-size: 25px; }
+  .tvd-grid { grid-template-columns: 1fr; }
+  .channel { grid-template-columns: 1fr; gap: 6px; }
+  .flip-grid { grid-template-columns: 1fr; }
+  .chain-row { grid-template-columns: 1fr; }
+  .chain-row .chain-arrow { transform: rotate(90deg); padding: 4px 0; }
+  .next-nav { grid-template-columns: 1fr; }
+}

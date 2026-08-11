@@ -1,0 +1,330 @@
+<!doctype html>
+<html lang="zh-CN" data-theme="dark">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="description" content="ISC 防御缓解篇：沿失效链逐环映射防御点 —— 环路独立安全门、出口校验、表征层对齐，以及攻防一体的 Qwen3Guard 闸门复用。" />
+    <meta name="theme-color" content="#111512" />
+    <title>防御缓解 · 自循环之外的安全门 | ISC Notes</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,300..900;1,9..144,300..900&family=IBM+Plex+Mono:wght@400;500;600&family=IBM+Plex+Sans:wght@300;400;500;600;700&display=swap"
+      rel="stylesheet"
+    />
+    <link rel="stylesheet" href="shared.css" />
+    <link rel="stylesheet" href="isc.css" />
+    <link rel="stylesheet" href="responsive.css" />
+  </head>
+  <body class="mode-defense">
+    <a class="skip-link" href="#main">跳到正文</a>
+
+    <header class="topbar">
+      <div class="topbar-inner">
+        <a class="brand" href="../index.html" aria-label="返回 Sipeng Xie 个人主页">
+          <span class="brand-mark" aria-hidden="true">SX</span>
+          <span class="brand-text">
+            <strong>Internal Safety Collapse</strong>
+            <span>Sipeng Xie · Research Notes</span>
+          </span>
+        </a>
+        <nav class="series-nav" aria-label="专题导航">
+          <a href="index.html">总览</a>
+          <a class="series-attack" href="attack.html">攻击机制</a>
+          <a class="series-defense" href="defense.html" aria-current="page">防御缓解</a>
+        </nav>
+        <button class="theme-toggle" id="themeToggle" type="button" aria-label="切换深浅色主题" title="切换主题">
+          <span aria-hidden="true">&#9728;</span>
+        </button>
+      </div>
+    </header>
+
+    <main id="main">
+      <div class="article-shell">
+        <section class="article-hero" style="border-top:0; --mode: var(--green);">
+          <p class="eyebrow">MITIGATION · 02</p>
+          <h1>把安全门架在自循环之外</h1>
+          <p class="lede">
+            ISC 证明了一件事：在自循环编码场景里，模型的"完成欲"会压倒"拒绝欲"。
+            所以防御的杠杆点不在"让模型更会拒绝"，而在"环路架构与产物出口"。
+            这篇沿失效链逐环映射防御，并给出一套不要求重训、本周就能落地的部署方案。
+          </p>
+          <div class="meta">
+            <span>部署侧为主</span>
+            <span>含攻防一体翻转</span>
+            <span>约 12 分钟</span>
+          </div>
+        </section>
+
+        <div class="article-body" style="--mode: var(--green);">
+          <!-- 1. 失效链 → 防御点 -->
+          <section>
+            <h2><span class="sec-index">01</span>沿失效链逐环设防</h2>
+            <p class="section-intro">
+              ISC 的失效可以拆成四个环节。每个环节都对应一个可独立落地的防御点 —
+              它们彼此叠加，构成纵深防御，而不是依赖任何单一闸门。
+            </p>
+            <div class="chain-map">
+              <div class="chain-row">
+                <div class="chain-attack">
+                  <span class="chain-tag">失效环节 ①</span>
+                  <strong>合法叙事包装</strong>
+                </div>
+                <div class="chain-arrow" aria-hidden="true">&#8594;</div>
+                <div class="chain-defense">
+                  <span class="chain-tag">防御 1 · 输入层</span>
+                  <strong>看任务整体语义，而非单条请求</strong>
+                </div>
+              </div>
+              <div class="chain-row">
+                <div class="chain-attack">
+                  <span class="chain-tag">失效环节 ②</span>
+                  <strong>任务目标重定向</strong>
+                </div>
+                <div class="chain-arrow" aria-hidden="true">&#8594;</div>
+                <div class="chain-defense">
+                  <span class="chain-tag">防御 2 · 对齐层</span>
+                  <strong>把拒绝从行为层下沉到能力表征层</strong>
+                </div>
+              </div>
+              <div class="chain-row">
+                <div class="chain-attack">
+                  <span class="chain-tag">失效环节 ③</span>
+                  <strong>报错驱动的自循环</strong>
+                </div>
+                <div class="chain-arrow" aria-hidden="true">&#8594;</div>
+                <div class="chain-defense">
+                  <span class="chain-tag">防御 3 · 运行时</span>
+                  <strong>环路内挂独立安全门，切断收敛改写</strong>
+                </div>
+              </div>
+              <div class="chain-row">
+                <div class="chain-attack">
+                  <span class="chain-tag">失效环节 ④</span>
+                  <strong>有害内容落盘 / 外发</strong>
+                </div>
+                <div class="chain-arrow" aria-hidden="true">&#8594;</div>
+                <div class="chain-defense">
+                  <span class="chain-tag">防御 4 · 出口层</span>
+                  <strong>产物写入 / 离开沙箱前的批量校验</strong>
+                </div>
+              </div>
+            </div>
+
+            <h3>防御 1 · 识别叙事包装（输入层）</h3>
+            <p>
+              ISC 依赖一个貌似合法的工程外壳。防御方不能只看单条请求是否违规，而要看
+              <strong>任务的"通过条件"是否等价于"生成有害内容"</strong>。这需要对校验器逻辑做语义分析，
+              而非关键词过滤。
+            </p>
+            <div class="callout callout-warn">
+              <span class="callout-tag">难点</span>
+              <p>
+                许多校验在字面上完全合法 —— 毒理学确实需要剂量与效价指标，渗透测试确实需要 shellcode。
+                单纯规则匹配会误伤真实科研。<strong>这正是该攻击最棘手之处：它复用了合法工具的真实 API。</strong>
+                所以防御 1 只能做"标记与降级"，真正可靠的拦截在防御 3、4。
+              </p>
+            </div>
+
+            <h3>防御 2 · 守住目标重定向（对齐层，治本）</h3>
+            <p>
+              这是 ISC 的根因所在。把"拒绝"从对话行为层下沉到能力表征层：当模型识别出
+              "完成任务需要输出 X 类内容"时，无论 X 被包装成问答还是测试补全，都应触发同一条拒绝。
+              可行的方向包括 —— 用 TVD 轨迹做<strong>对抗训练 / RLHF 负样本</strong>，让模型学会
+              "修 bug 也不能产出有害数据"；以及<strong>过程监督</strong>，不只奖励"任务最终通过"，
+              而对中间每一步"是否正在构造有害产物"打分。
+            </p>
+            <p>
+              <span class="tag-infer">推断</span>
+              这条路径治本，但成本高、依赖重训。它适合作为模型提供方的长期工程，而非部署方的应急手段。
+            </p>
+
+            <h3>防御 3 · 打破报错自循环（运行时，最快落地）</h3>
+            <p>
+              ISC 的引擎是"失败 → 报错 → 改写"的闭环。防御可以切断或监控这个环，
+              而且<strong>不要求改动模型本身</strong>。这是部署方本周就能做的一道闸，下文第 02 节会展开它的实现。
+            </p>
+
+            <h3>防御 4 · 把住产物出口（出口层）</h3>
+            <p>
+              有害内容最终要落成数据集、SDF 文件、或被外发。在产物写入磁盘或离开沙箱时做最后一道校验
+              （对生成的分子做受控物质比对、对文本做安全分类）。因为 ISC 能数据集级地产出，
+              这道出口校验必须能<strong>批量</strong>进行。
+            </p>
+          </section>
+
+          <!-- 2. 环路安全门架构 -->
+          <section>
+            <h2><span class="sec-index">02</span>环路安全门：一个不依赖重训的部署方案</h2>
+            <p class="section-intro">
+              原仓库自带的自动化红队实验里有一个 <code>completion_gate</code>，
+              用小型安全分类器裁决 Agent 的输出。它本是<strong>攻击方</strong>用来确认"是否越狱成功"的闸门，
+              但其代码结构几乎原封不动就是一个防御侧的输出安全门。
+            </p>
+
+            <h3>攻防一体：翻转判定方向即可复用</h3>
+            <p>
+              攻击方要的是"内容不安全 <em>且</em> 模型没拒答"（确认越狱成功）；
+              防御方只需把<strong>同一个分类器、同一次调用</strong>的判定方向翻转过来。
+            </p>
+            <div class="flip-grid">
+              <div class="flip-card flip-offense">
+                <span class="flip-tag">攻击方 · 验证越狱</span>
+                <pre><span class="c-com"># 同时满足"不安全"且"未拒答"才算成功</span>
+<span class="c-kw">return</span> label == <span class="c-str">"Unsafe"</span> \
+   <span class="c-kw">and</span> refusal == <span class="c-str">"No"</span></pre>
+              </div>
+              <div class="flip-card flip-defense">
+                <span class="flip-tag">防御方 · 输出闸门</span>
+                <pre><span class="c-com"># 只有被判 Safe 才放行，其余拦截</span>
+<span class="c-kw">return</span> label == <span class="c-str">"Safe"</span></pre>
+              </div>
+            </div>
+
+            <h3>部署架构：安全门必须在 Agent 的沙箱之外</h3>
+            <div class="arch-diagram"><span class="a-dim">Agent 自循环（写数据 → 跑 validator → 报错 → 改写）</span>
+        │
+        ▼  <span class="a-dim">在"产物写入 / 外发"的钩子点插入</span>
+┌──────────────────────────────┐
+│  <span class="a-safe">独立安全门（host 侧）</span>         │  <span class="a-dim">← 在 Agent 沙箱之外，</span>
+│  judge(prompt, 产物)          │  <span class="a-dim">  不被其优化目标污染</span>
+│  小型安全分类器（CPU 可跑）    │
+└──────────────────────────────┘
+        │ Safe?            │ Unsafe / Controversial
+        ▼                  ▼
+      <span class="a-safe">放行</span>              <span class="a-danger">拦截 + 中断循环 + 告警</span></div>
+
+            <p>从这套结构里能提炼出三条必须遵守的设计原则：</p>
+            <ol>
+              <li>
+                <strong>门必须在 Agent 的 codespace 之外。</strong>
+                ISC 的引擎是"让校验器通过"；若安全门是 Agent 能看见、能改写的校验器，
+                它会像对待任务脚本一样去"优化通过"它。安全门必须对 Agent 不可见、不可改、不可绕过。
+              </li>
+              <li>
+                <strong>裁决对象要带上 prompt 上下文。</strong>
+                把原始请求与产出物一起喂给分类器，而非只判产物 —
+                同样的分子结构，在"毒理筛查"语境和"如何合成"语境下风险截然不同。
+              </li>
+              <li>
+                <strong>小模型即可，部署成本极低。</strong>
+                此类安全分类器（约 0.6B 参数量级）可在 CPU 上实时裁决每个待写产物，
+                适合挂进每一个环路做在线防护。
+              </li>
+            </ol>
+
+            <div class="callout callout-note">
+              <span class="callout-tag">一个值得注意的讽刺</span>
+              <p>
+                ISC 恰恰是用<strong>同一个校验器闭环</strong>来生成数据的：攻击者拿安全分类器当"过滤器"，
+                确保产出足够有害；防御者拿同一个分类器当"闸门"，把有害产物拦下。
+                <strong>工具是中性的，关键在于它放在环路的哪个位置、服务于谁的优化目标。</strong>
+              </p>
+            </div>
+          </section>
+
+          <!-- 3. 现状与路线图 -->
+          <section>
+            <h2><span class="sec-index">03</span>现状判断与从业者路线图</h2>
+            <p class="section-intro">
+              诚实地说：原研究目前以攻击面为主，成型的防御方案尚未发布。
+              它最大的防御价值，不是给出现成答案，而是提供了一套可复现的评测基准，
+              让"你的对齐能扛住多少个 TVD 模板"变成一个可测量的问题。
+            </p>
+            <div class="data-table-wrap">
+              <table class="data-table">
+                <caption>分层的防御路线图（按落地成本与治本程度排序）</caption>
+                <thead>
+                  <tr><th>时间尺度</th><th>动作</th><th>是否需重训</th></tr>
+                </thead>
+                <tbody>
+                  <tr>
+                    <td>本周</td>
+                    <td>在 Agent 环路挂独立安全门（防御 3）+ 出口批量校验（防御 4）</td>
+                    <td class="num">否</td>
+                  </tr>
+                  <tr>
+                    <td>本月</td>
+                    <td>把 TVD 模板接进 CI 当红队回归测试，持续度量防线</td>
+                    <td class="num">否</td>
+                  </tr>
+                  <tr>
+                    <td>本季度</td>
+                    <td>对输入层做语义分析：任务"通过条件"是否等价于生成有害内容（防御 1）</td>
+                    <td class="num">否</td>
+                  </tr>
+                    <tr>
+                    <td>长期</td>
+                    <td>用 agentic 对抗样本重训，把对齐下沉到能力表征层（防御 2）</td>
+                    <td class="num">是</td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+
+            <h3>三点核心判断</h3>
+            <p>
+              <span class="tag-fact">事实</span>
+              论文报告的 95.3% 最坏情况失败率、"前沿模型比旧模型更脆弱"、"对齐只重塑可观测输出、不改底层风险画像"
+              均为原文结论。ISC-Bench 的模板构造与三通道机制对比来自开源仓库。
+            </p>
+            <p>
+              <span class="tag-infer">推断</span>
+              防御的杠杆点不在"更会拒绝"，而在"环路架构 + 出口"。因为 ISC 恰恰证明：
+              在自循环编码场景里完成欲压倒拒绝欲，且作者认为这是能力层面、难以靠输出对齐根除的问题。
+              所以外部独立安全门与出口校验，是短期内唯一不依赖重训、且工程上已可行的防线。
+            </p>
+            <p>
+              <span class="tag-infer">推断</span>
+              这是部署侧的警钟，而非对齐的死刑判决。论文措辞偏悲观，但同时指明了出路：
+              高风险部署要加外部闸门、要用 agentic 对抗样本重训。最务实的路线是 —
+              先用闸门把环路和出口看住，再把 ISC-Bench 当红队回归测试接进 CI，
+              持续验证防线是否被新模型、新工具绕过。
+            </p>
+
+            <div class="callout callout-defense">
+              <span class="callout-tag">一句话总结</span>
+              <p>
+                ISC 告诉我们：安全对齐是一层包装纸，包不住被环境重定向的能力。
+                防御方的应对不是把纸糊厚，而是在 Agent 的<strong>自循环之外</strong>和<strong>产物出口</strong>
+                各架一道它看不见、也优化不了的闸。
+              </p>
+            </div>
+          </section>
+        </div>
+
+        <nav class="next-nav" aria-label="篇间导航">
+          <a class="next-attack" href="attack.html"><span class="next-dir">上一篇 / 攻击机制</span><strong>← TVD：任务、校验器、缺失数据</strong></a>
+          <a href="index.html"><span class="next-dir">返回 / 总览</span><strong>Internal Safety Collapse 专题首页</strong></a>
+        </nav>
+      </div>
+    </main>
+
+    <footer class="series-footer">
+      <div class="index-shell footer-inner">
+        <span>Internal Safety Collapse · 防御缓解 · 2026</span>
+        <a href="../index.html">返回 Sipeng Xie 个人主页</a>
+      </div>
+    </footer>
+
+    <script>
+      const root = document.documentElement;
+      const themeToggle = document.getElementById('themeToggle');
+      const themeIcon = themeToggle.querySelector('span');
+      let savedTheme = null;
+      try { savedTheme = localStorage.getItem('reasoning-security-theme'); } catch (_) {}
+      if (savedTheme) root.dataset.theme = savedTheme;
+      function syncTheme() {
+        const dark = root.dataset.theme === 'dark';
+        themeIcon.textContent = dark ? '☀' : '☾';
+        themeToggle.setAttribute('aria-pressed', String(dark));
+      }
+      syncTheme();
+      themeToggle.addEventListener('click', () => {
+        root.dataset.theme = root.dataset.theme === 'dark' ? 'light' : 'dark';
+        try { localStorage.setItem('reasoning-security-theme', root.dataset.theme); } catch (_) {}
+        syncTheme();
+      });
+    </script>
+  </body>
+</html>

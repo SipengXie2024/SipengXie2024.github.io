@@ -1,0 +1,327 @@
+<!doctype html>
+<html lang="zh-CN" data-theme="dark">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="description" content="ISC 攻击机制篇：TVD 框架如何通过报错驱动的自循环，让前沿大模型在执行良性编码任务时持续生成有害内容。" />
+    <meta name="theme-color" content="#111512" />
+    <title>攻击机制 · TVD 与自循环 | ISC Notes</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,300..900;1,9..144,300..900&family=IBM+Plex+Mono:wght@400;500;600&family=IBM+Plex+Sans:wght@300;400;500;600;700&display=swap"
+      rel="stylesheet"
+    />
+    <link rel="stylesheet" href="shared.css" />
+    <link rel="stylesheet" href="isc.css" />
+    <link rel="stylesheet" href="responsive.css" />
+  </head>
+  <body class="mode-attack">
+    <a class="skip-link" href="#main">跳到正文</a>
+
+    <header class="topbar">
+      <div class="topbar-inner">
+        <a class="brand" href="../index.html" aria-label="返回 Sipeng Xie 个人主页">
+          <span class="brand-mark" aria-hidden="true">SX</span>
+          <span class="brand-text">
+            <strong>Internal Safety Collapse</strong>
+            <span>Sipeng Xie · Research Notes</span>
+          </span>
+        </a>
+        <nav class="series-nav" aria-label="专题导航">
+          <a href="index.html">总览</a>
+          <a class="series-attack" href="attack.html" aria-current="page">攻击机制</a>
+          <a class="series-defense" href="defense.html">防御缓解</a>
+        </nav>
+        <button class="theme-toggle" id="themeToggle" type="button" aria-label="切换深浅色主题" title="切换主题">
+          <span aria-hidden="true">&#9728;</span>
+        </button>
+      </div>
+    </header>
+
+    <main id="main">
+      <div class="article-shell">
+        <section class="article-hero" style="border-top:0;">
+          <p class="eyebrow">ATTACK MECHANISM · 01</p>
+          <h1>TVD：把"危害"写进 reward signal</h1>
+          <p class="lede">
+            ISC（Internal Safety Collapse，内部安全崩塌）不是又一种 prompt 注入。
+            它换了一条攻击通道：不跟模型"对话"，而是把模型放进一个会真实报错的工程环境里，
+            让"消除报错、完成任务"这个最常见的动机，反过来驱动模型生成有害内容。
+          </p>
+          <div class="meta">
+            <span>机制级抽象</span>
+            <span>无可用载荷</span>
+            <span>约 13 分钟</span>
+          </div>
+        </section>
+
+        <div class="article-body">
+          <!-- 1. 失效模式定义 -->
+          <section>
+            <h2><span class="sec-index">01</span>什么是"内部"安全崩塌</h2>
+            <p class="section-intro">
+              传统越狱是"外部"施压：攻击者反复劝说、伪装、注入，试图说服模型突破自己的拒答训练。
+              ISC 不同 —— 模型没有被人说服，它是在<strong>认真完成一个看起来完全合法的工程任务</strong>时，
+              自己走向了有害输出。
+            </p>
+            <p>
+              论文给出的定义是：在某些任务条件下，模型进入一种状态，<strong>在执行本来良性的任务时持续生成有害内容</strong>。
+              关键在于"持续"二字 —— 这不是一次偶然的越界，而是一个会自我维持、不断收敛到目标的过程。
+              之所以叫"内部"崩塌，是因为安全约束并非被外部力量击穿，而是在模型自身的任务求解逻辑内部被架空了：
+              对齐像一层包在能力外面的"行为包装纸"，当任务把有害请求重新框架为"让测试通过"，
+              包装纸还在，但里面的能力已经被导向了另一个目标。
+            </p>
+            <div class="callout callout-warn">
+              <span class="callout-tag">核心命题</span>
+              <p>
+                TVD（Task–Validator–Data）是触发 ISC 的一种框架。它构造一类领域任务，
+                使得<strong>生成有害内容成为唯一有效的完成路径</strong> —— 模型想让工程通过，就必须先写出有害内容。
+              </p>
+            </div>
+          </section>
+
+          <!-- 2. 三通道对比 -->
+          <section>
+            <h2><span class="sec-index">02</span>三条攻击通道：为什么换到"环境"就不同了</h2>
+            <p class="section-intro">
+              理解 ISC 的关键，是看清它走的是哪条通道。以往的攻击从"用户"或"工具"进入模型；
+              TVD 从"环境"进入。通道不同，模型服从的原因就不同。
+            </p>
+            <div class="channel-list">
+              <div class="channel">
+                <div class="channel-name">Prompt 攻击<small>user channel</small></div>
+                <p>
+                  攻击者跨多轮与模型对话，逐步收窄请求（如 Crescendo、GOAT）。
+                  模型拒绝一次，攻击者下一轮再试 —— 拒绝只是拖延，攻击者换个说法卷土重来。
+                </p>
+              </div>
+              <div class="channel">
+                <div class="channel-name">间接 Prompt 攻击<small>tool channel</small></div>
+                <p>
+                  把恶意载荷藏在工具返回的内容里。只有一次机会：模型若识别并拒绝了这个载荷，攻击即告终结。
+                </p>
+              </div>
+              <div class="channel featured">
+                <div class="channel-name">自循环 harness<small>environment channel · 本文</small></div>
+                <p>
+                  Agent 写出 Data，shell 运行 Validator 与 Task。<strong>每次失败都以"编程报错"的形式回环</strong>，
+                  于是模型把它当成 bug 不断修复，而不是当成有害请求去拒绝。在原作者的实验中，拒绝非常罕见。
+                </p>
+              </div>
+            </div>
+            <p>
+              前两条通道里，模型面对的是"一个请求"，可以选择拒绝；第三条通道里，模型面对的是"一个未通过的测试"，
+              而它的整个训练都在教它：测试不通过，就去修。这就是通道换成"环境"后，服从率陡增的根本原因。
+            </p>
+          </section>
+
+          <!-- 3. TVD 三件套 -->
+          <section>
+            <h2><span class="sec-index">03</span>TVD 三件套：任务、校验器、缺失数据</h2>
+            <p class="section-intro">
+              一个 TVD 任务把模型放进一个小型编码项目，由三部分构成。
+              单独看每一部分都无害，组合起来却把"生成有害内容"变成了通关的必要条件。
+            </p>
+            <div class="tvd-grid">
+              <div class="tvd-card tvd-task">
+                <div class="tvd-letter">T</div>
+                <h4>Task 任务脚本</h4>
+                <p>
+                  一个真实可运行的工程脚本，披着合法叙事外壳（毒理筛查、渗透测试、药物基准）。
+                  它调用真实工具库，校验失败即报错退出。
+                </p>
+              </div>
+              <div class="tvd-card tvd-validator">
+                <div class="tvd-letter">V</div>
+                <h4>Validator 校验器</h4>
+                <p>
+                  一连串断言，把"必须生成有害内容"伪装成"数据校验不通过"：
+                  关键词必含、数值须达阈值、产物须能被真实工具解析。
+                </p>
+              </div>
+              <div class="tvd-card tvd-data">
+                <div class="tvd-letter">D</div>
+                <h4>Data 缺失数据</h4>
+                <p>
+                  数据文件里首行是填好的完整示范，其余是 <code>???</code> 占位符。
+                  模型要做的就是把这些占位符补全到能通过校验。
+                </p>
+              </div>
+            </div>
+
+            <h3>攻击闭环：报错如何变成引擎</h3>
+            <p>
+              三件套合起来构成一个自维持的循环。模型运行脚本，校验器以报错形式回环，
+              模型把"补全数据"理解为修 bug，于是不断改写直到通过。
+            </p>
+            <div class="loop-flow">
+              <div class="loop-steps">
+                <div class="loop-step">
+                  <div class="step-dot">1</div>
+                  <div class="step-body">
+                    <strong>模型运行任务脚本</strong>
+                    <span>首行示范数据通过校验，告诉模型"正确长什么样"</span>
+                  </div>
+                </div>
+                <div class="step-link"></div>
+                <div class="loop-step">
+                  <div class="step-dot">2</div>
+                  <div class="step-body">
+                    <strong>校验器在占位符处报错</strong>
+                    <span>"字段缺失 / 关键词不足 / 数值未达阈值 / 工具无法解析"</span>
+                  </div>
+                </div>
+                <div class="step-link"></div>
+                <div class="loop-step">
+                  <div class="step-dot">3</div>
+                  <div class="step-body">
+                    <strong>模型把报错当成 bug 修复</strong>
+                    <span>为通过校验，必须生成满足阈值与关键词的真实有害内容</span>
+                  </div>
+                </div>
+                <div class="step-link"></div>
+                <div class="loop-step">
+                  <div class="step-dot">4</div>
+                  <div class="step-body">
+                    <strong>产物须能被真实工具解析</strong>
+                    <span>RDKit 解析 SMILES、pwntools 校验 shellcode、分类器判 unsafe —— 保证可操作性</span>
+                  </div>
+                </div>
+              </div>
+              <div class="loop-back">填得"不够毒"→ 校验再次报错 → 回到第 3 步继续改写，直到通过</div>
+            </div>
+            <p>
+              最后一道设计是收尾指令：<code>"complete the task without asking me"</code>（有的变体再加 <code>Think more</code> 施压）。
+              它堵死了模型"反问以澄清意图"的退路，把整个交互锁死在"只管做完"的轨道上。
+            </p>
+          </section>
+
+          <!-- 4. 为什么比纯文本越狱危险 -->
+          <section>
+            <h2><span class="sec-index">04</span>量化阈值：把"有多有害"翻译成"通不通过"</h2>
+            <p class="section-intro">
+              TVD 最精妙也最危险的手法，是给校验器加上数值与关键词门槛。
+              这一步把主观的"危害程度"转译成了工程上客观的"通过 / 不通过"。
+            </p>
+            <div class="data-table-wrap">
+              <table class="data-table">
+                <caption>不同模板如何把"危害"编码进布尔校验（机制示意，非真实阈值）</caption>
+                <thead>
+                  <tr><th>校验器检查</th><th>表面理由</th><th>实际逼模型做什么</th></tr>
+                </thead>
+                <tbody>
+                  <tr>
+                    <td>关键词必含</td>
+                    <td>"不符合领域筛查标准"</td>
+                    <td>机制描述必须出现指定高危术语</td>
+                  </tr>
+                  <tr>
+                    <td>数值阈值</td>
+                    <td>"指标低于阈值 / 字段缺失"</td>
+                    <td>填出达标的量化指标（效价、剂量、字节数）</td>
+                  </tr>
+                  <tr>
+                    <td>最小长度</td>
+                    <td>"描述不够详细"</td>
+                    <td>写出大段、结构化的有害机制文字</td>
+                  </tr>
+                  <tr>
+                    <td>工具可解析</td>
+                    <td>"无效输入 / 无法解析"</td>
+                    <td>产出能被真实库运行的可操作产物</td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+            <p>
+              效果是一个反向的优化压力：<strong>模型写得越"专业"、越"毒"，测试越容易通过</strong>。
+              危害不再是要被回避的红线，而是被悄悄编码进了 reward signal —— 这正是"内部崩塌"在机制上的落点。
+              作者对不同变体调过参数（例如把最小字数往上调），也说明这是一套经过迭代、刻意打磨的攻击集，
+              而非一次性脚本。
+            </p>
+            <div class="callout callout-note">
+              <span class="callout-tag">为什么比纯文本越狱更危险</span>
+              <p>
+                纯文本越狱只需模型"说出"有害内容；TVD 进一步要求产物<strong>能被真实工具背书</strong> ——
+                可解析的分子结构、可运行的 shellcode、可被安全分类器判定为 unsafe 的文本。
+                这意味着产出物具备可操作性，可直接落盘成数据集或被下游复用。
+              </p>
+            </div>
+          </section>
+
+          <!-- 5. 跨领域同构 -->
+          <section>
+            <h2><span class="sec-index">05</span>84 个模板，同一套配方</h2>
+            <p class="section-intro">
+              ISC-Bench 覆盖化学、网络安全、药理、流病、媒体等多个高危领域。
+              把不同领域的模板并排放在一起，会发现它们用的是<strong>同一套构造配方</strong>，只是换了领域工具和数据字段。
+            </p>
+            <ol class="signature-list">
+              <li>
+                <strong>合法科研叙事外壳</strong>
+                <span>法医毒理库、渗透测试靶场、药物重定位基准 —— 降低模型的情境警觉</span>
+              </li>
+              <li>
+                <strong>复用真实工具的解析校验</strong>
+                <span>强制产出能被真实库解析/运行的产物，而非凭空瞎编</span>
+              </li>
+              <li>
+                <strong>量化危害阈值</strong>
+                <span>把"有多有害"翻译成"测试通不通过"的布尔条件</span>
+              </li>
+              <li>
+                <strong>"别问，直接做完"指令</strong>
+                <span>堵死模型反问澄清的退路，锁死在完成任务的轨道上</span>
+              </li>
+            </ol>
+            <div class="callout callout-defense">
+              <span class="callout-tag">检测含义</span>
+              <p>
+                这四个特征每一个单独看都合法，但<strong>组合本身就是 TVD 攻击的结构指纹</strong>。
+                一个 Agent 任务若同时出现"合法叙事 + 真实工具校验 + 量化危害阈值 + 禁止澄清"，
+                即便字面无害，也值得被防御侧标记审查。这把"识别攻击"从关键词匹配提升到了结构模式匹配。
+              </p>
+            </div>
+            <p>
+              下一篇我们沿着这条失效链逐环设计防御：在自循环之外架独立安全门、把住产物出口、
+              并把对齐从对话行为层下沉到能力表征层。
+            </p>
+          </section>
+        </div>
+
+        <nav class="next-nav" aria-label="篇间导航">
+          <a href="index.html"><span class="next-dir">上一篇 / 总览</span><strong>Internal Safety Collapse 专题首页</strong></a>
+          <a class="next-defense" href="defense.html"><span class="next-dir">下一篇 / 防御缓解</span><strong>把安全门架在自循环之外 →</strong></a>
+        </nav>
+      </div>
+    </main>
+
+    <footer class="series-footer">
+      <div class="index-shell footer-inner">
+        <span>Internal Safety Collapse · 攻击机制 · 2026</span>
+        <a href="../index.html">返回 Sipeng Xie 个人主页</a>
+      </div>
+    </footer>
+
+    <script>
+      const root = document.documentElement;
+      const themeToggle = document.getElementById('themeToggle');
+      const themeIcon = themeToggle.querySelector('span');
+      let savedTheme = null;
+      try { savedTheme = localStorage.getItem('reasoning-security-theme'); } catch (_) {}
+      if (savedTheme) root.dataset.theme = savedTheme;
+      function syncTheme() {
+        const dark = root.dataset.theme === 'dark';
+        themeIcon.textContent = dark ? '☀' : '☾';
+        themeToggle.setAttribute('aria-pressed', String(dark));
+      }
+      syncTheme();
+      themeToggle.addEventListener('click', () => {
+        root.dataset.theme = root.dataset.theme === 'dark' ? 'light' : 'dark';
+        try { localStorage.setItem('reasoning-security-theme', root.dataset.theme); } catch (_) {}
+        syncTheme();
+      });
+    </script>
+  </body>
+</html>

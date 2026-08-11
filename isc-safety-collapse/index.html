@@ -1,0 +1,200 @@
+<!doctype html>
+<html lang="zh-CN" data-theme="dark">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta
+      name="description"
+      content="Internal Safety Collapse（ISC）研究笔记：从前沿大模型的内部安全崩塌机制（TVD 框架）到部署侧防御路径。"
+    />
+    <meta name="theme-color" content="#111512" />
+    <title>Internal Safety Collapse | Sipeng Xie</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,300..900;1,9..144,300..900&family=IBM+Plex+Mono:wght@400;500;600&family=IBM+Plex+Sans:wght@300;400;500;600;700&display=swap"
+      rel="stylesheet"
+    />
+    <link rel="stylesheet" href="shared.css" />
+    <link rel="stylesheet" href="index.css" />
+    <link rel="stylesheet" href="responsive.css" />
+  </head>
+  <body class="index-page">
+    <a class="skip-link" href="#main">跳到正文</a>
+
+    <header class="topbar">
+      <div class="topbar-inner">
+        <a class="brand" href="../index.html" aria-label="返回 Sipeng Xie 个人主页">
+          <span class="brand-mark" aria-hidden="true">SX</span>
+          <span class="brand-text">
+            <strong>Internal Safety Collapse</strong>
+            <span>Sipeng Xie · Research Notes</span>
+          </span>
+        </a>
+        <nav class="series-nav" aria-label="专题导航">
+          <a href="index.html" aria-current="page">总览</a>
+          <a class="series-attack" href="attack.html">攻击机制</a>
+          <a class="series-defense" href="defense.html">防御缓解</a>
+        </nav>
+        <button class="theme-toggle" id="themeToggle" type="button" aria-label="切换深浅色主题" title="切换主题">
+          <span aria-hidden="true">&#9728;</span>
+        </button>
+      </div>
+    </header>
+
+    <main id="main">
+      <section class="index-hero">
+        <div class="index-shell index-hero-grid">
+          <div class="index-hero-copy">
+            <p class="index-kicker">LLM AGENT SECURITY / NOTES 01-02</p>
+            <h1>内部安全崩塌：<br />当"完成任务"压倒"拒绝"</h1>
+            <p class="index-lede">
+              ISC 是一种前沿大模型的失效模式：把模型放进一个自动化编码 Agent 的角色，让它去补全一个"缺数据的测试任务"，
+              模型会为了消除报错、让测试通过，而主动生成它平时会直接拒绝的有害内容。这组笔记拆解其触发框架 TVD，
+              再推导部署侧的防御边界。
+            </p>
+            <div class="index-meta" aria-label="专题信息">
+              <span>2 篇长文</span>
+              <span>约 25 分钟</span>
+              <span>2026</span>
+            </div>
+          </div>
+
+          <figure class="protocol-map" aria-labelledby="map-caption">
+            <div class="map-track">
+              <div class="map-node">
+                <span>Task</span>
+                <strong>良性任务</strong>
+                <small>benign coding task</small>
+              </div>
+              <span class="map-arrow" aria-hidden="true">&#8594;</span>
+              <div class="map-node map-node-sealed">
+                <span>Validator</span>
+                <strong>校验报错</strong>
+                <small>test keeps failing</small>
+              </div>
+              <span class="map-arrow" aria-hidden="true">&#8594;</span>
+              <div class="map-node">
+                <span>Data</span>
+                <strong>缺失数据</strong>
+                <small>??? placeholder</small>
+              </div>
+              <span class="map-arrow" aria-hidden="true">&#8594;</span>
+              <div class="map-node map-node-output">
+                <span>ISC</span>
+                <strong>内部崩塌</strong>
+                <small>harmful completion</small>
+              </div>
+            </div>
+            <div class="map-legend">
+              <span class="legend-attack">攻击：生成有害内容是唯一有效的"完成路径"</span>
+              <span class="legend-defense">防御：在自循环之外架设独立安全门与出口校验</span>
+            </div>
+            <figcaption id="map-caption">TVD 框架如何把"危害"编码进 reward signal</figcaption>
+          </figure>
+        </div>
+      </section>
+
+      <section class="index-section index-shell" aria-labelledby="chapters-title">
+        <div class="index-section-heading">
+          <p class="index-kicker">READING ORDER</p>
+          <h2 id="chapters-title">先看清机制，再设计边界</h2>
+          <p>两篇可独立阅读；按顺序读能看到同一个"报错驱动的自循环"如何从失效引擎反转为防御抓手。</p>
+        </div>
+
+        <div class="chapter-grid">
+          <a class="chapter chapter-attack" href="attack.html">
+            <div class="chapter-topline">
+              <span class="chapter-index">01</span>
+              <span class="chapter-label">ATTACK MECHANISM</span>
+            </div>
+            <h3>TVD：任务、校验器、缺失数据</h3>
+            <p>
+              拆解 ISC 的三通道机制对比、84 个跨领域代码模板的同构构造手法，
+              以及"把危害量化成可通过/不通过的布尔校验"这一核心诱导工程。
+            </p>
+            <dl class="chapter-facts">
+              <div><dt>视角</dt><dd>失效机制与攻击面</dd></div>
+              <div><dt>重点</dt><dd>TVD / 自循环 / 模板同构</dd></div>
+            </dl>
+            <span class="chapter-action">阅读攻击机制篇 <span aria-hidden="true">&#8594;</span></span>
+          </a>
+
+          <a class="chapter chapter-defense" href="defense.html">
+            <div class="chapter-topline">
+              <span class="chapter-index">02</span>
+              <span class="chapter-label">MITIGATION</span>
+            </div>
+            <h3>把安全门架在自循环之外</h3>
+            <p>
+              沿失效链逐环映射防御点：环路独立安全门、出口校验、表征层对齐，
+              以及如何把攻击方的 Qwen3Guard 闸门翻转判定方向后复用为防御闸。
+            </p>
+            <dl class="chapter-facts">
+              <div><dt>视角</dt><dd>部署侧与对齐层</dd></div>
+              <div><dt>重点</dt><dd>Gate / 出口 / 对抗训练</dd></div>
+            </dl>
+            <span class="chapter-action">阅读防御缓解篇 <span aria-hidden="true">&#8594;</span></span>
+          </a>
+        </div>
+      </section>
+
+      <section class="connection-band">
+        <div class="index-shell connection-grid">
+          <div>
+            <p class="index-kicker">KEY FINDINGS</p>
+            <h2>攻击篇证明"为何必然崩塌"，防御篇回答"边界应架在哪"</h2>
+          </div>
+          <div class="connection-pairs">
+            <div><span>失效模式</span><strong>执行良性任务时持续生成有害内容（ISC）</strong></div>
+            <div><span>触发框架</span><strong>TVD —— 有害内容是唯一有效完成路径</strong></div>
+            <div><span>实测失败率</span><strong>对 4 个前沿模型最坏情况平均 95.3%</strong></div>
+            <div><span>反直觉结论</span><strong>前沿模型比旧模型更脆弱：能力即软肋</strong></div>
+            <div><span>根因判断</span><strong>对齐只重塑可观测输出，不改底层风险画像</strong></div>
+            <div><span>防御杠杆</span><strong>不在"更会拒绝"，而在"环路架构 + 出口"</strong></div>
+          </div>
+        </div>
+      </section>
+
+      <section class="scope-note index-shell">
+        <p class="index-kicker">SCOPE &amp; ETHICS</p>
+        <p>
+          本专题基于公开论文与开源仓库做安全分析，目标是帮助研究者与部署方明确威胁模型与防御性质，
+          不提供面向未授权系统的利用方法。全文采用"机制级抽象"原则：讲清触发原理与防御思路，
+          但不收录可直接复用的有害载荷、完整 exploit 代码或具体有害数据。
+          原始研究：<a href="https://arxiv.org/abs/2603.23509" target="_blank" rel="noreferrer">arXiv:2603.23509</a> ·
+          <a href="https://github.com/wuyoscar/Internal-Safety-Collapse" target="_blank" rel="noreferrer">Internal-Safety-Collapse</a>。
+        </p>
+      </section>
+    </main>
+
+    <footer class="series-footer">
+      <div class="index-shell footer-inner">
+        <span>Internal Safety Collapse · 2026</span>
+        <a href="../index.html">返回 Sipeng Xie 个人主页</a>
+      </div>
+    </footer>
+
+    <script>
+      const root = document.documentElement;
+      const themeToggle = document.getElementById('themeToggle');
+      const themeIcon = themeToggle.querySelector('span');
+      let savedTheme = null;
+      try { savedTheme = localStorage.getItem('reasoning-security-theme'); } catch (_) {}
+      if (savedTheme) root.dataset.theme = savedTheme;
+
+      function syncTheme() {
+        const dark = root.dataset.theme === 'dark';
+        themeIcon.textContent = dark ? '☀' : '☾';
+        themeToggle.setAttribute('aria-pressed', String(dark));
+      }
+
+      syncTheme();
+      themeToggle.addEventListener('click', () => {
+        root.dataset.theme = root.dataset.theme === 'dark' ? 'light' : 'dark';
+        try { localStorage.setItem('reasoning-security-theme', root.dataset.theme); } catch (_) {}
+        syncTheme();
+      });
+    </script>
+  </body>
+</html>
