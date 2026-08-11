@@ -1,0 +1,306 @@
+<!doctype html>
+<html lang="zh-CN" data-theme="dark">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta
+      name="description"
+      content="一篇机制可解释性学习笔记：用 difference-in-means 定位 LLM 激活空间中的单一拒绝方向，并通过正交投影在运行时或权重级将其消融。附完整优化路线与数据质量原则。"
+    />
+    <meta name="theme-color" content="#10140f" />
+    <title>消融"拒绝"：定位并移除 LLM 的拒绝方向 | Sipeng Xie</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,300..900;1,9..144,300..900&family=IBM+Plex+Mono:wght@400;500;600&family=IBM+Plex+Sans:wght@300;400;500;600;700&display=swap"
+      rel="stylesheet"
+    />
+    <link rel="stylesheet" href="../styles.css" />
+    <link rel="stylesheet" href="styles.css" />
+  </head>
+  <body>
+    <a class="skip-link" href="#main">跳到正文</a>
+
+    <header class="site-header">
+      <div class="header-inner">
+        <a class="brand" href="../index.html" aria-label="返回 Sipeng Xie 个人主页">
+          <span class="brand-mark" aria-hidden="true">SX</span>
+          <span class="brand-text">
+            <strong>Refusal Direction Notes</strong>
+            <span>Sipeng Xie · 研究笔记</span>
+          </span>
+        </a>
+        <nav class="nav" aria-label="文章导航">
+          <a href="#idea">思路</a>
+          <a href="#method">方法</a>
+          <a href="#optimize">优化</a>
+          <a href="#data">数据</a>
+          <a href="#scope">边界</a>
+        </nav>
+        <a class="header-cta" href="../index.html#projects">返回主页</a>
+      </div>
+    </header>
+
+    <main id="main">
+      <section class="hero shell">
+        <div class="hero-copy">
+          <p class="eyebrow">Mechanistic Interpretability / Study Notes</p>
+          <h1>消融"拒绝"</h1>
+          <p class="hero-statement">
+            LLM 的拒绝行为，在激活空间里近似由一个单一方向编码。算出它，再把它从每层激活（或直接写入权重）中正交投影掉，模型就不再拒绝。
+          </p>
+          <p class="hero-summary">
+            这是对 remove-refusals-with-transformers 参考实现与 Arditi 等人"Refusal is mediated by a single direction"工作的学习笔记，
+            记录方向提取、消融注入的机制，以及把这份粗糙 PoC 打磨成可靠工具的优化路线。
+          </p>
+          <div class="hero-actions" aria-label="相关链接">
+            <a class="button primary" href="#method">看方法</a>
+            <a class="button" href="https://github.com/Sumandora/remove-refusals-with-transformers">参考实现</a>
+            <a class="button" href="https://www.lesswrong.com/posts/jGuXSZgv6qfdhMCuJ/refusal-in-llms-is-mediated-by-a-single-direction">原始论文</a>
+          </div>
+          <dl class="profile-facts">
+            <div>
+              <dt>核心技术</dt>
+              <dd>difference-in-means</dd>
+            </div>
+            <div>
+              <dt>消融方式</dt>
+              <dd>正交投影 / 权重级</dd>
+            </div>
+            <div>
+              <dt>适用模型</dt>
+              <dd>1–8B（8GB 显存）</dd>
+            </div>
+          </dl>
+        </div>
+
+        <figure class="portrait-block formula-card">
+          <div class="portrait-index" aria-hidden="true">01 / CORE MATH</div>
+          <div class="formula-frame">
+            <div class="formula-row">
+              <span class="formula-tag">方向提取</span>
+              <code>r̂ = (μ<sub>harmful</sub> − μ<sub>harmless</sub>) / ‖·‖</code>
+            </div>
+            <div class="formula-row">
+              <span class="formula-tag">运行时消融</span>
+              <code>x ← x − (x·r̂)·r̂</code>
+            </div>
+            <div class="formula-row">
+              <span class="formula-tag">权重级消融</span>
+              <code>W ← (I − r̂r̂<sup>T</sup>)·W</code>
+            </div>
+          </div>
+          <figcaption>
+            <span>三条核心公式</span>
+            <span>投影到正交补空间</span>
+          </figcaption>
+        </figure>
+      </section>
+
+      <section id="idea" class="section shell">
+        <div class="section-heading">
+          <div class="section-label">
+            <span>01</span>
+            <h2>核心思路</h2>
+          </div>
+          <p>为什么"拒绝"能被如此干净地拿掉，而不是一个模糊的权衡。</p>
+        </div>
+        <div class="prose">
+          <p>
+            对齐训练在模型内部留下的"拒绝"行为，在高维激活空间里惊人地<strong>低维</strong>——近似一个一维子空间。
+            这意味着它不是散布在网络各处的复杂计算，而更像一个可以被单独定位、单独移除的"开关"。
+          </p>
+          <p>
+            正因如此，才能用一个线性操作（减去投影）把它剥离，而对模型其余的推理能力只造成有限损伤。
+            这项工作属于机制可解释性（mechanistic interpretability）：不依赖行为层面的提示词工程，而是直接读写模型内部的表征。
+          </p>
+          <ul>
+            <li><strong>定位</strong>：拒绝信号集中在中段某一层、最后一个 token 位置的 hidden state。</li>
+            <li><strong>表征</strong>：有害指令与无害指令在该位置的激活均值之差，即"拒绝方向"。</li>
+            <li><strong>抹除</strong>：沿该方向把激活投影到其正交补空间，拒绝信息被删除，其余信息基本保留。</li>
+          </ul>
+        </div>
+      </section>
+
+      <section id="method" class="section shell">
+        <div class="section-heading">
+          <div class="section-label">
+            <span>02</span>
+            <h2>方法：三步</h2>
+          </div>
+          <p>参考实现的最小可行流程——方向提取、运行时消融、（进阶）权重级永久消融。</p>
+        </div>
+
+        <div class="steps">
+          <article class="step-card">
+            <div class="step-head">
+              <span class="step-index">STEP 1</span>
+              <h3>计算拒绝方向</h3>
+            </div>
+            <p>
+              用 chat template 包装一批有害 / 无害指令，各跑一次前向，取约 <code>60%</code> 深度那层、最后一个 token 的 hidden state，
+              两组激活均值相减后归一化。本质是 difference-in-means。
+            </p>
+            <div class="code-shell">
+              <div class="code-head"><span>direction</span></div>
+              <pre><code>refusal_dir = mean(harmful_hidden) - mean(harmless_hidden)
+refusal_dir = refusal_dir / refusal_dir.norm()</code></pre>
+            </div>
+          </article>
+
+          <article class="step-card">
+            <div class="step-head">
+              <span class="step-index">STEP 2</span>
+              <h3>运行时消融</h3>
+            </div>
+            <p>
+              每层前向后，把激活在拒绝方向上的分量减掉。参考实现用"插入假层"的方式实现；更干净的做法是
+              <code>register_forward_hook</code>，不翻倍层数、可随时开关。
+            </p>
+            <div class="code-shell">
+              <div class="code-head"><span>activation hook</span></div>
+              <pre><code>def ablation_hook(x, r̂):
+    proj = (x · r̂) * r̂        # x 在拒绝方向上的投影
+    return x - proj           # 投影到正交补空间</code></pre>
+            </div>
+          </article>
+
+          <article class="step-card">
+            <div class="step-head">
+              <span class="step-index">STEP 3</span>
+              <h3>权重级永久消融</h3>
+            </div>
+            <p>
+              把方向直接写入权重：对所有写入残差流的投影矩阵（attention 的 <code>o_proj</code>、MLP 的 <code>down_proj</code>）左乘一个正交化算子。
+              改完另存为新模型，可被 llama.cpp / vLLM / ollama 等任意框架加载，零运行时开销。
+            </p>
+            <div class="code-shell">
+              <div class="code-head"><span>orthogonalize</span></div>
+              <pre><code>for W in resid_write_weights:   # o_proj, down_proj, ...
+    W ← (I − r̂ r̂ᵀ) · W          # 结构性抹除该方向</code></pre>
+            </div>
+          </article>
+        </div>
+      </section>
+
+      <section id="optimize" class="section shell">
+        <div class="section-heading">
+          <div class="section-label">
+            <span>03</span>
+            <h2>把 PoC 打磨成工具</h2>
+          </div>
+          <p>参考实现自称"crude"。按收益排序的优化方向如下。</p>
+        </div>
+
+        <ol class="opt-list">
+          <li>
+            <span class="opt-rank">01</span>
+            <div>
+              <h3>消融方式 → 权重级永久修改</h3>
+              <p>
+                收益最大。避免运行时插层带来的调度开销，产出可移植的独立模型。这是社区大量
+                "<code>-abliterated</code>" 后缀模型（FailSpy 等）的标准做法。
+              </p>
+            </div>
+          </li>
+          <li>
+            <span class="opt-rank">02</span>
+            <div>
+              <h3>方向质量 → 扫层选优 + 更多样本</h3>
+              <p>
+                不拍脑袋取 60% 深度，而是对所有层 × 位置扫描，按"消融后拒绝率下降 vs 能力损伤"选最优点；
+                样本从 32 条提到 128–256 条以压低均值噪声；必要时用 PCA 取第一主成分代替纯均值差，方向更"纯"。
+              </p>
+            </div>
+          </li>
+          <li>
+            <span class="opt-rank">03</span>
+            <div>
+              <h3>计算效率 → 批量前向</h3>
+              <p>
+                拿 hidden states 不需要 <code>generate</code>——一次普通前向即可，跳过采样。加 padding 整批一次前向，
+                64 条变 1 次调用；均值累加用 float32 避免 fp16 数值误差。
+              </p>
+            </div>
+          </li>
+          <li>
+            <span class="opt-rank">04</span>
+            <div>
+              <h3>补上验证闭环</h3>
+              <p>
+                量化两个指标：拒绝率（消融前后 harmful 测试集上仍含拒绝措辞的比例）与能力损伤（harmless 集上消融前后输出的
+                KL 散度）。在"层 × 强度系数 α"网格上选点。可选 norm-preserving 变体进一步降低能力损伤。
+              </p>
+            </div>
+          </li>
+        </ol>
+      </section>
+
+      <section id="data" class="section shell">
+        <div class="section-heading">
+          <div class="section-label">
+            <span>04</span>
+            <h2>数据质量决定方向质量</h2>
+          </div>
+          <p>方向是均值差，两组数据的任何系统性差异都会被吸进方向。四条原则。</p>
+        </div>
+
+        <div class="data-grid">
+          <article>
+            <h3>行为真实</h3>
+            <p>
+              要的方向是"拒绝 ↔ 遵从"，不是"有害话题 ↔ 无害话题"。harmful 组只保留模型确实拒绝的，
+              harmless 组只保留确实正常回答的——先跑一遍用关键词筛。
+            </p>
+          </article>
+          <article>
+            <h3>风格匹配</h3>
+            <p>
+              两组在长度、句式分布上尽量接近，否则句式特征混入方向、误伤正常行为。
+              更干净的对照：同一批有害指令，一组直接问（拒绝）、一组加越狱前缀（回答），相减只剩"拒绝"成分。
+            </p>
+          </article>
+          <article>
+            <h3>多样性</h3>
+            <p>覆盖多个有害类别与无害领域，避免提取出"某类话题向量"而非通用的拒绝方向。</p>
+          </article>
+          <article>
+            <h3>数量与留出</h3>
+            <p>128–256 条；算方向的样本不用于最终评估，单独留 held-out 测试集测拒绝率。</p>
+          </article>
+        </div>
+      </section>
+
+      <section id="scope" class="section shell">
+        <div class="section-heading">
+          <div class="section-label">
+            <span>05</span>
+            <h2>适用边界与定位</h2>
+          </div>
+          <p>这篇笔记是机制可解释性的学习记录，目的在理解对齐的内部结构。</p>
+        </div>
+        <div class="prose">
+          <p>
+            学习这项技术是为了理解<strong>对齐训练在表征层面如何工作</strong>——这是可解释性研究的核心问题之一。
+            它揭示：安全对齐产生的某些行为是脆弱的、可被线性操作逆转的，这对评估模型鲁棒性、研究对齐的稳定性都有价值。
+          </p>
+          <p>
+            硬件边界：本机 8GB 显存只够 1–8B 模型的 4bit 量化（Qwen3-4B / Llama-3.1-8B）。像 DeepSeek-V4-Flash
+            这类 304B MoE 模型（最激进 2-bit 量化也要 ~95GB）本地不可行，但消融的数学与模型大小无关，技术在小模型上即可完整练通。
+          </p>
+          <p class="note">
+            授权边界：仅在自有模型、自有硬件、学习目的下操作。本文不提供任何指向真实滥用的成品或数据。
+          </p>
+        </div>
+      </section>
+    </main>
+
+    <footer class="footer shell">
+      <div>
+        <strong>Sipeng Xie</strong>
+        <span>Systems, security, and verifiable infrastructure.</span>
+      </div>
+      <p><a href="../index.html">返回个人主页</a> · © 2026</p>
+    </footer>
+  </body>
+</html>
