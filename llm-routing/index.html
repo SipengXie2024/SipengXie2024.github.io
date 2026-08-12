@@ -1,0 +1,545 @@
+<!doctype html>
+<html lang="zh-CN" data-theme="dark">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta
+      name="description"
+      content="LLM 路由三篇论文精读笔记：RouteLLM 的成本-质量权衡、Router-R1 的强化学习序贯路由、The Routing Plateau 的准确率天花板，外加五条核心洞察。"
+    />
+    <meta name="theme-color" content="#10140f" />
+    <title>LLM 路由笔记：三篇论文精读 | Sipeng Xie</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,300..900;1,9..144,300..900&family=IBM+Plex+Mono:wght@400;500;600&family=IBM+Plex+Sans:wght@300;400;500;600;700&display=swap"
+      rel="stylesheet"
+    />
+    <link rel="stylesheet" href="notes.css" />
+    <link rel="stylesheet" href="responsive.css" />
+  </head>
+  <body>
+    <a class="skip-link" href="#main">跳到正文</a>
+
+    <header class="topbar">
+      <div class="topbar-inner">
+        <a class="brand" href="../index.html" aria-label="返回 Sipeng Xie 个人主页">
+          <span class="brand-mark" aria-hidden="true">SX</span>
+          <span class="brand-text">
+            <strong>LLM 路由笔记</strong>
+            <span>Sipeng Xie · 研究笔记</span>
+          </span>
+        </a>
+        <nav class="page-nav" aria-label="章节导航">
+          <a href="#overview">总览</a>
+          <a href="#routellm">RouteLLM</a>
+          <a href="#router-r1">Router-R1</a>
+          <a href="#plateau">Plateau</a>
+          <a href="#insights">核心洞察</a>
+          <a href="#references">参考资料</a>
+        </nav>
+        <a class="nav-cta" href="../index.html#projects">返回主页</a>
+      </div>
+    </header>
+
+    <main id="main">
+      <section class="hero shell" id="top">
+        <div class="hero-copy">
+          <p class="eyebrow">每日探索 · 笔记 01</p>
+          <h1>LLM 路由：把每个 query 交给对的模型</h1>
+          <p class="lede">
+            强模型贵，弱模型便宜但弱。<strong>LLM 路由</strong>问的是一个看似简单的问题——能不能用一个小小的"调度员"读一下每个进来的
+            query，把它交给"能答好、又最便宜"的那个模型？这组笔记顺着三篇论文走完一个学习闭环：一篇定义问题，一篇代表前沿，一篇画出天花板。
+          </p>
+          <ul class="hero-facts">
+            <li>3 篇论文</li>
+            <li>5 条核心洞察</li>
+            <li>约 25 分钟</li>
+            <li>2026</li>
+          </ul>
+        </div>
+
+        <figure class="loop-map" aria-labelledby="loop-caption">
+          <p class="loop-map-caption" id="loop-caption">学习闭环</p>
+          <div class="loop-step">
+            <span class="loop-step-num">01</span>
+            <div class="loop-step-body">
+              <strong>理解问题</strong>
+              <span>RouteLLM 把路由形式化成一个可优化的任务。</span>
+              <span class="loop-tag">奠基</span>
+            </div>
+          </div>
+          <div class="loop-step">
+            <span class="loop-step-num">02</span>
+            <div class="loop-step-body">
+              <strong>看最前沿</strong>
+              <span>Router-R1 用 RL 把路由变成序贯决策。</span>
+              <span class="loop-tag">前沿</span>
+            </div>
+          </div>
+          <div class="loop-step">
+            <span class="loop-step-num">03</span>
+            <div class="loop-step-body">
+              <strong>知道天花板</strong>
+              <span>The Routing Plateau 量出当前方法能走多远。</span>
+              <span class="loop-tag">元认知</span>
+            </div>
+          </div>
+        </figure>
+      </section>
+
+      <section class="section shell" id="overview">
+        <div class="section-heading">
+          <div class="kicker">
+            <span>01</span>
+            <h2>为什么是这三篇</h2>
+          </div>
+          <p>
+            单独读任何一篇都不完整。按顺序读，它们依次回答三个问题——问题是什么、最前沿怎么解、解到什么程度就到头了。
+          </p>
+        </div>
+
+        <div class="paper-grid">
+          <a class="paper-card reveal" href="#routellm">
+            <div class="paper-topline">
+              <span class="paper-num">01</span>
+              <span class="paper-role">奠基</span>
+            </div>
+            <h3>RouteLLM</h3>
+            <p>把"LLM 路由"形式化成一个可优化的问题，是后续所有工作都要对标的基线。</p>
+            <span class="paper-link">读这篇精读 <span>ICLR 2025</span></span>
+          </a>
+
+          <a class="paper-card reveal" href="#router-r1" data-tone="blue">
+            <div class="paper-topline">
+              <span class="paper-num">02</span>
+              <span class="paper-role">前沿</span>
+            </div>
+            <h3>Router-R1</h3>
+            <p>用强化学习把路由从"一次性判断"升级成"序贯决策 + 多模型聚合"。</p>
+            <span class="paper-link">读这篇精读 <span>2025</span></span>
+          </a>
+
+          <a class="paper-card reveal" href="#plateau" data-tone="warm">
+            <div class="paper-topline">
+              <span class="paper-num">03</span>
+              <span class="paper-role">元认知</span>
+            </div>
+            <h3>The Routing Plateau</h3>
+            <p>系统测了 21 种路由方法，发现大家准确率差不多、且都远低于理论上限，并解释了为什么。</p>
+            <span class="paper-link">读这篇精读 <span>2026</span></span>
+          </a>
+        </div>
+      </section>
+
+      <section class="section shell paper-section" id="routellm">
+        <div class="paper-head">
+          <div>
+            <div class="paper-head-label">
+              <span>Paper 01 · 奠基</span>
+            </div>
+            <h2>RouteLLM: Learning to Route LLMs with Preference Data</h2>
+            <div class="paper-tags">
+              <a class="paper-tag" href="https://arxiv.org/abs/2406.18665" target="_blank" rel="noreferrer">arXiv:2406.18665</a>
+              <span class="paper-tag">ICLR 2025</span>
+              <a class="paper-tag" href="https://github.com/lm-sys/RouteLLM" target="_blank" rel="noreferrer">代码 · lm-sys/RouteLLM</a>
+            </div>
+          </div>
+          <p class="paper-lede">
+            这篇把"LLM 路由"变成一个定义清晰、可优化的问题。训练一个小 router，把简单 query 分给便宜的弱模型、把难
+            query 分给贵的强模型——<strong>几乎不掉质量，却能省下大钱</strong>。
+          </p>
+        </div>
+
+        <div class="paper-body">
+          <div>
+            <div class="plain-language">
+              <h3>它在解决什么（大白话）</h3>
+              <p class="analogy">
+                想象一家医院。顶级专家号又贵又难约；普通门诊便宜，但只看得了常见病。你不会把感冒挂给专家，也不敢让门诊医生做开颅手术。
+              </p>
+              <p>
+                RouteLLM 干的就是<strong>分诊护士</strong>的活。一个小模型读一下每个进来的 query，判断它是"便宜的弱模型能搞定"，还是"得请贵的强模型出马"。做好了会发现：大多数
+                query 其实都是"感冒"——于是大头成本没了，质量却几乎没掉。
+              </p>
+            </div>
+
+            <div class="concepts">
+              <h3>读完要能复述的核心概念</h3>
+              <ul class="concept-list">
+                <li>
+                  <strong>二元路由（binary routing）</strong>
+                  <p>每个 query 都是二选一：弱模型还是强模型。整件事的关键，就是把这条线画好。</p>
+                </li>
+                <li>
+                  <strong>三个打分指标</strong>
+                  <p><code>PGR</code>（performance gap recovered）衡量 router"挽回了多少强模型的质量"；<code>APGR</code> 把这一点在所有工作点上取平均；<code>CPT(x%)</code> 告诉你"想挽回 x% 质量，最少要把多少比例的调用发给强模型"——也就是最省钱的那个点。</p>
+                </li>
+                <li>
+                  <strong>4 种 router</strong>
+                  <p><code>mf</code>（矩阵分解，官方推荐）、<code>sw_ranking</code>（加权 Elo）、<code>bert</code>（BERT 分类器）、<code>causal_llm</code>（用 Llama-3-8B 做分类）。</p>
+                </li>
+                <li>
+                  <strong>训练数据</strong>
+                  <p>来自 Chatbot Arena 的人类偏好，再用 GPT-4 当 judge 造增强数据，补上 Arena 闲聊覆盖不到的领域。</p>
+                </li>
+              </ul>
+            </div>
+
+            <div class="questions">
+              <h3>精读问题</h3>
+              <ol>
+                <li>为什么只用 Arena 数据训出来的 router，在 MMLU / GSM8K 上几乎等于随机？数据增强到底起了什么作用？</li>
+                <li>mf 为什么比 bert 还强？这说明了什么？</li>
+                <li>"换个模型对不用重训"是怎么做到的，为什么在实战里很重要？</li>
+              </ol>
+            </div>
+          </div>
+
+          <aside class="paper-aside">
+            <div class="result-card">
+              <p class="result-label">关键结论</p>
+              <div class="result-metric">
+                <strong>85%</strong>
+                <span>最高降本</span>
+              </div>
+              <p>……同时在 MT Bench 上仍保持 95% 的 GPT-4 性能。最优 router 比商业路由系统少花约 40%，就能达到同等质量。</p>
+            </div>
+            <div class="aside-note">
+              <span>值得停下来想</span>
+              <p>只用 Arena 闲聊数据训的 router，在知识密集的 MMLU、GSM8K 上近乎随机；直到 GPT-4 造出针对性领域数据才超过随机——这正是<strong>洞察 1</strong> 的种子。</p>
+            </div>
+          </aside>
+        </div>
+      </section>
+
+      <section class="section shell paper-section" id="router-r1" data-tone="blue">
+        <div class="paper-head">
+          <div>
+            <div class="paper-head-label">
+              <span>Paper 02 · 前沿</span>
+            </div>
+            <h2>Router-R1: Teaching LLMs Multi-Round Routing and Aggregation via Reinforcement Learning</h2>
+            <div class="paper-tags">
+              <a class="paper-tag" href="https://arxiv.org/abs/2506.09033" target="_blank" rel="noreferrer">arXiv:2506.09033</a>
+              <span class="paper-tag">UIUC · 2025</span>
+            </div>
+          </div>
+          <p class="paper-lede">
+            RouteLLM 是"一锤子买卖"，看一眼就定。Router-R1 问：如果 router 能<strong>边想、边调一个模型、边看结果、再决定下一步</strong>——一路把多个模型的长处拼起来呢？它用强化学习学会这套循环。
+          </p>
+        </div>
+
+        <div class="paper-body">
+          <div>
+            <div class="plain-language">
+              <h3>它在解决什么（大白话）</h3>
+              <p class="analogy">
+                RouteLLM 的护士看一眼就开张转诊单。Router-R1 更像一位谨慎的医生：先琢磨症状，开一项检查，看结果，再决定下一步——中间咨询好几位专科医生，把他们的意见拼成最终诊断。
+              </p>
+              <p>
+                拆开看，router 本身就是一个 LLM，在 <code>think</code>（内部推理）和 <code>route</code>（调用某个模型）之间交替，每个
+                query 最多走 4 步。强化学习教它什么时候该省、什么时候该加钱。
+              </p>
+            </div>
+
+            <div class="concepts">
+              <h3>读完要能复述的核心概念</h3>
+              <ul class="concept-list">
+                <li>
+                  <strong>router 本身就是 LLM</strong>
+                  <p>它在 <code>think</code> 和 <code>route</code> 之间交替，于是路由从"一次性分类"变成"序贯决策"。</p>
+                </li>
+                <li>
+                  <strong>三项 reward</strong>
+                  <p>format reward（格式对不对）、outcome reward（最终答案对不对）、<strong>cost reward</strong>（调贵模型就扣分）。成本-质量的权衡就是这么学出来的。</p>
+                </li>
+                <li>
+                  <strong>靠 descriptor 泛化</strong>
+                  <p>只需要每个模型的简单信息（价格、延迟、几个示例分数），就能路由到<strong>没见过的模型</strong>，不用重训。</p>
+                </li>
+                <li>
+                  <strong>故意做小</strong>
+                  <p>router 只有 3B（Qwen2.5-3B / LLaMA-3.2-3B），单张 GPU 可训，比它调度的 7B–70B 模型都小。</p>
+                </li>
+              </ul>
+            </div>
+
+            <div class="questions">
+              <h3>精读问题</h3>
+              <ol>
+                <li>"序贯决策"相比 RouteLLM 的"单轮二选一"，能力上多了什么？</li>
+                <li>cost reward 是怎么设计的？它如何改变 router 学到的策略？</li>
+                <li>为什么说这是"路由 + 聚合"，而不只是"路由"？</li>
+              </ol>
+            </div>
+          </div>
+
+          <aside class="paper-aside">
+            <div class="result-card">
+              <p class="result-label">关键结论</p>
+              <div class="result-metric">
+                <strong>0.135&nbsp;&rarr;&nbsp;0.416</strong>
+              </div>
+              <p>一个自己只能考 0.135 的 3B，学会调度一池子模型后冲到 0.416——<strong>超过池子里任何单一模型</strong>。</p>
+            </div>
+            <div class="aside-note">
+              <span>训练细节</span>
+              <p>用 PPO 在 veRL 框架上训练。分层奖励会在格式一崩时把其余奖励清零（防 reward hacking），被调模型返回的内容不参与 loss。详见<strong>洞察 2</strong>。</p>
+            </div>
+          </aside>
+        </div>
+      </section>
+
+      <section class="section shell paper-section" id="plateau" data-tone="warm">
+        <div class="paper-head">
+          <div>
+            <div class="paper-head-label">
+              <span>Paper 03 · 元认知</span>
+            </div>
+            <h2>The Routing Plateau: Understanding and Breaking the Accuracy Limits of LLM Routers</h2>
+            <div class="paper-tags">
+              <a class="paper-tag" href="https://arxiv.org/abs/2606.07587" target="_blank" rel="noreferrer">arXiv:2606.07587</a>
+              <span class="paper-tag">Rice University / Amazon · 2026</span>
+            </div>
+          </div>
+          <p class="paper-lede">
+            在做路由产品之前，得先有人告诉你天花板到底有多高。这篇系统测了 <strong>21 种路由方法</strong>、跨 5 个
+            benchmark，发现一个反直觉的 <strong>routing plateau（路由平台期）</strong>，并解释了到底是什么卡住了大家。
+          </p>
+        </div>
+
+        <div class="paper-body">
+          <div>
+            <div class="plain-language">
+              <h3>它在解决什么（大白话）</h3>
+              <p class="analogy">
+                想象 21 种分诊系统，从花哨的神经网络到最简单的"找最相似的历史病例"。你会以为复杂的一定赢。结果它们全都卡在几乎相同的准确率上——而且都远低于一个"事后知道谁会答对"的假想
+                oracle。
+              </p>
+              <p>
+                病根叫 <strong>correctness-prediction bottleneck</strong>：router 只能学到"模型平均多强"这种粗粒度全局信号，学不到真正要紧的"这条具体
+                query 谁恰好对"。简单题大家都会分；真正难、需要 instance 级判断的题，所有方法一起栽。
+              </p>
+            </div>
+
+            <div class="concepts">
+              <h3>读完要能复述的核心概念</h3>
+              <ul class="concept-list">
+                <li>
+                  <strong>routing plateau</strong>
+                  <p>在 RouterBench 上，前 15 名 router 准确率只差 0.23 个百分点；最简单的 kNN 在全部 5 个 benchmark 都排进前二。</p>
+                </li>
+                <li>
+                  <strong>oracle gap</strong>
+                  <p>卡在平台期的方法，比 oracle（永远挑"答对且最便宜"的理论上限）低 10–30 个百分点。</p>
+                </li>
+                <li>
+                  <strong>是表征问题，不是架构问题</strong>
+                  <p>router 抓到了"模型平均能力"，却抓不住 per-query 的对错，所以换更巧的架构也没用。</p>
+                </li>
+                <li>
+                  <strong>堆资源也砸不动</strong>
+                  <p>堆数据、换大 encoder、端到端微调，三管齐下也只弥合 14.6% 的 oracle gap（约 2.13 个百分点）。</p>
+                </li>
+              </ul>
+            </div>
+
+            <div class="questions">
+              <h3>精读问题</h3>
+              <ol>
+                <li>为什么免训练的 kNN 能跟精心训练的神经 router 打平？</li>
+                <li>"plateau 是表征问题不是架构问题"这句话到底什么意思？</li>
+                <li>对想做路由产品的人，这篇泼了什么冷水、指了什么方向？</li>
+              </ol>
+            </div>
+          </div>
+
+          <aside class="paper-aside">
+            <div class="result-card">
+              <p class="result-label">关键发现</p>
+              <div class="result-metric">
+                <strong>14.6%</strong>
+                <span>的 oracle gap</span>
+              </div>
+              <p>……堆数据、换大 encoder、端到端微调全都用上，最多也只能弥合这么点 oracle gap。平台期很顽固。</p>
+            </div>
+            <div class="aside-note">
+              <span>破局方向</span>
+              <p>plateau 卡住的全是"单发、静态"路由。论文点名的破局方向，正是 Router-R1 那套"试一步、看结果、再决定"——代价是多轮成本。见<strong>洞察 3</strong>。</p>
+            </div>
+          </aside>
+        </div>
+      </section>
+
+      <section class="section shell" id="insights">
+        <div class="section-heading">
+          <div class="kicker">
+            <span>02</span>
+            <h2>五条值得带走的核心洞察</h2>
+          </div>
+          <p>
+            结论好抄，判断难得。这是读完三篇后真正该带走的五条——每条都注明出处和为什么重要。
+          </p>
+        </div>
+
+        <div class="insight-list">
+          <article class="insight reveal">
+            <div class="insight-index" aria-hidden="true">1</div>
+            <div class="insight-body">
+              <p class="insight-source">出自 RouteLLM</p>
+              <h3>路由器的泛化是有边界的</h3>
+              <ul class="insight-points">
+                <li>只用 Chatbot Arena（8 万条，开放闲聊/写作类）训练的 router，在 MMLU、GSM8K 上<strong>≈随机乱猜</strong>。</li>
+                <li>原因是分布不匹配：闲聊上学到的"强弱判断"，迁移不到专业知识选择题和数学推理。</li>
+                <li>转折点是用 GPT-4 当 judge 造了<strong>针对性领域</strong>的增强数据，性能才超过随机。</li>
+                <li>结果锚点：MT Bench 上成本最高降 85%，仍保 95% GPT-4 性能；最优 router 比商业路由系统少花约 40% 达同等质量。</li>
+              </ul>
+              <div class="insight-why">
+                <span>为什么重要</span>
+                <p>训练分布和线上分布越像，效果越好。"一次训练、到处通用"是美好假设——实战必须用自己真实的 query 分布去校准 router。这是所有路由/网关产品的隐藏前提，卖你 router 的人不会主动说。</p>
+              </div>
+            </div>
+          </article>
+
+          <article class="insight reveal">
+            <div class="insight-index" aria-hidden="true">2</div>
+            <div class="insight-body">
+              <p class="insight-source">出自 Router-R1</p>
+              <h3>用小模型当 router，是因为它只"分诊"不"治病"</h3>
+              <ul class="insight-points">
+                <li>router 本体只有 3B（Qwen2.5-3B / LLaMA-3.2-3B，开源，单张 A6000 可训），却比它调度的大多数模型（7B~70B）都小。</li>
+                <li>核心逻辑："判断这题该找谁做"比"亲自做对"简单得多。一个自己只能考 0.135 的 3B，学会分诊后调度专家池，整体冲到 0.416——超过池子里任何单一模型。</li>
+                <li>反直觉的一点：router 一旦变成最强模型（比如 Opus），路由就失去意义——那它就不是 router，是 agent 了。路由要成立，必须<strong>"决策成本 &lt;&lt; 执行成本"</strong>。</li>
+                <li>训练：默认 PPO（不是 GRPO），框架 veRL；三项 rule-based reward；分层奖励防 reward hacking——格式一崩，其余奖励清零；被调模型返回的 <code>&lt;info&gt;</code> 不参与 loss。</li>
+              </ul>
+              <div class="insight-why">
+                <span>为什么重要</span>
+                <p>想用 LLM 的推理能力做路由，就得把 router 成本压到地板——小开源模型是唯一出路。</p>
+              </div>
+            </div>
+          </article>
+
+          <article class="insight reveal">
+            <div class="insight-index" aria-hidden="true">3</div>
+            <div class="insight-body">
+              <p class="insight-source">出自 The Routing Plateau</p>
+              <h3>静态路由有天花板，绕开它的办法是"边做边问"</h3>
+              <ul class="insight-points">
+                <li>21 种路由方法（含最简单的 kNN）准确率几乎一样，挤在同一个 plateau，比 oracle 低 10~30 个百分点。堆数据、换大 encoder、端到端微调，只弥合 14.6% 的差距。</li>
+                <li>根源（correctness-prediction bottleneck）：静态路由只能学到"模型平均多强"这种粗信号，学不到"这条具体 query 谁恰好对"。</li>
+                <li>关键：plateau 卡住的全是"单发、静态"路由（看一眼就选）。Router-R1 那种"试一步、看结果、再决定"的序贯交互，正好是论文点名的破局方向——代价是多轮成本。</li>
+              </ul>
+              <div class="insight-why">
+                <span>为什么重要</span>
+                <p>静态路由这条路快到头了，别再堆架构；前沿在"序贯决策 + 聚合"。</p>
+              </div>
+            </div>
+          </article>
+
+          <article class="insight reveal">
+            <div class="insight-index" aria-hidden="true">4</div>
+            <div class="insight-body">
+              <p class="insight-source">作者自己的分析</p>
+              <h3>"步数 × 成本"的拐点，真正的元凶是级联试错</h3>
+              <ul class="insight-points">
+                <li>不是 router 自身贵：3B 跑多步也远低于 70B 一次（KV cache 下成本近似线性）——这正是用小 router 的精妙处。</li>
+                <li>真正的拐点：当题目难到 router 必须逐级试错、最后还是要叫最贵的模型时，前面那些没答对的调用全成<strong>沉没成本</strong>。此时"路由"比"直接用最强模型一次到位"还贵（论文里 α=0 时，Router-R1 的 cost≈直接用 70B，没省钱）。</li>
+                <li>简化量级：简单题路由能省约 7 倍；难题上级联试错可能贵近 2 倍。</li>
+                <li>本质：路由省不省钱是个<strong>分布问题</strong>——取决于你线上"简单 query 占比"。简单题越多越赚，难题越多越亏。Sapiom 这类公司值钱，就值钱在握着真实分布、算得出这个拐点。</li>
+              </ul>
+              <div class="insight-why">
+                <span>为什么重要</span>
+                <p>评估路由方案前，先摸清自己的 query 难度分布，再谈省钱。</p>
+              </div>
+            </div>
+          </article>
+
+          <article class="insight reveal">
+            <div class="insight-index" aria-hidden="true">5</div>
+            <div class="insight-body">
+              <p class="insight-source">三篇共通</p>
+              <h3>oracle 是"改完卷子才知道选谁"的满分线</h3>
+              <ul class="def-list">
+                <li><strong>ground truth</strong> —— 题目自带的标准答案，与模型无关。</li>
+                <li><strong>correctness label</strong> —— 让每个模型做一遍题、对照答案批改出的"谁对谁错"。</li>
+                <li><strong>oracle</strong> —— 事后看完所有对错、每题挑"答对且最便宜"算出的理论最高分。</li>
+              </ul>
+              <ul class="insight-points">
+                <li>oracle 是<strong>分数，不是数据</strong>；而且算它得先把所有模型全跑一遍——这恰恰违背了路由省钱的初衷。所以它只能离线当尺子，永远没法线上真用。</li>
+                <li>oracle gap 的本质是<strong>信息差</strong>：oracle 看了答案才选，router 没看答案就得猜。这不是算法不行，是结构性信息不足——正是洞察 3 那个 plateau 的根。</li>
+                <li>一个隐藏的选择偏差：路由研究全建立在"有标准答案"的任务上（选择题/短答案/数学/代码），因为只有它们能自动判对错。开放式生成（写作/聊天）的对错依赖 judge、很难标注——这些结论在那里未必成立。</li>
+              </ul>
+              <div class="insight-why">
+                <span>为什么重要</span>
+                <p>看任何路由论文的漂亮数字前，先问一句——它的 ground truth 是怎么来的、适不适用我的场景。</p>
+              </div>
+            </div>
+          </article>
+        </div>
+      </section>
+
+      <section class="section shell" id="references">
+        <div class="section-heading">
+          <div class="kicker">
+            <span>03</span>
+            <h2>参考资料</h2>
+          </div>
+          <p>这组笔记的原始来源。每篇都附 arXiv 页面；有代码的也一并附上。</p>
+        </div>
+
+        <ol class="ref-list">
+          <li class="ref">
+            <span class="ref-num">01</span>
+            <div class="ref-body">
+              <h3><a href="https://arxiv.org/abs/2406.18665" target="_blank" rel="noreferrer">RouteLLM: Learning to Route LLMs with Preference Data</a></h3>
+              <p class="ref-meta">Ong et al. · ICLR 2025</p>
+              <p>把 LLM 路由形式化为可优化问题，提出 PGR / APGR / CPT 三个指标和 4 种 router。</p>
+              <div class="ref-links">
+                <a href="https://arxiv.org/abs/2406.18665" target="_blank" rel="noreferrer">arXiv:2406.18665</a>
+                <a href="https://github.com/lm-sys/RouteLLM" target="_blank" rel="noreferrer">代码 · lm-sys/RouteLLM</a>
+              </div>
+            </div>
+          </li>
+          <li class="ref">
+            <span class="ref-num">02</span>
+            <div class="ref-body">
+              <h3><a href="https://arxiv.org/abs/2506.09033" target="_blank" rel="noreferrer">Router-R1: Teaching LLMs Multi-Round Routing and Aggregation via Reinforcement Learning</a></h3>
+              <p class="ref-meta">Zhang et al. · UIUC · 2025</p>
+              <p>把路由建成序贯决策过程，用 format / outcome / cost 三项 rule-based reward 训练一个小 LLM router。</p>
+              <div class="ref-links">
+                <a href="https://arxiv.org/abs/2506.09033" target="_blank" rel="noreferrer">arXiv:2506.09033</a>
+              </div>
+            </div>
+          </li>
+          <li class="ref">
+            <span class="ref-num">03</span>
+            <div class="ref-body">
+              <h3><a href="https://arxiv.org/abs/2606.07587" target="_blank" rel="noreferrer">The Routing Plateau: Understanding and Breaking the Accuracy Limits of LLM Routers</a></h3>
+              <p class="ref-meta">Lu et al. · Rice University / Amazon · 2026</p>
+              <p>跨 5 个 benchmark 测了 21 种路由方法，提出 routing plateau 现象，并追溯到 correctness-prediction bottleneck。</p>
+              <div class="ref-links">
+                <a href="https://arxiv.org/abs/2606.07587" target="_blank" rel="noreferrer">arXiv:2606.07587</a>
+              </div>
+            </div>
+          </li>
+        </ol>
+      </section>
+    </main>
+
+    <footer class="site-footer">
+      <div class="shell footer-inner">
+        <span>
+          <strong>LLM 路由笔记</strong>
+          每日探索 · 笔记 01 · 2026
+        </span>
+        <div class="footer-links">
+          <a href="#references">参考资料</a>
+          <a href="../index.html">返回个人主页</a>
+        </div>
+      </div>
+    </footer>
+
+    <script src="notes.js"></script>
+  </body>
+</html>
