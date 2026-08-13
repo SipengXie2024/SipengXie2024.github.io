@@ -1,0 +1,418 @@
+<!doctype html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta
+      name="description"
+      content="L3LLM 论文阅读笔记:把 LLM decoding 的权重与 KV cache 驻留进 CPU 的 GB 级 L3 缓存——KV 悖论、权重–注意力解耦、亚算子同步,以及对工作负载假设的批判性阅读。"
+    />
+    <meta name="theme-color" content="#10140f" />
+    <title>L3LLM 阅读笔记:缓存驻留推理 | Sipeng Xie</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,300..900;1,9..144,300..900&family=IBM+Plex+Mono:wght@400;500;600&family=IBM+Plex+Sans:wght@300;400;500;600;700&display=swap"
+      rel="stylesheet"
+    />
+    <style>
+      :root {
+        --page: #10140f;
+        --panel: #171c15;
+        --panel-2: #1c221a;
+        --ink: #e9ede6;
+        --ink-2: #a9b0a6;
+        --ink-3: #767d72;
+        --accent: #4caf7d;
+        --accent-2: #6cc79a;
+        --warm: #d0622a;
+        --line: rgba(169, 176, 166, 0.16);
+      }
+      * { box-sizing: border-box; }
+      body {
+        margin: 0;
+        background: var(--page);
+        color: var(--ink);
+        font-family: "IBM Plex Sans", system-ui, sans-serif;
+        font-weight: 400;
+        line-height: 1.75;
+        -webkit-font-smoothing: antialiased;
+      }
+      body::before {
+        content: "";
+        position: fixed;
+        inset: 0;
+        pointer-events: none;
+        background:
+          radial-gradient(60% 40% at 20% 0%, rgba(76, 175, 125, 0.08), transparent 70%),
+          radial-gradient(50% 35% at 85% 5%, rgba(208, 98, 42, 0.06), transparent 70%);
+        z-index: 0;
+      }
+      a { color: var(--accent-2); text-decoration: none; }
+      a:hover { text-decoration: underline; }
+      .shell { max-width: 880px; margin: 0 auto; padding: 0 24px; position: relative; z-index: 1; }
+
+      .skip-link {
+        position: absolute; left: -9999px;
+      }
+      .skip-link:focus {
+        left: 16px; top: 16px; z-index: 10;
+        background: var(--panel-2); color: var(--ink);
+        padding: 8px 14px; border-radius: 8px;
+      }
+
+      /* Topbar */
+      .topbar {
+        border-bottom: 1px solid var(--line);
+        background: rgba(16, 20, 15, 0.85);
+        backdrop-filter: blur(8px);
+        position: sticky; top: 0; z-index: 5;
+      }
+      .topbar-inner {
+        max-width: 880px; margin: 0 auto; padding: 14px 24px;
+        display: flex; align-items: center; gap: 14px;
+      }
+      .brand { display: flex; align-items: center; gap: 12px; color: var(--ink); }
+      .brand:hover { text-decoration: none; }
+      .brand-mark {
+        font-family: "IBM Plex Mono", monospace; font-weight: 600; font-size: 13px;
+        background: var(--accent); color: #0b0f0c;
+        width: 32px; height: 32px; border-radius: 8px;
+        display: inline-flex; align-items: center; justify-content: center;
+      }
+      .brand-text { display: flex; flex-direction: column; line-height: 1.25; }
+      .brand-text strong { font-family: "Fraunces", serif; font-weight: 600; font-size: 15px; }
+      .brand-text span { font-family: "IBM Plex Mono", monospace; font-size: 11px; color: var(--ink-3); letter-spacing: 0.04em; }
+
+      /* Hero */
+      .hero { padding: 72px 0 40px; }
+      .kicker {
+        font-family: "IBM Plex Mono", monospace; font-size: 12px; font-weight: 500;
+        letter-spacing: 0.14em; text-transform: uppercase;
+        color: var(--accent); margin: 0 0 18px;
+      }
+      h1 {
+        font-family: "Fraunces", serif; font-weight: 600;
+        font-size: clamp(32px, 5.5vw, 48px); line-height: 1.15;
+        margin: 0 0 20px; letter-spacing: -0.01em;
+      }
+      .lede { font-size: 18px; color: var(--ink-2); max-width: 44em; margin: 0 0 26px; }
+      .lede a { color: var(--accent-2); }
+      .meta-row {
+        display: flex; flex-wrap: wrap; gap: 10px 22px;
+        font-family: "IBM Plex Mono", monospace; font-size: 12px; color: var(--ink-3);
+        letter-spacing: 0.04em;
+      }
+      .meta-row span::before { content: "·"; margin-right: 22px; color: var(--accent); }
+      .meta-row span:first-child::before { content: ""; margin: 0; }
+
+      /* Sections */
+      section.note { padding: 34px 0 6px; }
+      .sec-head { display: flex; align-items: baseline; gap: 16px; margin-bottom: 14px; }
+      .sec-num {
+        font-family: "IBM Plex Mono", monospace; font-size: 13px; font-weight: 600;
+        color: var(--warm); letter-spacing: 0.08em;
+      }
+      h2 {
+        font-family: "Fraunces", serif; font-weight: 600; font-size: 26px;
+        margin: 0; letter-spacing: -0.01em;
+      }
+      h3 { font-family: "Fraunces", serif; font-weight: 600; font-size: 19px; margin: 26px 0 8px; }
+      p { margin: 0 0 14px; color: var(--ink-2); }
+      p strong, li strong { color: var(--ink); font-weight: 600; }
+      ul, ol { margin: 0 0 14px; padding-left: 22px; color: var(--ink-2); }
+      li { margin-bottom: 8px; }
+
+      blockquote {
+        margin: 18px 0; padding: 14px 20px;
+        border-left: 3px solid var(--accent);
+        background: var(--panel);
+        border-radius: 0 10px 10px 0;
+        color: var(--ink);
+      }
+      blockquote p { margin: 0; color: var(--ink); }
+
+      pre {
+        background: #0c100b;
+        border: 1px solid var(--line);
+        border-radius: 10px;
+        padding: 16px 18px;
+        overflow-x: auto;
+        font-family: "IBM Plex Mono", monospace;
+        font-size: 13px; line-height: 1.7;
+        color: var(--ink-2);
+        margin: 16px 0 18px;
+      }
+
+      table {
+        width: 100%; border-collapse: collapse;
+        margin: 16px 0 20px; font-size: 14px;
+        background: var(--panel); border-radius: 10px; overflow: hidden;
+      }
+      th, td { padding: 10px 14px; text-align: left; border-bottom: 1px solid var(--line); }
+      th {
+        font-family: "IBM Plex Mono", monospace; font-size: 11px; font-weight: 600;
+        letter-spacing: 0.08em; text-transform: uppercase; color: var(--ink-3);
+        background: var(--panel-2);
+      }
+      td { color: var(--ink-2); }
+      tr:last-child td { border-bottom: none; }
+      td strong { color: var(--ink); }
+
+      /* Findings band */
+      .band {
+        margin: 44px 0;
+        background: var(--panel);
+        border: 1px solid var(--line);
+        border-radius: 14px;
+        padding: 30px 30px 22px;
+      }
+      .band h2 { margin-bottom: 18px; }
+      .finding { display: flex; gap: 16px; padding: 10px 0; border-bottom: 1px solid var(--line); }
+      .finding:last-child { border-bottom: none; }
+      .finding span {
+        flex: 0 0 128px;
+        font-family: "IBM Plex Mono", monospace; font-size: 11px; font-weight: 600;
+        letter-spacing: 0.08em; text-transform: uppercase; color: var(--accent);
+        padding-top: 4px;
+      }
+      .finding strong { font-weight: 500; color: var(--ink); }
+
+      .scope {
+        margin: 40px 0 20px;
+        padding: 18px 22px;
+        border: 1px dashed var(--line);
+        border-radius: 12px;
+        font-size: 14px;
+      }
+      .scope p { margin: 0; color: var(--ink-3); }
+
+      footer.site-footer {
+        border-top: 1px solid var(--line);
+        margin-top: 56px;
+        padding: 26px 0 40px;
+      }
+      .footer-inner {
+        display: flex; justify-content: space-between; align-items: center; gap: 16px;
+        font-family: "IBM Plex Mono", monospace; font-size: 12px; color: var(--ink-3);
+        letter-spacing: 0.04em;
+      }
+
+      @media (max-width: 640px) {
+        .hero { padding: 48px 0 28px; }
+        .finding { flex-direction: column; gap: 4px; }
+        .finding span { flex: none; }
+        .footer-inner { flex-direction: column; align-items: flex-start; }
+      }
+    </style>
+  </head>
+  <body>
+    <a class="skip-link" href="#main">跳到正文</a>
+
+    <header class="topbar">
+      <div class="topbar-inner">
+        <a class="brand" href="../index.html" aria-label="返回 Sipeng Xie 个人主页">
+          <span class="brand-mark" aria-hidden="true">SX</span>
+          <span class="brand-text">
+            <strong>L3LLM 阅读笔记</strong>
+            <span>Sipeng Xie · Paper Notes</span>
+          </span>
+        </a>
+      </div>
+    </header>
+
+    <main id="main" class="shell">
+      <section class="hero">
+        <p class="kicker">Systems Paper Notes / SOSP 2026 Submission</p>
+        <h1>把 LLM 推理塞进 CPU 的 GB 级缓存</h1>
+        <p class="lede">
+          《L3LLM: Cache-Resident LLM Inference in GB-Scale Last-Level Caches》的追问式阅读笔记。
+          不按论文章节顺序,按我阅读时真实追问的顺序组织:每一节都是一个"没看懂 / 我不信"的问题,
+          以及追到底之后得到的答案。
+        </p>
+        <div class="meta-row">
+          <span>2026</span>
+          <span>约 20 分钟</span>
+          <span>个人学习笔记,非论文官方解读</span>
+        </div>
+      </section>
+
+      <section class="note">
+        <div class="sec-head"><span class="sec-num">00</span><h2>论文一句话</h2></div>
+        <p>
+          现代服务器 CPU 靠 3D 堆叠缓存有了 GB 级 L3(AMD EPYC 9684X 单 socket 1152MB)。
+          这篇论文把 LLM decoding 的权重和 KV cache 整个驻留进 L3,绕开 DRAM 带宽墙,
+          实测比同等硬件条件的 llama.cpp 快 2.04–11.51 倍 TPOT。
+        </p>
+      </section>
+
+      <section class="note">
+        <div class="sec-head"><span class="sec-num">01</span><h2>第一个疑问:CPU 凭什么跑机器学习?</h2></div>
+        <p>
+          第一反应和所有系统背景的人一样:CPU 的并行能力跟 GPU 差远了,这不是以卵击石?
+        </p>
+        <p>
+          关键在于 <strong>decoding 不是算力游戏,是带宽游戏</strong>。Decoding 每生成一个 token 要把全部权重过一遍,
+          核心计算是矩阵乘向量(GEMV),每个权重元素只用一次,算术强度只有 2–5 FLOPs/Byte。
+          一块 H100 要打满算力需要约 600 FLOPs/Byte——也就是说 GPU 跑小 batch decoding 时,
+          tensor core 利用率可能不到 1%,瓶颈完全卡在"每秒能从显存流出多少字节"。
+        </p>
+        <p>
+          所以真正的竞赛是<strong>权重从哪流出来</strong>:GPU 从片外 HBM 流,L3LLM 从片上 L3 流。
+          HBM 再快也是片外,L3 是片上。论文赌的是片上缓存带宽能追平片外显存带宽,而硬件便宜得多、还容易买到。
+        </p>
+        <p>
+          至于 CPU 的短板,论文是承认之后用软件补:跨核全局 barrier 太贵,就做细粒度同步;
+          OpenMP 调度开销在微秒级 kernel 面前嫌贵,就自研静态绑核线程池;算力不够,
+          就 INT8 + AVX-512 VNNI,并且只认领内存受限的 decoding,算力受限的 prefill 明确不碰。
+        </p>
+      </section>
+
+      <section class="note">
+        <div class="sec-head"><span class="sec-num">02</span><h2>地基:KV cache 到底是什么</h2></div>
+        <p>
+          后面所有推导都建立在这上面。Transformer 每一层的 attention 在算第 N 个 token 时都要回看前 N-1 个,
+          而历史 token 在每层算出的 K、V 向量一旦算出就永远不变,所以推理引擎把它们存下来重用——这就是 KV cache。
+        </p>
+        <p>它的物理结构决定体积是三个维度的乘积:</p>
+        <ul>
+          <li><strong>层数</strong>:每层的 K/V 是独立的一套,8 层存 8 份;</li>
+          <li><strong>对话数</strong>:每条对话的历史不同,KV 完全私有,10 条并发对话就是 10 份(对比:权重是所有对话共用一份);</li>
+          <li><strong>上下文长度</strong>:聊得越长,攒的越多。</li>
+        </ul>
+      </section>
+
+      <section class="note">
+        <div class="sec-head"><span class="sec-num">03</span><h2>KV 悖论:这篇论文的"题眼"</h2></div>
+        <p>
+          目标是把权重和 KV 都放进 L3。模型大了怎么办?按层切到多台机器(流水线并行)。
+          论文证了一个反直觉的结论:<strong>加机器能摊薄权重,但摊不薄 KV</strong>。
+        </p>
+        <p>纯数字推导(8 层模型,一条对话每层的 KV 算 1MB,一条对话完整 KV 就是 8MB,钉死不变):</p>
+        <ul>
+          <li>2 台机器:每台 4 层;流水线要不空转就得 2 条对话同时在跑;每台要存 4 层 × 2 条 = 8MB;</li>
+          <li>4 台机器:每台 2 层;要 4 条对话填满;每台 2 × 4 = 8MB;</li>
+          <li>8 台机器:每台 1 层;8 条对话;每台 1 × 8 = 8MB。</li>
+        </ul>
+        <p>
+          机器每翻一倍,"每台分到的层数减半"和"每台要管的对话数翻倍"是同一个动作的两个后果,恰好抵消。
+        </p>
+        <blockquote>
+          <p>不管怎么切,每台机器背上永远恰好是一整条对话的完整 KV。</p>
+        </blockquote>
+        <p>
+          这在 DRAM 时代无所谓(内存大),但 L3 是固定预算(1.15GB/socket):KV 随上下文膨胀,
+          把权重挤出 L3,缓存驻留就破功——而且加多少机器都救不了。这就是悖论。
+        </p>
+      </section>
+
+      <section class="note">
+        <div class="sec-head"><span class="sec-num">04</span><h2>出路:权重和 KV 为什么可以分开</h2></div>
+        <p>
+          拆开一层看数据流,每一步计算要摸的东西要么是权重、要么是 KV,<strong>从不同时摸</strong>:
+        </p>
+        <ul>
+          <li>QKV 投影、输出投影、FFN:只用权重,不关心历史;</li>
+          <li>attention(softmax(QK^T)V 那一步):只用 KV 历史,一个权重参数都没有。</li>
+        </ul>
+        <p>
+          "当前"和"历史"在一层里只相遇一次,且相遇时权重已经退场。所以把权重放"权重机"、KV 放"注意力机",
+          语义完全不变,交界面上每 token 只传几 KB 的小向量——大块头都不动。这就是 WA 分离。
+        </p>
+        <p>但追问下去会发现有两刀,论文的实测和主张之间有条缝:</p>
+        <table>
+          <thead>
+            <tr><th></th><th>摆法一:按层切 KV</th><th>摆法二:按对话切 KV</th></tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td><strong>怎么摆</strong></td>
+              <td>每台注意力 socket 存"本机几层 × 所有在途对话"</td>
+              <td>每条对话完整归属一台注意力机</td>
+            </tr>
+            <tr>
+              <td><strong>效果</strong></td>
+              <td>KV 总量没变,但权重和 KV 各独占一个 socket 的 1.15GB,互不挤占</td>
+              <td>加机器不再加深流水线,悖论真正解开</td>
+            </tr>
+            <tr>
+              <td><strong>论文证据</strong></td>
+              <td>实验全是这种;7B 上实测收益 1.13 倍,中等</td>
+              <td>只是 §3.1 的架构主张,没有实验真的挂第二台注意力机</td>
+            </tr>
+          </tbody>
+        </table>
+        <p>
+          再追一刀,摆法二有硬下限:单条对话的 KV 是原子的。7B 模型 INT8 下一条 4K 上下文的对话,
+          全模型 KV 约 1GB——一台 socket 的 L3 几乎只够一条;32K 上下文约 8GB,单机想都别想。
+          所以"所有 KV 永远驻留 L3"在长上下文下数学上不可能。论文真实的承诺(§3.1)是:
+          <strong>权重永远驻留;KV 尽量驻留,装不下就在注意力机局部溢出到 DRAM,不连累权重</strong>。
+        </p>
+      </section>
+
+      <section class="note">
+        <div class="sec-head"><span class="sec-num">05</span><h2>亚算子同步:同一个思想的第二次应用</h2></div>
+        <p>
+          缓存驻留后 kernel 从毫秒缩到微秒,原本无所谓的"算子边界全局 barrier"浮出水面:
+          96 个核对一个共享计数器原子加,缓存行在 96 核间来回过户;而且 attention head 之间明明互不依赖,却要互相等。
+        </p>
+        <p>
+          改法:每个 head 算完自己发"就绪"信号,不等别人;FFN 这种躲不开的汇合,用树形层次化同步
+          (CCD 内先汇合,再每 CCD 出一个代表),把扇入从 96 锁到小组规模。
+        </p>
+        <p>
+          这和 WA 分离是<strong>同一个原则在两个维度的应用</strong>:WA 解的是"空间上不该住一起的数据",
+          亚算子解的是"时间上不该锁步的计算"——同步/共置的粒度应该对齐真实依赖,而不是对齐抽象边界。
+          这个原则大概是这篇论文之外最能带走的东西。
+        </p>
+      </section>
+
+      <section class="note">
+        <div class="sec-head"><span class="sec-num">06</span><h2>数字该怎么读</h2></div>
+        <p>
+          论文的性能模型就三句话:总延迟 = 段数 × 单段耗时;吞吐 = 单段耗时的倒数;单段耗时 = 数据量 ÷ 带宽。
+          前两句是流水线常识,第三句指出两个旋钮:切机器拧小数据量(KV 拧不动,见悖论),驻留 L3 拧大带宽。
+        </p>
+        <p>
+          评估方法上,大模型的数字(Qwen-8B、70B,最高 13.9×)不是实测:他们在真机上掐表单段耗时,
+          套公式组合出端到端,再用 3B/7B 实测校准。校准显示估计值系统性偏小 15%–52%(漏算跨节点干扰和缓存抖动),
+          所以外推图要按"趋势可信、绝对值偏乐观两三成"来读。
+        </p>
+      </section>
+
+      <section class="band" aria-labelledby="findings-title">
+        <p class="kicker">Critical Takeaways</p>
+        <h2 id="findings-title">批判性结论</h2>
+        <div class="finding"><span>大头在哪</span><strong>2–11.5 倍的大数字主要来自"缓存驻留"本身;WA 分离和亚算子同步的消融各值 1.0–1.5 倍——作者消融做得坦白,加分。</strong></div>
+        <div class="finding"><span>Prefill 空白</span><strong>全文只有两句话,(see §6) 是悬空引用。Agent 时代(prefill 重、并发高、输入远多于输出),"decoding 主导"的前提正在过时。</strong></div>
+        <div class="finding"><span>甜区</span><strong>小 batch、长生成、低并发、延迟敏感的交互负载 + GPU 买不到的部署环境。Batch 32 时加速比掉到约 2 倍。</strong></div>
+        <div class="finding"><span>没有免费切法</span><strong>KV 三刀各有墙:按层切有悖论,按对话切有单条对话的下限,按时间切有每 token 的归并税。</strong></div>
+      </section>
+
+      <section class="note">
+        <div class="sec-head"><span class="sec-num">07</span><h2>方法论:这次阅读本身的收获</h2></div>
+        <ul>
+          <li><strong>盯住 motivating premise 问"今天还成立吗"</strong>——论文的"decoding 占主导"是基于昨天的负载写的;</li>
+          <li><strong>分清"实测到的"和"声称可扩展的"</strong>——摆法一 vs 摆法二就是这条缝;</li>
+          <li><strong>自己拿公开参数算一遍数</strong>——每层 KV 8KB、每 socket 分 0.86GB,一算就发现配置表全是精心卡在 1.15GB 以内的;</li>
+          <li><strong>没懂就追问到底</strong>——KV 悖论我追了四五轮才真懂,每次"没懂"都指向一个更基础的概念缺口。</li>
+        </ul>
+      </section>
+
+      <section class="scope">
+        <p>
+          本篇是个人学习笔记,基于 SOSP 2026 投稿论文(匿名审稿版)整理,非原创研究、非论文官方解读;
+          文中对论文的评价(如"实测与主张的缝隙""外推数字的折扣")是个人观点,供参考。
+          阅读过程为与 Claude Code 的对话式精读,后由人工整理成文。
+        </p>
+      </section>
+    </main>
+
+    <footer class="site-footer">
+      <div class="shell footer-inner">
+        <span>L3LLM Reading Notes · 2026</span>
+        <a href="../index.html">返回 Sipeng Xie 个人主页</a>
+      </div>
+    </footer>
+  </body>
+</html>
