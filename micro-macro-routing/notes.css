@@ -869,6 +869,17 @@ h1 {
   max-width: 820px;
 }
 
+/* ---------- Caution section ---------- */
+
+#caveat .concept-list,
+#caveat .iso-callout {
+  max-width: 820px;
+}
+
+#caveat .iso-callout {
+  margin-top: 28px;
+}
+
 /* ---------- Research proposition (thesis card) ---------- */
 
 .thesis-card {

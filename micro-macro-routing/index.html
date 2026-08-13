@@ -36,6 +36,7 @@
           <a href="#isomorphism">同构</a>
           <a href="#theory">理论</a>
           <a href="#gap">空白</a>
+          <a href="#caveat">审慎</a>
           <a href="#references">文献</a>
         </nav>
         <a class="nav-cta" href="../index.html#projects">返回主页</a>
@@ -341,10 +342,52 @@
         </div>
       </section>
 
-      <section class="section shell" id="references">
+      <section class="section shell" id="caveat">
         <div class="section-heading">
           <div class="kicker">
             <span>06</span>
+            <h2>审慎一笔：这个统一框架可能收益存疑</h2>
+          </div>
+          <p>
+            前面把「跨尺度统一」的前景讲得很诱人。但在真的投入之前，得先泼一盆冷水——下面五点疑虑，每一点都可能让「统一」的收益大打折扣。
+          </p>
+        </div>
+
+        <ul class="concept-list caveat-list">
+          <li class="reveal">
+            <strong>大头收益并不依赖「统一」</strong>
+            <p>宏观选模型能省约 85% 的成本，微观选 expert 能省约 50%，叠在一起看似能省到约 90%。但这个大头，是两边各自分别优化就能拿到的——它跟「统一」没有因果关系。统一框架不能把这笔本来就到手的账，记在自己头上邀功。</p>
+          </li>
+          <li class="reveal">
+            <strong>两头不靠，真正有用的窗口很窄</strong>
+            <p>面对黑盒大模型——恰恰是省钱诉求最强的场景——你拿不到它内部的 expert 信息，统一框架连数据都没有，根本无从下手。而面对自己的开源模型，信息虽然拿得到，分别优化却已经够好，统一能带来的增量可能只剩几个百分点。于是陷入一个尴尬：能做的场景收益小，收益大的场景却做不了。</p>
+          </li>
+          <li class="reveal">
+            <strong>两层之间的耦合可能很弱</strong>
+            <p>选模型，看的是「query 类型」和「模型能力」的匹配；选 expert，看的是「token 局部结构」和「expert 权重」的匹配。这两套信号几乎不重叠。如果耦合本来就很弱，强行统一不但带不来收益，还白白多出一层复杂度。</p>
+          </li>
+          <li class="reveal">
+            <strong>它违背「分层」的工程智慧</strong>
+            <p>系统工程里有条铁律：分层解耦，往往胜过精巧的统一。网络协议栈、缓存体系，靠的都是分层才站稳的。当简单的分层就能赢的时候，「统一」很可能是一种过度设计。</p>
+          </li>
+          <li class="reveal">
+            <strong>所有权门槛把大多数人挡在门外</strong>
+            <p>端到端的统一，要求你「既控模型权重、又控路由」。这样的条件，基本只有大模型公司才具备；学术界的小团队很难拿到，也就难以真正验证一个统一框架——验证不了，方向再美也落不了地。</p>
+          </li>
+        </ul>
+
+        <div class="iso-callout reveal">
+          <span>点题</span>
+          <p>
+            所以，这是一个「低期望值」而非「零价值」的方向。<strong>把「这条路可能走不通」如实记下来，和「发现空白」同样有价值</strong>——及早证伪一个方向，跟提出一个方向一样重要。
+          </p>
+        </div>
+      </section>
+
+      <section class="section shell" id="references">
+        <div class="section-heading">
+          <div class="kicker">
+            <span>07</span>
             <h2>参考文献</h2>
           </div>
           <p>这份综述的核心来源，按尺度分成两组。有 arXiv 页面的都附了链接。</p>
