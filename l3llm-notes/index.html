@@ -198,11 +198,41 @@
         letter-spacing: 0.04em;
       }
 
+      /* Viz cards */
+      .viz-card { background: var(--panel); border: 1px solid var(--line); border-radius: 14px; padding: 22px 22px 16px; margin: 20px 0 24px; }
+      .viz-title { font-family: "IBM Plex Mono", monospace; font-size: 11px; font-weight: 600; letter-spacing: 0.12em; text-transform: uppercase; color: var(--ink-3); margin: 0 0 14px; }
+      .viz-sub { font-family: "IBM Plex Mono", monospace; font-size: 11px; font-weight: 600; letter-spacing: 0.08em; color: var(--ink-3); margin: 0 0 10px; }
+      .viz-caption { font-size: 13px; color: var(--ink-3); margin: 12px 0 4px; line-height: 1.6; }
+      .viz-legend { display: flex; flex-wrap: wrap; gap: 10px 20px; font-size: 12px; color: var(--ink-2); margin-bottom: 14px; }
+      .viz-legend .sw { width: 10px; height: 10px; border-radius: 2px; display: inline-block; margin-right: 7px; vertical-align: -1px; }
+      .viz-grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }
+      svg text { font-family: "IBM Plex Sans", sans-serif; }
+      svg .mono { font-family: "IBM Plex Mono", monospace; }
+
+      /* Gantt / KV grids — 2px page-colored gaps act as surface gaps */
+      .gantt, .kvgrid { display: grid; gap: 2px; background: var(--page); border-radius: 10px; padding: 2px; margin-bottom: 6px; }
+      .gantt { grid-template-columns: 64px repeat(8, 1fr); }
+      .kvgrid { grid-template-columns: 64px repeat(4, 1fr); }
+      .gcell { min-height: 30px; border-radius: 4px; display: flex; align-items: center; justify-content: center; font-family: "IBM Plex Mono", monospace; font-size: 12px; }
+      .gcell.busy { background: #48a874; color: #0b0f0c; font-weight: 600; }
+      .gcell.idle { background: #12160f; border: 1px solid rgba(169,176,166,0.10); }
+      .gcell.m2 { background: #d0622a; color: #14100b; font-weight: 600; }
+      .gcell.ghead, .gcell.glabel { background: transparent; border: none; color: var(--ink-3); font-size: 11px; min-height: 22px; }
+      .gcell.glabel { justify-content: flex-end; padding-right: 10px; }
+
+      /* Hero stats */
+      .stats { display: grid; grid-template-columns: repeat(3, 1fr); gap: 14px; margin-top: 30px; }
+      .stat { background: var(--panel); border: 1px solid var(--line); border-radius: 12px; padding: 16px 18px 14px; }
+      .stat b { display: block; font-size: 32px; font-weight: 600; line-height: 1.1; color: var(--ink); }
+      .stat span { display: block; margin-top: 6px; font-family: "IBM Plex Mono", monospace; font-size: 11px; letter-spacing: 0.06em; color: var(--ink-3); }
+
       @media (max-width: 640px) {
         .hero { padding: 48px 0 28px; }
         .finding { flex-direction: column; gap: 4px; }
         .finding span { flex: none; }
         .footer-inner { flex-direction: column; align-items: flex-start; }
+        .viz-grid-2 { grid-template-columns: 1fr; }
+        .stats { grid-template-columns: 1fr; }
       }
     </style>
   </head>
@@ -234,6 +264,11 @@
           <span>2026</span>
           <span>约 20 分钟</span>
           <span>个人学习笔记,非论文官方解读</span>
+        </div>
+        <div class="stats">
+          <div class="stat"><b>11.51×</b><span>最大 TPOT 加速 · 3B / batch 1 / 实测</span></div>
+          <div class="stat"><b>1152 MB</b><span>单 socket L3 · 96 核 × 12MB</span></div>
+          <div class="stat"><b>2.04×</b><span>batch 32 时的实测下限 · 7B</span></div>
         </div>
       </section>
 
@@ -270,6 +305,19 @@
           一块 H100 要打满算力需要约 600 FLOPs/Byte——也就是说 GPU 跑小 batch decoding 时,
           tensor core 利用率可能不到 1%,瓶颈完全卡在"每秒能从显存流出多少字节"。
         </p>
+        <div class="viz-card">
+          <p class="viz-title">Fig. A · 算术强度错配:GPU 算力在 decoding 上为何闲置(FLOPs/Byte)</p>
+          <svg viewBox="0 0 720 132" role="img" aria-label="打满 H100 算力需要约 600 FLOPs/Byte,而 decoding 实际只有 2 到 5">
+            <text x="162" y="42" text-anchor="end" font-size="13" fill="#a9b0a6">打满 H100 算力所需</text>
+            <rect x="170" y="26" width="500" height="24" rx="4" fill="#d0622a"><title>约 600 FLOPs/Byte(INT8 约 2000 TFLOPS ÷ HBM 约 3.3TB/s)</title></rect>
+            <rect x="170" y="26" width="4" height="24" fill="#d0622a"></rect>
+            <text x="678" y="43" font-size="12" class="mono" fill="#a9b0a6">≈600</text>
+            <text x="162" y="98" text-anchor="end" font-size="13" fill="#a9b0a6">decoding 实际(GEMV)</text>
+            <rect x="170" y="82" width="5" height="24" rx="2" fill="#48a874"><title>2–5 FLOPs/Byte(论文 Fig. 2,context 4096)</title></rect>
+            <text x="184" y="99" font-size="12" class="mono" fill="#a9b0a6">2–5</text>
+          </svg>
+          <p class="viz-caption">数量级估算。差距约两个数量级:瓶颈在数据流出速度,不在乘加算力——这就是"CPU + 大 L3"有资格上桌的原因。</p>
+        </div>
         <p>
           所以真正的竞赛是<strong>权重从哪流出来</strong>:GPU 从片外 HBM 流,L3LLM 从片上 L3 流。
           HBM 再快也是片外,L3 是片上。论文赌的是片上缓存带宽能追平片外显存带宽,而硬件便宜得多、还容易买到。
@@ -298,6 +346,43 @@
           <li><strong>对话数</strong>:每条对话的历史不同,KV 完全私有,10 条并发对话就是 10 份(对比:权重是所有对话共用一份);</li>
           <li><strong>上下文长度</strong>:聊得越长,攒的越多。</li>
         </ul>
+        <div class="viz-card">
+          <p class="viz-title">Fig. B · KV cache 的结构:层 × 时间 × 对话</p>
+          <div class="viz-legend">
+            <span><span class="sw" style="background:#48a874"></span>已积累的历史 K/V</span>
+            <span><span class="sw" style="background:#d0622a"></span>本 token 新追加</span>
+          </div>
+          <svg viewBox="0 0 720 200" role="img" aria-label="两条对话各自的 KV 存储:每条 4 层,每层随 token 增长向右追加">
+            <text x="96" y="42" font-size="13" font-weight="600" fill="#e9ede6">对话 A</text>
+            <text x="88" y="73" text-anchor="end" font-size="10" class="mono" fill="#767d72">层1</text>
+            <text x="88" y="98" text-anchor="end" font-size="10" class="mono" fill="#767d72">层2</text>
+            <text x="88" y="123" text-anchor="end" font-size="10" class="mono" fill="#767d72">层3</text>
+            <text x="88" y="148" text-anchor="end" font-size="10" class="mono" fill="#767d72">层4</text>
+            <g fill="#48a874" fill-opacity="0.25" stroke="#48a874" stroke-opacity="0.9" stroke-width="1">
+              <rect x="96" y="58" width="34" height="22" rx="3"/><rect x="133" y="58" width="34" height="22" rx="3"/><rect x="170" y="58" width="34" height="22" rx="3"/><rect x="207" y="58" width="34" height="22" rx="3"/><rect x="244" y="58" width="34" height="22" rx="3"/>
+              <rect x="96" y="83" width="34" height="22" rx="3"/><rect x="133" y="83" width="34" height="22" rx="3"/><rect x="170" y="83" width="34" height="22" rx="3"/><rect x="207" y="83" width="34" height="22" rx="3"/><rect x="244" y="83" width="34" height="22" rx="3"/>
+              <rect x="96" y="108" width="34" height="22" rx="3"/><rect x="133" y="108" width="34" height="22" rx="3"/><rect x="170" y="108" width="34" height="22" rx="3"/><rect x="207" y="108" width="34" height="22" rx="3"/><rect x="244" y="108" width="34" height="22" rx="3"/>
+              <rect x="96" y="133" width="34" height="22" rx="3"/><rect x="133" y="133" width="34" height="22" rx="3"/><rect x="170" y="133" width="34" height="22" rx="3"/><rect x="207" y="133" width="34" height="22" rx="3"/><rect x="244" y="133" width="34" height="22" rx="3"/>
+            </g>
+            <g fill="#d0622a" fill-opacity="0.3" stroke="#d0622a" stroke-width="1">
+              <rect x="281" y="58" width="34" height="22" rx="3"/><rect x="281" y="83" width="34" height="22" rx="3"/><rect x="281" y="108" width="34" height="22" rx="3"/><rect x="281" y="133" width="34" height="22" rx="3"/>
+            </g>
+            <text x="205" y="180" text-anchor="middle" font-size="10" class="mono" fill="#767d72">随生成向右增长 →</text>
+            <line x1="372" y1="40" x2="372" y2="168" stroke="#767d72" stroke-opacity="0.5" stroke-dasharray="4 4"/>
+            <text x="372" y="188" text-anchor="middle" font-size="11" class="mono" fill="#767d72">互不共享</text>
+            <text x="430" y="42" font-size="13" font-weight="600" fill="#e9ede6">对话 B</text>
+            <g fill="#48a874" fill-opacity="0.25" stroke="#48a874" stroke-opacity="0.9" stroke-width="1">
+              <rect x="430" y="58" width="34" height="22" rx="3"/><rect x="467" y="58" width="34" height="22" rx="3"/><rect x="504" y="58" width="34" height="22" rx="3"/><rect x="541" y="58" width="34" height="22" rx="3"/><rect x="578" y="58" width="34" height="22" rx="3"/>
+              <rect x="430" y="83" width="34" height="22" rx="3"/><rect x="467" y="83" width="34" height="22" rx="3"/><rect x="504" y="83" width="34" height="22" rx="3"/><rect x="541" y="83" width="34" height="22" rx="3"/><rect x="578" y="83" width="34" height="22" rx="3"/>
+              <rect x="430" y="108" width="34" height="22" rx="3"/><rect x="467" y="108" width="34" height="22" rx="3"/><rect x="504" y="108" width="34" height="22" rx="3"/><rect x="541" y="108" width="34" height="22" rx="3"/><rect x="578" y="108" width="34" height="22" rx="3"/>
+              <rect x="430" y="133" width="34" height="22" rx="3"/><rect x="467" y="133" width="34" height="22" rx="3"/><rect x="504" y="133" width="34" height="22" rx="3"/><rect x="541" y="133" width="34" height="22" rx="3"/><rect x="578" y="133" width="34" height="22" rx="3"/>
+            </g>
+            <g fill="#d0622a" fill-opacity="0.3" stroke="#d0622a" stroke-width="1">
+              <rect x="615" y="58" width="34" height="22" rx="3"/><rect x="615" y="83" width="34" height="22" rx="3"/><rect x="615" y="108" width="34" height="22" rx="3"/><rect x="615" y="133" width="34" height="22" rx="3"/>
+            </g>
+          </svg>
+          <p class="viz-caption">每生成一个 token,每条对话的每一层都向右追加一格。层数翻倍 → 份数翻倍;对话翻倍 → 整摞翻倍;上下文变长 → 向右无限延伸。</p>
+        </div>
       </section>
 
       <section class="note">
@@ -312,12 +397,33 @@
           <li>4 台机器:每台 2 层;要 4 条对话填满;每台 2 × 4 = 8MB;</li>
           <li>8 台机器:每台 1 层;8 条对话;每台 1 × 8 = 8MB。</li>
         </ul>
-        <p>为什么机器多了,对话数就<strong>必须</strong>多?看时间轴。2 台机器只跑 1 条对话时,每台一半时间在空转:</p>
-        <pre>机器1: [算A的第1-4层]   闲 ———— 闲
-机器2:      闲          [算A的第5-8层]</pre>
-        <p>要不让它闲着,就得再塞一条对话错开进:</p>
-        <pre>机器1: [A][B][A][B] ...
-机器2:    [A][B][A][B] ...   ← 两台都满了,代价:2 条对话同时在跑</pre>
+        <p>为什么机器多了,对话数就<strong>必须</strong>多?看 4 台机器的时间轴(每一格 = 一台机器在一个时间片处理一条对话):</p>
+        <div class="viz-card">
+          <p class="viz-title">Fig. C · 流水线为什么要喂饱:机器 × 时间</p>
+          <p class="viz-sub">只有 1 条对话 —— 对角线式推进,每台 3/4 时间空转</p>
+          <div class="gantt">
+            <div class="gcell glabel">机器1</div>
+            <div class="gcell busy">A</div><div class="gcell idle"></div><div class="gcell idle"></div><div class="gcell idle"></div><div class="gcell busy">A</div><div class="gcell idle"></div><div class="gcell idle"></div><div class="gcell idle"></div>
+            <div class="gcell glabel">机器2</div>
+            <div class="gcell idle"></div><div class="gcell busy">A</div><div class="gcell idle"></div><div class="gcell idle"></div><div class="gcell idle"></div><div class="gcell busy">A</div><div class="gcell idle"></div><div class="gcell idle"></div>
+            <div class="gcell glabel">机器3</div>
+            <div class="gcell idle"></div><div class="gcell idle"></div><div class="gcell busy">A</div><div class="gcell idle"></div><div class="gcell idle"></div><div class="gcell idle"></div><div class="gcell busy">A</div><div class="gcell idle"></div>
+            <div class="gcell glabel">机器4</div>
+            <div class="gcell idle"></div><div class="gcell idle"></div><div class="gcell idle"></div><div class="gcell busy">A</div><div class="gcell idle"></div><div class="gcell idle"></div><div class="gcell idle"></div><div class="gcell busy">A</div>
+          </div>
+          <p class="viz-sub" style="margin-top:16px">4 条对话错开进入 —— 全部填满</p>
+          <div class="gantt">
+            <div class="gcell glabel">机器1</div>
+            <div class="gcell busy">A</div><div class="gcell busy">B</div><div class="gcell busy">C</div><div class="gcell busy">D</div><div class="gcell busy">A</div><div class="gcell busy">B</div><div class="gcell busy">C</div><div class="gcell busy">D</div>
+            <div class="gcell glabel">机器2</div>
+            <div class="gcell idle"></div><div class="gcell busy">A</div><div class="gcell busy">B</div><div class="gcell busy">C</div><div class="gcell busy">D</div><div class="gcell busy">A</div><div class="gcell busy">B</div><div class="gcell busy">C</div>
+            <div class="gcell glabel">机器3</div>
+            <div class="gcell idle"></div><div class="gcell idle"></div><div class="gcell busy">A</div><div class="gcell busy">B</div><div class="gcell busy">C</div><div class="gcell busy">D</div><div class="gcell busy">A</div><div class="gcell busy">B</div>
+            <div class="gcell glabel">机器4</div>
+            <div class="gcell idle"></div><div class="gcell idle"></div><div class="gcell idle"></div><div class="gcell busy">A</div><div class="gcell busy">B</div><div class="gcell busy">C</div><div class="gcell busy">D</div><div class="gcell busy">A</div>
+          </div>
+          <p class="viz-caption">流水线有 p 段,就得有 p 条对话同时在流动——在途对话数被迫等于机器数,这就是悖论里那个"× p"的来源。</p>
+        </div>
         <p>
           4 台机器同理:1 条对话时每台 3/4 时间空转,要塞 4 条才填满。规律就是<strong>流水线有几段,
           就得有几条对话在流动</strong>——这个对话数是被迫的,不是你选的。
@@ -330,6 +436,51 @@
         <p>8 台机器时变成:</p>
         <pre>对话A~H 的第1层 KV,各一份 = 8MB</pre>
         <p>随机器数变化的只是 8MB 的组成方式(层越来越少 × 对话越来越多),总量不变。</p>
+        <div class="viz-card">
+          <p class="viz-title">Fig. D · KV 悖论的图形化:加机器,权重一路变瘦,KV 纹丝不动</p>
+          <div class="viz-grid-2">
+            <div>
+              <p class="viz-sub">每台持有的权重(GB)</p>
+              <svg viewBox="0 0 340 210" role="img" aria-label="每台权重随机器数下降:2 台 4GB,4 台 2GB,8 台 1GB">
+                <line x1="44" y1="45" x2="316" y2="45" stroke="rgba(169,176,166,0.12)" stroke-width="1"/>
+                <line x1="44" y1="110" x2="316" y2="110" stroke="rgba(169,176,166,0.12)" stroke-width="1"/>
+                <line x1="44" y1="175" x2="316" y2="175" stroke="rgba(169,176,166,0.25)" stroke-width="1"/>
+                <text x="38" y="49" text-anchor="end" font-size="10" class="mono" fill="#767d72">4</text>
+                <text x="38" y="114" text-anchor="end" font-size="10" class="mono" fill="#767d72">2</text>
+                <text x="38" y="179" text-anchor="end" font-size="10" class="mono" fill="#767d72">0</text>
+                <rect x="88" y="45" width="24" height="130" rx="4" fill="#48a874"><title>2 台机器:每台 4GB 权重</title></rect><rect x="88" y="171" width="24" height="4" fill="#48a874"/>
+                <rect x="168" y="110" width="24" height="65" rx="4" fill="#48a874"><title>4 台机器:每台 2GB 权重</title></rect><rect x="168" y="171" width="24" height="4" fill="#48a874"/>
+                <rect x="248" y="142.5" width="24" height="32.5" rx="4" fill="#48a874"><title>8 台机器:每台 1GB 权重</title></rect><rect x="248" y="171" width="24" height="4" fill="#48a874"/>
+                <text x="100" y="37" text-anchor="middle" font-size="11" class="mono" fill="#a9b0a6">4GB</text>
+                <text x="180" y="102" text-anchor="middle" font-size="11" class="mono" fill="#a9b0a6">2GB</text>
+                <text x="260" y="134" text-anchor="middle" font-size="11" class="mono" fill="#a9b0a6">1GB</text>
+                <text x="100" y="196" text-anchor="middle" font-size="10" class="mono" fill="#767d72">2 台</text>
+                <text x="180" y="196" text-anchor="middle" font-size="10" class="mono" fill="#767d72">4 台</text>
+                <text x="260" y="196" text-anchor="middle" font-size="10" class="mono" fill="#767d72">8 台</text>
+              </svg>
+            </div>
+            <div>
+              <p class="viz-sub">每台持有的 KV(MB)</p>
+              <svg viewBox="0 0 340 210" role="img" aria-label="每台 KV 不随机器数变化:恒为 8MB">
+                <line x1="44" y1="45" x2="316" y2="45" stroke="rgba(169,176,166,0.12)" stroke-width="1"/>
+                <line x1="44" y1="110" x2="316" y2="110" stroke="rgba(169,176,166,0.12)" stroke-width="1"/>
+                <line x1="44" y1="175" x2="316" y2="175" stroke="rgba(169,176,166,0.25)" stroke-width="1"/>
+                <text x="38" y="49" text-anchor="end" font-size="10" class="mono" fill="#767d72">8</text>
+                <text x="38" y="114" text-anchor="end" font-size="10" class="mono" fill="#767d72">4</text>
+                <text x="38" y="179" text-anchor="end" font-size="10" class="mono" fill="#767d72">0</text>
+                <line x1="100" y1="45" x2="260" y2="45" stroke="#a9b0a6" stroke-opacity="0.6" stroke-width="1" stroke-dasharray="3 3"/>
+                <rect x="88" y="45" width="24" height="130" rx="4" fill="#d0622a"><title>2 台机器:每台 8MB KV</title></rect><rect x="88" y="171" width="24" height="4" fill="#d0622a"/>
+                <rect x="168" y="45" width="24" height="130" rx="4" fill="#d0622a"><title>4 台机器:每台 8MB KV</title></rect><rect x="168" y="171" width="24" height="4" fill="#d0622a"/>
+                <rect x="248" y="45" width="24" height="130" rx="4" fill="#d0622a"><title>8 台机器:每台 8MB KV</title></rect><rect x="248" y="171" width="24" height="4" fill="#d0622a"/>
+                <text x="180" y="30" text-anchor="middle" font-size="11" class="mono" fill="#a9b0a6">8MB · 不变</text>
+                <text x="100" y="196" text-anchor="middle" font-size="10" class="mono" fill="#767d72">2 台</text>
+                <text x="180" y="196" text-anchor="middle" font-size="10" class="mono" fill="#767d72">4 台</text>
+                <text x="260" y="196" text-anchor="middle" font-size="10" class="mono" fill="#767d72">8 台</text>
+              </svg>
+            </div>
+          </div>
+          <p class="viz-caption">示意数值:8 层模型、每层 1GB 权重;每条对话每层 1MB KV。左面板一路下降,右面板被"层数 ÷ p × 对话 × p"锁死在 8MB。</p>
+        </div>
         <blockquote>
           <p>不管怎么切,每台机器背上永远恰好是一整条对话的完整 KV。</p>
         </blockquote>
@@ -356,14 +507,37 @@
           但追问下去会发现:KV 有两个独立的维度(层、对话),摆到机器上有两种切法。把 KV 想成一张方格表
           (2 条对话、4 层),每个格子是"某层 × 某对话"的一份 KV:
         </p>
-        <pre>        层1   层2   层3   层4
-对话A  [A1]  [A2]  [A3]  [A4]
-对话B  [B1]  [B2]  [B3]  [B4]</pre>
-        <p>这 8 个格子分给 2 台机器,两种切法:</p>
-        <pre>摆法一 · 竖切(按层)            摆法二 · 横切(按对话)
-机器1: A1 A2 B1 B2               机器1: A1 A2 A3 A4
-机器2: A3 A4 B3 B4               机器2: B1 B2 B3 B4
-每台: 所有对话 × 一半层            每台: 所有层 × 一条对话</pre>
+        <div class="viz-card">
+          <p class="viz-title">Fig. E · KV 的两种摆法(颜色 = 归属机器)</p>
+          <div class="viz-legend">
+            <span><span class="sw" style="background:#48a874"></span>机器 1</span>
+            <span><span class="sw" style="background:#d0622a"></span>机器 2</span>
+          </div>
+          <div class="viz-grid-2">
+            <div>
+              <p class="viz-sub">摆法一 · 竖切(按层,配合流水线)</p>
+              <div class="kvgrid">
+                <div class="gcell ghead"></div><div class="gcell ghead">层1</div><div class="gcell ghead">层2</div><div class="gcell ghead">层3</div><div class="gcell ghead">层4</div>
+                <div class="gcell glabel">对话A</div>
+                <div class="gcell busy">A1</div><div class="gcell busy">A2</div><div class="gcell m2">A3</div><div class="gcell m2">A4</div>
+                <div class="gcell glabel">对话B</div>
+                <div class="gcell busy">B1</div><div class="gcell busy">B2</div><div class="gcell m2">B3</div><div class="gcell m2">B4</div>
+              </div>
+              <p class="viz-caption">机器1 拿前 2 层、机器2 拿后 2 层,<strong>所有对话</strong>都在每一台上。</p>
+            </div>
+            <div>
+              <p class="viz-sub">摆法二 · 横切(按对话,独立扩展)</p>
+              <div class="kvgrid">
+                <div class="gcell ghead"></div><div class="gcell ghead">层1</div><div class="gcell ghead">层2</div><div class="gcell ghead">层3</div><div class="gcell ghead">层4</div>
+                <div class="gcell glabel">对话A</div>
+                <div class="gcell busy">A1</div><div class="gcell busy">A2</div><div class="gcell busy">A3</div><div class="gcell busy">A4</div>
+                <div class="gcell glabel">对话B</div>
+                <div class="gcell m2">B1</div><div class="gcell m2">B2</div><div class="gcell m2">B3</div><div class="gcell m2">B4</div>
+              </div>
+              <p class="viz-caption">机器1 拿对话 A、机器2 拿对话 B,<strong>所有层</strong>都在每一台上。</p>
+            </div>
+          </div>
+        </div>
         <p>
           加第 3 台机器时分晓立现:摆法一里新机器是流水线的新一段——层重新摊、被迫更多对话在途,
           每台总量不变(正是悖论);摆法二里新机器只是池子里多一个位置,新对话放上去就行,
@@ -422,6 +596,51 @@
           论文的性能模型就三句话:总延迟 = 段数 × 单段耗时;吞吐 = 单段耗时的倒数;单段耗时 = 数据量 ÷ 带宽。
           前两句是流水线常识,第三句指出两个旋钮:切机器拧小数据量(KV 拧不动,见悖论),驻留 L3 拧大带宽。
         </p>
+        <div class="viz-card">
+          <p class="viz-title">Fig. F · 实测 TPOT 对比:LLaMA-3.2-3B,ctx 4096(越低越好)</p>
+          <div class="viz-legend">
+            <span><span class="sw" style="background:#d0622a"></span>llama.cpp</span>
+            <span><span class="sw" style="background:#48a874"></span>L3LLM</span>
+          </div>
+          <svg viewBox="0 0 720 310" role="img" aria-label="分组柱状图:各 batch 下 llama.cpp 与 L3LLM 的 TPOT 毫秒数,L3LLM 全面更低">
+            <line x1="52" y1="22" x2="700" y2="22" stroke="rgba(169,176,166,0.12)"/><line x1="52" y1="70" x2="700" y2="70" stroke="rgba(169,176,166,0.12)"/><line x1="52" y1="118" x2="700" y2="118" stroke="rgba(169,176,166,0.12)"/><line x1="52" y1="166" x2="700" y2="166" stroke="rgba(169,176,166,0.12)"/><line x1="52" y1="214" x2="700" y2="214" stroke="rgba(169,176,166,0.12)"/>
+            <line x1="52" y1="262" x2="700" y2="262" stroke="rgba(169,176,166,0.25)"/>
+            <text x="44" y="266" text-anchor="end" font-size="10" class="mono" fill="#767d72">0</text>
+            <text x="44" y="218" text-anchor="end" font-size="10" class="mono" fill="#767d72">50</text>
+            <text x="44" y="170" text-anchor="end" font-size="10" class="mono" fill="#767d72">100</text>
+            <text x="44" y="122" text-anchor="end" font-size="10" class="mono" fill="#767d72">150</text>
+            <text x="44" y="74" text-anchor="end" font-size="10" class="mono" fill="#767d72">200</text>
+            <text x="44" y="26" text-anchor="end" font-size="10" class="mono" fill="#767d72">250</text>
+            <g>
+              <rect x="81" y="215.3" width="24" height="46.7" rx="4" fill="#d0622a"><title>llama.cpp · batch 1 · 48.6 ms</title></rect><rect x="81" y="258" width="24" height="4" fill="#d0622a"/>
+              <rect x="107" y="258" width="24" height="4" rx="2" fill="#48a874"><title>L3LLM · batch 1 · 4.2 ms</title></rect>
+              <rect x="189" y="215" width="24" height="47" rx="4" fill="#d0622a"><title>llama.cpp · batch 2 · 49.0 ms</title></rect><rect x="189" y="258" width="24" height="4" fill="#d0622a"/>
+              <rect x="215" y="253.9" width="24" height="8.1" rx="2" fill="#48a874"><title>L3LLM · batch 2 · 8.4 ms</title></rect><rect x="215" y="258" width="24" height="4" fill="#48a874"/>
+              <rect x="297" y="210.4" width="24" height="51.6" rx="4" fill="#d0622a"><title>llama.cpp · batch 4 · 53.7 ms</title></rect><rect x="297" y="258" width="24" height="4" fill="#d0622a"/>
+              <rect x="323" y="246.9" width="24" height="15.1" rx="4" fill="#48a874"><title>L3LLM · batch 4 · 15.7 ms</title></rect><rect x="323" y="258" width="24" height="4" fill="#48a874"/>
+              <rect x="405" y="183.2" width="24" height="78.8" rx="4" fill="#d0622a"><title>llama.cpp · batch 8 · 82.1 ms</title></rect><rect x="405" y="258" width="24" height="4" fill="#d0622a"/>
+              <rect x="431" y="238.6" width="24" height="23.4" rx="4" fill="#48a874"><title>L3LLM · batch 8 · 24.4 ms</title></rect><rect x="431" y="258" width="24" height="4" fill="#48a874"/>
+              <rect x="513" y="129" width="24" height="133" rx="4" fill="#d0622a"><title>llama.cpp · batch 16 · 138.5 ms</title></rect><rect x="513" y="258" width="24" height="4" fill="#d0622a"/>
+              <rect x="539" y="220" width="24" height="42" rx="4" fill="#48a874"><title>L3LLM · batch 16 · 43.8 ms</title></rect><rect x="539" y="258" width="24" height="4" fill="#48a874"/>
+              <rect x="621" y="54.8" width="24" height="207.2" rx="4" fill="#d0622a"><title>llama.cpp · batch 32 · 215.8 ms</title></rect><rect x="621" y="258" width="24" height="4" fill="#d0622a"/>
+              <rect x="647" y="188.8" width="24" height="73.2" rx="4" fill="#48a874"><title>L3LLM · batch 32 · 76.3 ms</title></rect><rect x="647" y="258" width="24" height="4" fill="#48a874"/>
+            </g>
+            <text x="106" y="207" text-anchor="middle" font-size="11" class="mono" font-weight="600" fill="#e9ede6">11.5×</text>
+            <text x="214" y="207" text-anchor="middle" font-size="11" class="mono" font-weight="600" fill="#e9ede6">5.8×</text>
+            <text x="322" y="202" text-anchor="middle" font-size="11" class="mono" font-weight="600" fill="#e9ede6">3.4×</text>
+            <text x="430" y="175" text-anchor="middle" font-size="11" class="mono" font-weight="600" fill="#e9ede6">3.4×</text>
+            <text x="538" y="121" text-anchor="middle" font-size="11" class="mono" font-weight="600" fill="#e9ede6">3.2×</text>
+            <text x="646" y="47" text-anchor="middle" font-size="11" class="mono" font-weight="600" fill="#e9ede6">2.8×</text>
+            <text x="106" y="282" text-anchor="middle" font-size="10" class="mono" fill="#767d72">1</text>
+            <text x="214" y="282" text-anchor="middle" font-size="10" class="mono" fill="#767d72">2</text>
+            <text x="322" y="282" text-anchor="middle" font-size="10" class="mono" fill="#767d72">4</text>
+            <text x="430" y="282" text-anchor="middle" font-size="10" class="mono" fill="#767d72">8</text>
+            <text x="538" y="282" text-anchor="middle" font-size="10" class="mono" fill="#767d72">16</text>
+            <text x="646" y="282" text-anchor="middle" font-size="10" class="mono" fill="#767d72">32</text>
+            <text x="700" y="304" text-anchor="end" font-size="10" class="mono" fill="#767d72">batch size →</text>
+          </svg>
+          <p class="viz-caption">数据:论文 Table 2(a),端到端实测。batch 越大,llama.cpp 越能摊薄从内存读权重的成本,加速比从 11.5× 收窄到 2.8×——这是 ground truth,不是外推。</p>
+        </div>
         <p>
           评估方法上,大模型的数字(Qwen-8B、70B,最高 13.9×)不是实测:他们在真机上掐表单段耗时,
           套公式组合出端到端,再用 3B/7B 实测校准。校准显示估计值系统性偏小 15%–52%(漏算跨节点干扰和缓存抖动),
