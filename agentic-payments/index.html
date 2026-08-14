@@ -1,0 +1,534 @@
+<!doctype html>
+<html lang="zh-CN" data-theme="dark">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta
+      name="description"
+      content="AI agent 开始自己花钱了——agentic payments 让链上流量变了形状（微额、突发、发送方高度集中），热点竞争从合约变成账户链与结算 slot；调度层的公平单位崩塌、排序权被定价；安全层的 bearer 凭证穿过基础设施（看到=能用）。基于 14 个代理的并行调研，标清每个结论的证据边界。"
+    />
+    <meta name="theme-color" content="#10140f" />
+    <title>Agentic Payments：当 AI 开始自己花钱 | Sipeng Xie</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,300..900;1,9..144,300..900&family=IBM+Plex+Mono:wght@400;500;600&family=IBM+Plex+Sans:wght@300;400;500;600;700&display=swap"
+      rel="stylesheet"
+    />
+    <link rel="stylesheet" href="notes.css" />
+    <link rel="stylesheet" href="responsive.css" />
+  </head>
+  <body>
+    <a class="skip-link" href="#main">跳到正文</a>
+
+    <header class="topbar">
+      <div class="topbar-inner">
+        <a class="brand" href="../index.html" aria-label="返回 Sipeng Xie 个人主页">
+          <span class="brand-mark" aria-hidden="true">SX</span>
+          <span class="brand-text">
+            <strong>Agentic Payments 笔记</strong>
+            <span>Sipeng Xie · 研究笔记</span>
+          </span>
+        </a>
+        <nav class="page-nav" aria-label="章节导航">
+          <a href="#landscape">版图</a>
+          <a href="#hotspots">热点竞争</a>
+          <a href="#m2m">M2M 调度</a>
+          <a href="#security">支付安全</a>
+          <a href="#insights">研究切入点</a>
+          <a href="#references">参考资料</a>
+        </nav>
+        <a class="nav-cta" href="../index.html#projects">返回主页</a>
+      </div>
+    </header>
+
+    <main id="main">
+      <section class="hero shell" id="top">
+        <div class="hero-copy">
+          <p class="eyebrow">每日探索 · 笔记 04 · Blockchain study notes</p>
+          <h1>当 AI 开始自己花钱：链上流量改变了形状</h1>
+          <p class="lede">
+            2025 年 5 月 Coinbase 推出 <strong>x402</strong>，复活了 HTTP 402 状态码，让 AI agent 能在请求头里直接付款。一年之内，这套"agentic payments"撑起了上十亿笔链上交易，也把区块链流量的形状彻底改写——<strong>微额、突发、发送方高度集中</strong>。这组笔记基于一场 14 个代理并行检索 + 逐条核查的调研，回答一个问题：<strong>这个变化对执行层、调度层、安全层分别意味着什么，哪里是研究空白。</strong>
+          </p>
+          <ul class="hero-facts">
+            <li>1.37 亿笔已度量交易</li>
+            <li>3 层问题</li>
+            <li>4 条研究切入点</li>
+            <li>2026-08</li>
+          </ul>
+        </div>
+
+        <figure class="loop-map" aria-labelledby="loop-caption">
+          <p class="loop-map-caption" id="loop-caption">阅读路径</p>
+          <div class="loop-step">
+            <span class="loop-step-num">01</span>
+            <div class="loop-step-body">
+              <strong>看版图</strong>
+              <span>谁在让 AI 花钱，流量长什么样。</span>
+              <span class="loop-tag">背景</span>
+            </div>
+          </div>
+          <div class="loop-step">
+            <span class="loop-step-num">02</span>
+            <div class="loop-step-body">
+              <strong>拆问题</strong>
+              <span>执行层热点、调度层公平、安全层凭证，逐层展开。</span>
+              <span class="loop-tag">三个维度</span>
+            </div>
+          </div>
+          <div class="loop-step">
+            <span class="loop-step-num">03</span>
+            <div class="loop-step-body">
+              <strong>找空白</strong>
+              <span>哪几处是"没人做过、数据公开、值得做"的研究切入点。</span>
+              <span class="loop-tag">研究切入点</span>
+            </div>
+          </div>
+        </figure>
+      </section>
+
+      <section class="section shell" id="landscape">
+        <div class="section-heading">
+          <div class="kicker">
+            <span>01</span>
+            <h2>一年之内：三条路线、一张版图</h2>
+          </div>
+          <p>
+            agentic payments 不是一个协议，是一场三方竞速：链上原生的 x402、为支付建链的 Tempo、卡组织的链下方案——它们对"链上流量"的贡献方向几乎相反。
+          </p>
+        </div>
+
+        <div class="paper-grid four">
+          <div class="paper-card reveal">
+            <div class="paper-topline">
+              <span class="paper-num">01</span>
+              <span class="paper-role">链上</span>
+            </div>
+            <h3>x402 · Coinbase</h3>
+            <p>HTTP 402 + 请求头签名付款 + facilitator 链上结算。上十亿笔交易，几乎全部压在 Base 上。</p>
+            <span class="paper-link">2025-05 推出 <span>Linux Foundation</span></span>
+          </div>
+
+          <div class="paper-card reveal" data-tone="blue">
+            <div class="paper-topline">
+              <span class="paper-num">02</span>
+              <span class="paper-role">为支付建链</span>
+            </div>
+            <h3>Tempo · Stripe + Paradigm</h3>
+            <p>专用支付链：2D nonce、稳定币计价 gas、USD 计费。账户层修完后，执行层仍暴露给状态热点。</p>
+            <span class="paper-link">2026-03 <span>测试网 Moderato</span></span>
+          </div>
+
+          <div class="paper-card reveal" data-tone="warm">
+            <div class="paper-topline">
+              <span class="paper-num">03</span>
+              <span class="paper-role">链下</span>
+            </div>
+            <h3>Visa / Stripe / OpenAI</h3>
+            <p>TAP、ACP、Instant Checkout：消费者支付留在卡组织轨道，机器间微支付才流向链上。</p>
+            <span class="paper-link">无采用量数据 <span>双轨分流</span></span>
+          </div>
+
+          <div class="paper-card reveal">
+            <div class="paper-topline">
+              <span class="paper-num">04</span>
+              <span class="paper-role">卸载</span>
+            </div>
+            <h3>Cloudflare / MPP</h3>
+            <p>deferred payment、session vouchers：验证留在链下、按批结算——把流量挡在链上调度器之外。</p>
+            <span class="paper-link">"无区块链交易" <span>边缘结算</span></span>
+          </div>
+        </div>
+
+        <div class="iso-callout reveal">
+          <p>
+            <strong>一个必须记住的样本局限：</strong>所有"agent 在链上支付"的可观测流量，几乎 100% 来自 x402 这一条协议。这意味着所有结论本质上是"x402 流量报告"，而不是"agent 链上支付全景"——Tempo、Skyfire、Nevermined 等竞品没有公开的链上数据。
+          </p>
+        </div>
+      </section>
+
+      <section class="section shell paper-section" id="hotspots">
+        <div class="paper-head">
+          <div>
+            <div class="paper-head-label">
+              <span>维度 01 · 执行层</span>
+            </div>
+            <h2>热点竞争：形状问题，不是规模问题</h2>
+            <div class="paper-tags">
+              <span class="paper-tag">129 relayer EOA</span>
+              <span class="paper-tag">98.6% USDC</span>
+              <span class="paper-tag">burst +10,780%/week</span>
+            </div>
+          </div>
+          <p class="paper-lede">
+            经典热点是"大量不同用户抢同一合约"（NFT mint、DeFi 挤兑）。agent 支付流量形成的是一种<strong>结构性热点</strong>——热点不在合约，在账户链与结算 slot。关键数据：Base 上 1.37 亿笔 x402 交易仅由 129 个 relayer EOA 提交；98.6% 以 USDC 结算、收款方高度集中。
+          </p>
+        </div>
+
+        <div class="paper-body">
+          <div>
+            <div class="plain-language">
+              <h3>它在解决什么（大白话）</h3>
+              <p class="analogy">
+                把并行执行系统（BlockSTM 类）想成一个多车道收费站：理论上 100 辆车可以 10 条道并行通过。但 agent 流量是"一家物流公司包下了 60% 的车，且每辆车都去同一个收费站"——车道再多，这家的车也只能串行过。问题不是车太多（规模），是<strong>车队形状把并行度锁死了</strong>。
+              </p>
+              <p>
+                四层结构性热点：① <strong>账户序列化</strong>——EOA nonce 是全局串行链，129 个 relayer 扛 1.37 亿笔；② <strong>状态热点</strong>——收款方集中 → 同一 balance slot 的 write-write 冲突；③ <strong>访问层会合点</strong>——RPC 限流先于 gas 成为瓶颈（Nexus 报告）；④ <strong>突发同步</strong>——fleet 在 2 秒内同时启停，同步性比总量更伤并行系统。
+              </p>
+              <p>
+                与经典热点的最有价值差异：agent 流量是<strong>同质、可预测、结构已知的</strong>——经典热点只能被动缓解，agent 流量的模式是先验可知的，这给主动优化创造了经典 workload 没有的机会。定性为 <em>"hostile-shaped but well-characterized workload"</em>。
+              </p>
+            </div>
+
+            <div class="concepts">
+              <h3>读完要能复述的核心概念</h3>
+              <ul class="concept-list">
+                <li>
+                  <strong>2D nonce（并行 nonce lanes）</strong>
+                  <p>Tempo 原生字段 <code>nonce_key: U256</code>：每条 lane 独立递增，支付流走自己的 lane 不阻塞账户其他活动——账户层串行链的协议级修复。谱系：ERC-4337 <code>key‖seq</code> → Sui per-object versioning → Solana 无 nonce。</p>
+                </li>
+                <li>
+                  <strong>balance CRDT 不可用，但窄操作域有救</strong>
+                  <p>CRDT 保收敛不保不变量（<code>balance ≥ 0</code> 顺序敏感）。可行路线：预扣/额度模型（session 一次串行分配 + 本地检查）、净额结算（批内乱序、批末检查）。论文空间：形式化并证明 "budget-bounded invariance"（守恒恒成立 + 透支有界 + receiver 收敛）。</p>
+                </li>
+                <li>
+                  <strong>读写集声明调度</strong>
+                  <p>x402 类交易（<code>transferWithAuthorization</code>）的读写集协议级可静态推导（两个 balance slot + authorization slot）——可用 access list 声明 + 运行时校验 + 违约罚没，把冲突从"运行时发现"变成"调度时构造"。</p>
+                </li>
+              </ul>
+            </div>
+          </div>
+
+          <aside class="paper-aside">
+            <div class="result-card">
+              <p class="result-label">关键事实</p>
+              <div class="result-metric">
+                <strong>19%</strong>
+                <span>x402 峰值占 Base 全网活动</span>
+              </div>
+              <p>2025-11-17 Artemis 数据。注意：网上流传的 "35%" 未找到出处，实际峰值占比为 19%——引用任何占比前先核实口径。</p>
+            </div>
+            <div class="aside-note">
+              <span>值得停下来想</span>
+              <p>Tempo 修复了账户层依赖（2D nonce），但执行层仍是串行 EVM——账户层不再是吞吐借口之后，状态冲突会<strong>全额暴露给执行层</strong>。业界把问题推到了执行层研究者门口。</p>
+            </div>
+          </aside>
+        </div>
+      </section>
+
+      <section class="section shell paper-section" id="m2m" data-tone="blue">
+        <div class="paper-head">
+          <div>
+            <div class="paper-head-label">
+              <span>维度 02 · 调度层</span>
+            </div>
+            <h2>M2M 调度：公平单位崩塌，机器机会独特</h2>
+            <div class="paper-tags">
+              <span class="paper-tag">per-tx 公平 = per-relayer 放大</span>
+              <span class="paper-tag">加密 mempool 价值倒挂</span>
+              <span class="paper-tag">deadline / EDF</span>
+            </div>
+          </div>
+          <p class="paper-lede">
+            M2M（machine-to-machine）是 agent 与 agent 的支付。它有两个物理特征：<strong>① 每笔钱很小但很急</strong>（付 $0.20 换 500ms 内拿到 API 结果，晚了交易作废）；<strong>② 发送方高度集中且规律</strong>（一个链上只看得到少数几个大户地址在发，节奏像钟表）。这两个特征把为人类设计的调度与排序机制几乎全部打翻。
+          </p>
+        </div>
+
+        <div class="paper-body">
+          <div>
+            <div class="plain-language">
+              <h3>它在解决什么（大白话）</h3>
+              <p class="analogy">
+                人类世界"公平排队"很简单：先到先得。但 M2M 下一个区块装 1000 笔，600 笔来自同一个 relayer（替几十万 agent 提交的中间商）——按"每笔平等"那个 relayer 独占 60%，等于一个"人"拿走 600 人的份额；反过来按"每个地址限量"，大户分身一万个地址就绕过了。要公平，必须知道"这些地址背后是谁"——<strong>公平分配的单位必须不可伪造，最终绑死在身份层</strong>。
+              </p>
+              <p>
+                加密 mempool 为什么失效：它防的是"看内容插队"（三明治），但 M2M 单笔 $0.20 无价格影响（无攻击动机）；加密只藏内容不藏元数据（大小/间隔/频率相同 → 匿名集≈1）；解密延迟对微支付可能贵过保护对象本身。<strong>M2M 的病是"规律泄露"，不是"内容泄露"</strong>。
+              </p>
+              <p>
+                但机器流量有一个人类流量永远没有的优势：<strong>交易双方都是可编程的、有密钥的、会遵守协议的</strong>——可以直接要求交易自带调度元数据（截止时间、订阅配额、时间戳承诺），让调度器从"盲猜"变"知情"。这是比防御更大的机会。
+              </p>
+            </div>
+
+            <div class="concepts">
+              <h3>读完要能复述的核心概念</h3>
+              <ul class="concept-list">
+                <li>
+                  <strong>排序权定价：温和版已实证，恶意版是公认威胁</strong>
+                  <p>Solana 上 AI MEV agent 在 Jito 拍卖动态抬小费（单笔套利利润被卷到 $1.58，120ms 延迟优势 = 第一名和第三名差距）；ChainScore 已把 "Sequencer Extortion" 列为下一个 L2 威胁（cartel 垃圾交易勒索剧本）；防御（Arbitrum Censorship Timeout / Delayed Inbox）存在但被 Wei Dai 指出可被三明治绕过——<strong>"如何检测/证明被定向延迟"是公认空白</strong>。</p>
+                </li>
+                <li>
+                  <strong>Deadline 显式化 → EDF 调度</strong>
+                  <p>agent 的交易自带截止时间（付 $0.20 换 500ms 内响应，超时即无价值）——调度器第一次知道哪些急哪些能等。EDF 是调度理论最优单机算法之一，50 年理论可迁移，区块链批处理约束下的竞争比分析无人做过。</p>
+                </li>
+                <li>
+                  <strong>订阅式块空间预留 + 密码学到达承诺</strong>
+                  <p>机器流量可预测 → 预付订阅（agent 获费用上界、调度器获负载先验）；双 agent 互签时间戳承诺 → 排序者行为第一次变得可审计（治"选择性延迟不可证明"）。</p>
+                </li>
+              </ul>
+            </div>
+          </div>
+
+          <aside class="paper-aside">
+            <div class="result-card">
+              <p class="result-label">关键事实</p>
+              <div class="result-metric">
+                <strong>$1.58</strong>
+                <span>Solana AI MEV 单笔套利利润</span>
+              </div>
+              <p>50 个 agent 抢同一个机会，赢的 1 个拿钱，输的 49 个替它付成本。排序权的定价压力已在真实系统实证。</p>
+            </div>
+            <div class="aside-note">
+              <span>值得停下来想</span>
+              <p>admission fairness 无法在链上独立求解——per-sender 被 sybil 稀释，per-principal 需要链下身份。调度公平性变成"身份证明强度"的函数：强身份拿大配额，弱身份按 per-address 小配额。</p>
+            </div>
+          </aside>
+        </div>
+      </section>
+
+      <section class="section shell paper-section" id="security" data-tone="warm">
+        <div class="paper-head">
+          <div>
+            <div class="paper-head-label">
+              <span>维度 03 · 安全层</span>
+            </div>
+            <h2>支付安全：不记名支票穿过基础设施</h2>
+            <div class="paper-tags">
+              <span class="paper-tag">bearer 凭证</span>
+              <span class="paper-tag">HTTPS 救不了</span>
+              <span class="paper-tag">零信任改造</span>
+            </div>
+          </div>
+          <p class="paper-lede">
+            x402 的支付凭证是一张 EIP-712 签名的转账授权，放在 HTTP 头里（<code>X-PAYMENT</code>）。它有三个致命性质：<strong>不记名</strong>（合约只查签名不查提交者）、<strong>会过手</strong>（流经网关/日志/CDN）、<strong>只能兑一次</strong>（nonce 一次性）。三者叠加 = 捡到就能花。
+          </p>
+        </div>
+
+        <div class="paper-body">
+          <div>
+            <div class="plain-language">
+              <h3>它在解决什么（大白话）</h3>
+              <p class="analogy">
+                TLS 是运钞车——保证支票"在路上"没人偷看。但运钞车到站就结束：TLS 在服务器侧第一跳（CDN/负载均衡）就解开，之后明文在一串程序（网关、应用代码、日志系统、第三方监控）之间流转。更根本的是，这张支票<strong>必须被收款方读到</strong>才能验签——它的安全模型完全建立在"看到的人都是好人"上。
+              </p>
+              <p>
+                这和普通 API key 的暴露面一模一样，但代价完全不同：API key 是"可作废的门禁卡"（控制台一点就撤销、异常调用有风控），x402 凭证是"<strong>捡到就能花的现金支票</strong>"（不能撤销、全局有效、链上结算看起来完全正常）。行业二十年前的答案（PCI-DSS 管两端、tokenization 商户只碰一次性代币）x402 一个都没抄。
+              </p>
+              <p>
+                零信任改造的核心一句话：<strong>假设中间的一切都已被攻陷，让"看到 ≠ 能用"</strong>。具体六原则：不记名→记名（结算绑定 facilitator）、最小权限（凭证绑定资源+面额=报价+消费限额）、短命+可撤销（TTL + cancelAuthorization）、假设中间件沦陷（凭证只加密给 facilitator + 敏感头打码）、可检测可审计（结算回执对账）、限制爆炸半径（热钱包隔离 + 多 facilitator 路由）。
+              </p>
+            </div>
+
+            <div class="concepts">
+              <h3>读完要能复述的核心概念</h3>
+              <ul class="concept-list">
+                <li>
+                  <strong>抢跑攻击的完整剧本</strong>
+                  <p>① agent 签支票放 HTTP 头 → ② 路人甲在日志/网关/恶意服务器看到 → ③ 路人甲自己发链上交易兑现（不记名）→ ④ nonce 作废 → ⑤ facilitator 结算失败 → ⑥ 服务器返回 402 → <strong>你的 agent 付了钱、没拿到服务</strong>。论文在 Base Sepolia 实测复现，连交易哈希都给了。</p>
+                </li>
+                <li>
+                  <strong>修复状态：部分修复，核心问题仍在</strong>
+                  <p>有修复流程（HackerOne 报告 + SDK 补丁），但截至 2026-05 论文发表时点，抢跑在主路径（EIP-3009 + x402ExactPermit2Proxy 缺 caller 检查）仍可复现；V2 公告的改动不含 settlement/caller binding；根子在 ERC-3009 本身（设计上就是"持有即可提交"）。</p>
+                </li>
+                <li>
+                  <strong>安全与反刷量的协议层收敛</strong>
+                  <p>结算绑定（记名）+ 资源绑定（限用途）同时治安全问题（抢跑/重放）和数据真实性问题（刷量必须真开服务才能结算）——三条线汇合成同一个协议原语，是写论文的好结构。</p>
+                </li>
+              </ul>
+            </div>
+          </div>
+
+          <aside class="paper-aside">
+            <div class="result-card">
+              <p class="result-label">关键事实</p>
+              <div class="result-metric">
+                <strong>85%</strong>
+                <span>学术度量的"运营者内部"流量占比</span>
+              </div>
+              <p>复现全部 1.37 亿笔的 gas 成本仅 $14–36 万——刷量极廉价，"任何从 12 月峰值外推的人是在从 memecoin 外推"。</p>
+            </div>
+            <div class="aside-note">
+              <span>值得停下来想</span>
+              <p>那张"不记名支票"的旅程：HTTPS 只管路上，到了服务器侧第一跳就解密，之后明文经过 CDN→网关→应用→日志→第三方监控——每一环都可能泄露，而凭证不记名，拿到就能用。这就是"bearer token 穿过基础设施"的经典问题，x402 重新发明了一遍。</p>
+            </div>
+          </aside>
+        </div>
+      </section>
+
+      <section class="section shell" id="insights">
+        <div class="section-heading">
+          <div class="kicker">
+            <span>02</span>
+            <h2>四条研究切入点</h2>
+          </div>
+          <p>前两条来自调研数据，后两条是推断——都标了证据边界。排序按"投入产出"（数据可得性 × 问题新颖度）。</p>
+        </div>
+
+        <div class="insight-list">
+          <article class="insight reveal">
+            <div class="insight-index" aria-hidden="true">1</div>
+            <div class="insight-body">
+              <p class="insight-source">事实 · 数据公开、问题新颖、基线齐备</p>
+              <h3>Agentic workload benchmark：从冲突率量化起步成本最低</h3>
+              <ul class="insight-points">
+                <li>x402 全量数据公开可提取（EVM Base + 非 EVM Solana 双链），wash 过滤方法已有（arXiv:2607.12575）——数据、问题、对比基线三者齐备。</li>
+                <li>一个 trace-driven 的执行层研究完全可做："agent 支付流量形状下，乐观并行执行的冲突率退化量化 + 冲突感知调度的收益"。</li>
+                <li>注意：85% 学术口径流量为运营者内部刷量，做实验前必须先做 wash 过滤的数据集分层（真实子集/全量两个口径都报）。</li>
+              </ul>
+              <div class="insight-why">
+                <span>为什么重要</span>
+                <p>目前不存在 agentic workload 的执行层 benchmark——谁先建，谁就是这个领域的度量标准。这对博士生是最直接的入场券。</p>
+              </div>
+            </div>
+          </article>
+
+          <article class="insight reveal">
+            <div class="insight-index" aria-hidden="true">2</div>
+            <div class="insight-body">
+              <p class="insight-source">事实 · 协议层有先例（Tempo 2D nonce / access list），执行层是空白</p>
+              <h3>冲突感知调度：用 workload 的先验知识换掉投机失败</h3>
+              <ul class="insight-points">
+                <li>核心观察：x402 类交易的读写集协议级可静态推导（<code>transferWithAuthorization</code> 的两个 balance slot + authorization slot），不需要推测执行。</li>
+                <li>机制：access list 声明（EIP-2930 强化：声明 + 运行时校验 + 违约罚没）→ 冲突图按 receiver slot 切成独立连通分量 → 组间并行、组内 delta 聚合（对热点 slot 的 N 次写合并成 1 次 net apply）。</li>
+                <li>对比对象是 BlockSTM 类盲目乐观 + 回退：热点 receiver 场景下它退化为反复 re-execution；上面的方案把冲突从"运行时发现"变成"调度时构造"。</li>
+              </ul>
+              <div class="insight-why">
+                <span>为什么重要</span>
+                <p>Tempo 修复了账户层依赖（2D nonce），但执行层仍是串行 EVM——账户层不再是吞吐借口之后，状态冲突会全额暴露给执行层。这个空白是业界亲手推过来的。</p>
+              </div>
+            </div>
+          </article>
+
+          <article class="insight reveal">
+            <div class="insight-index" aria-hidden="true">3</div>
+            <div class="insight-body">
+              <p class="insight-source">推断 · 理论可迁移（EDF 50 年），区块链适配无人做过</p>
+              <h3>Deadline-aware sequencing：机器流量第一次让调度器"知情"</h3>
+              <ul class="insight-points">
+                <li>agent 的交易自带截止时间（付 $0.20 换 500ms 内 API 响应，超时即无价值）——调度器第一次知道哪些急哪些能等。</li>
+                <li>EDF（earliest-deadline-first）是调度理论最优单机算法之一，50 年理论可直接迁移；唯一适配工作是区块链批处理约束（块边界、gas 上限）下的竞争比分析。</li>
+                <li>协议钩子已有：Tempo 的 expiring nonce + scheduled txs 提供了"何时执行"的发送方声明——只差没人把"按截止时间排序"当成正式问题研究。</li>
+              </ul>
+              <div class="insight-why">
+                <span>为什么重要</span>
+                <p>人类流量的公平排序是"防御排序者"，M2M 可以是"与调度器合作"——这个转变本身就是论文级别的 framing。</p>
+              </div>
+            </div>
+          </article>
+
+          <article class="insight reveal">
+            <div class="insight-index" aria-hidden="true">4</div>
+            <div class="insight-body">
+              <p class="insight-source">推断 · 三条线在协议层收敛，安全与反刷量同解</p>
+              <h3>零信任 x402 + budget-bounded invariance：两个理论-机制结合点</h3>
+              <ul class="insight-points">
+                <li><strong>零信任 x402</strong>：把 Web API 安全二十年的教训系统化映射到 agent 支付协议（结算绑定/资源绑定/凭证加密/TTL）——每条都对应一次当年真金白银的损失，x402 等于在 2025 年重新发明了"90 年代明文卡号直传"。</li>
+                <li><strong>budget-bounded invariance</strong>：在 agent 微支付的窄操作域（只有 ±、先验预算上界）内形式化并证明三个性质——守恒恒成立、透支有界、receiver 收敛；落地为并行执行的 delta 聚合调度机制。锚点：coordination avoidance（Balegas et al.）、RedBlue、TCC（Zawirski et al.）。</li>
+                <li>关键收敛：结算绑定 + 资源绑定同时治安全（抢跑/重放）和数据真实性（刷量必须真开服务）——三条线汇合成同一个协议原语。</li>
+              </ul>
+              <div class="insight-why">
+                <span>为什么重要</span>
+                <p>安全问题和数据真实性问题在协议层收敛为同一个修复，这种"一石二鸟"的结构是论文的好叙事——而且每一条都有真实的攻击证据（论文实测）和未落地的协议空间（V2 未修）。</p>
+              </div>
+            </div>
+          </article>
+        </div>
+      </section>
+
+      <section class="section shell" id="references">
+        <div class="section-heading">
+          <div class="kicker">
+            <span>03</span>
+            <h2>参考资料</h2>
+          </div>
+          <p>这组笔记的一手来源。调研方法与完整数据见根目录《agentic-payments-onchain-traffic-research.md》。</p>
+        </div>
+
+        <ol class="ref-list">
+          <li class="ref">
+            <span class="ref-num">01</span>
+            <div class="ref-body">
+              <h3><a href="https://arxiv.org/html/2605.11781v1" target="_blank" rel="noreferrer">Five Attacks on x402 Agentic Payment Protocol</a></h3>
+              <p class="ref-meta">arXiv · 2026-05 · Zelin Li, Qin Wang, Zhipeng Wang</p>
+              <p>五类攻击的实测验证（含 Base Sepolia 交易哈希）：结算抢跑、并发重放、缓存泄露、恶意服务器选择、乐观执行回滚。作者已通过 HackerOne 向 Coinbase 负责任披露。</p>
+              <div class="ref-links">
+                <a href="https://arxiv.org/html/2605.11781v1" target="_blank" rel="noreferrer">论文全文</a>
+              </div>
+            </div>
+          </li>
+          <li class="ref">
+            <span class="ref-num">02</span>
+            <div class="ref-body">
+              <h3><a href="https://arxiv.org/html/2607.12575v1" target="_blank" rel="noreferrer">流量真实性全量度量（wash trading 分析）</a></h3>
+              <p class="ref-meta">arXiv · 2026-07</p>
+              <p>Base 1.367 亿笔 + Solana 4,948 万笔全量分析：约 85% 为运营者内部流量，复现全部交易的 gas 成本仅 $14–36 万。做 benchmark 前必读。</p>
+              <div class="ref-links">
+                <a href="https://arxiv.org/html/2607.12575v1" target="_blank" rel="noreferrer">论文全文</a>
+              </div>
+            </div>
+          </li>
+          <li class="ref">
+            <span class="ref-num">03</span>
+            <div class="ref-body">
+              <h3><a href="https://tempo.xyz/developers/docs/protocol/transactions/spec-tempo-transaction" target="_blank" rel="noreferrer">Tempo Transaction Specification（2D nonce / call batching / access keys）</a></h3>
+              <p class="ref-meta">Tempo · Stripe + Paradigm 孵化 · 2026</p>
+              <p>2D/expiring nonce 的协议级落地（<code>nonce_key: U256</code>）、原生 call batching、access keys with spending limits。账户层修复的工业参照。</p>
+              <div class="ref-links">
+                <a href="https://tempo.xyz/developers/docs/protocol/transactions/spec-tempo-transaction" target="_blank" rel="noreferrer">交易规范</a>
+                <a href="https://github.com/tempoxyz/tempo" target="_blank" rel="noreferrer">GitHub（Reth SDK + Simplex BFT）</a>
+              </div>
+            </div>
+          </li>
+          <li class="ref">
+            <span class="ref-num">04</span>
+            <div class="ref-body">
+              <h3><a href="https://www.chainscorelabs.com/en/blog/smart-contract-auditing-and-best-practices/l2-and-rollup-contract-audits/why-sequencer-extortion-will-become-a-common-threat" target="_blank" rel="noreferrer">Sequencer Extortion: The Next L2 Security Threat</a></h3>
+              <p class="ref-meta">ChainScore Labs · 2025-11</p>
+              <p>把 sequencer 勒索列为下一个威胁：单点排序权垄断整条链的 MEV 供应链，给出 cartel 垃圾交易勒索剧本。检测/取证机制是公认空白。</p>
+              <div class="ref-links">
+                <a href="https://www.chainscorelabs.com/en/blog/smart-contract-auditing-and-best-practices/l2-and-rollup-contract-audits/why-sequencer-extortion-will-become-a-common-threat" target="_blank" rel="noreferrer">原文</a>
+              </div>
+            </div>
+          </li>
+          <li class="ref">
+            <span class="ref-num">05</span>
+            <div class="ref-body">
+              <h3><a href="https://medium.com/@yavorovych/the-infrastructure-war-behind-solanas-ai-mev-agents-219fafc80c02" target="_blank" rel="noreferrer">The infrastructure war behind Solana's AI MEV agents</a></h3>
+              <p class="ref-meta">Daniel Yavorovych · 2026-05</p>
+              <p>Solana 上 AI MEV agent 的实测：Jito 拍卖动态小费、120ms 延迟优势定胜负、单笔套利利润被卷到 $1.58。排序权定价温和版的实证。</p>
+              <div class="ref-links">
+                <a href="https://medium.com/@yavorovych/the-infrastructure-war-behind-solanas-ai-mev-agents-219fafc80c02" target="_blank" rel="noreferrer">原文</a>
+              </div>
+            </div>
+          </li>
+          <li class="ref">
+            <span class="ref-num">06</span>
+            <div class="ref-body">
+              <h3><a href="https://www.coinbase.com/developer-platform/discover/launches/x402" target="_blank" rel="noreferrer">x402 protocol（Coinbase）+ x402 Foundation</a></h3>
+              <p class="ref-meta">Coinbase · 2025-05 推出 · 2026-07 捐入 Linux Foundation</p>
+              <p>HTTP 402 + 请求头签名付款 + facilitator 链上结算。所有"agent 在链上支付"可观测流量的来源协议。</p>
+              <div class="ref-links">
+                <a href="https://www.coinbase.com/developer-platform/discover/launches/x402" target="_blank" rel="noreferrer">Coinbase 介绍</a>
+                <a href="https://x402.org/" target="_blank" rel="noreferrer">x402.org</a>
+              </div>
+            </div>
+          </li>
+        </ol>
+      </section>
+    </main>
+
+    <footer class="site-footer">
+      <div class="shell footer-inner">
+        <span>
+          <strong>Agentic Payments 笔记</strong>
+          每日探索 · 笔记 04 · Blockchain study notes · 2026-08
+        </span>
+        <div class="footer-links">
+          <a href="#references">参考资料</a>
+          <a href="../index.html">返回个人主页</a>
+        </div>
+      </div>
+    </footer>
+
+    <script src="notes.js"></script>
+  </body>
+</html>
