@@ -256,15 +256,12 @@
               <span>LLM inference engineering notes</span>
             </div>
             <div>
-              <h3><a href="./deepseek-indexer-notes/">先量，再改：照着一次真实优化学推理 infra 调优</a></h3>
+              <h3><a href="./deepseek-indexer-notes/">先量，再改：一次推理优化拆成 5 个小动作</a></h3>
               <p>
-                A tutorial built on one real optimization of DeepSeek-V4.1 serving on 8&times; RTX PRO 6000 (SM120,
-                PCIe-only): measure first, classify the bottleneck as compute, memory or overhead, bound the gain with
-                Amdahl's law (and pick the right denominator), probe that a Triton op really lowers to the native
-                instruction before building on it, and accept changes by bit-identity, top-k identity and statistically
-                resolvable accuracy gates. Estimation exercises, the detours and wrong predictions, and a portable
-                troubleshooting table. The two kernel changes cut 1M-token cold TTFT from 135 s to 61 s
-                (<a href="https://github.com/yhfgyyf/vllm-deepseek-v4-sm89/pull/156">upstream PR #156</a>).
+                A beginner-friendly walk through one real optimization of DeepSeek-V4.1 serving: measure first, tell which
+                of three kinds of slow you have, estimate the gain before coding, run a tiny probe before trusting new
+                hardware, and prove nothing broke. One idea, one analogy and one number per section; details are folded.
+                1M-token time to first token went from 135 s to 61 s.
               </p>
             </div>
           </article>

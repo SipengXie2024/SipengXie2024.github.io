@@ -525,3 +525,66 @@
   color: #cfe4d6;
   font-size: 12.5px;
 }
+
+/* ---------- ADHD-friendly layer ---------- */
+.easy { max-width: 760px; }
+.easy p { color: var(--muted); font-size: 17px; line-height: 1.75; margin: 0 0 14px; }
+.easy .big-idea {
+  margin: 0 0 22px;
+  color: var(--ink);
+  font-family: var(--font-display);
+  font-size: clamp(24px, 3.2vw, 32px);
+  line-height: 1.35;
+}
+.easy .big-idea em { color: var(--accent-bright); font-style: normal; }
+.analogy {
+  display: grid;
+  grid-template-columns: 56px minmax(0, 1fr);
+  gap: 14px;
+  margin: 0 0 20px;
+  padding: 16px 18px;
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  background: var(--surface);
+}
+.analogy b { color: var(--accent-bright); font-family: var(--font-mono); font-size: 11px; letter-spacing: 0.08em; padding-top: 4px; }
+.analogy span { color: var(--ink); font-size: 16.5px; line-height: 1.7; }
+.tldr { list-style: none; margin: 0; padding: 0; }
+.tldr li { padding: 14px 18px; border-bottom: 1px solid var(--line); }
+.tldr li:last-child { border-bottom: 0; }
+.tldr .k { display: block; color: var(--quiet); font-family: var(--font-mono); font-size: 10.5px; letter-spacing: 0.1em; margin-bottom: 4px; }
+.tldr .v { color: var(--ink); font-size: 15.5px; line-height: 1.55; }
+.tldr .v strong { color: var(--accent-bright); }
+.bars { margin: 6px 0 22px; }
+.bar { display: grid; grid-template-columns: 120px minmax(0, 1fr) 48px; gap: 12px; align-items: center; margin: 9px 0; font-size: 14.5px; color: var(--muted); }
+.bar i { display: block; height: 14px; border-radius: 4px; background: var(--line-strong); }
+.bar.hot i { background: var(--accent); }
+.bar b { color: var(--ink); font-family: var(--font-mono); font-size: 13px; font-weight: 500; text-align: right; }
+.beforeafter { display: grid; grid-template-columns: 1fr auto 1fr; gap: 14px; align-items: center; margin: 4px 0 22px; padding: 18px; border: 1px solid var(--line); border-radius: 10px; background: var(--surface); text-align: center; }
+.beforeafter div span { display: block; color: var(--quiet); font-size: 12.5px; margin-bottom: 4px; }
+.beforeafter div strong { color: var(--ink); font-family: var(--font-mono); font-size: 24px; font-weight: 500; }
+.beforeafter div.after strong { color: var(--accent-bright); }
+.beforeafter .arrow { color: var(--quiet); font-size: 22px; }
+.story { list-style: none; margin: 0 0 20px; padding: 0; counter-reset: s; }
+.story li { position: relative; padding: 10px 0 10px 44px; color: var(--muted); font-size: 16px; line-height: 1.65; border-left: 1px solid var(--line); margin-left: 14px; }
+.story li::before { counter-increment: s; content: counter(s); position: absolute; left: -14px; top: 10px; width: 28px; height: 28px; border-radius: 50%; background: var(--surface-raised); border: 1px solid var(--line-strong); color: var(--accent-bright); font-family: var(--font-mono); font-size: 12px; display: grid; place-items: center; }
+.story li strong { color: var(--ink); }
+.more { margin: 8px 0 6px; border: 1px solid var(--line); border-radius: 8px; }
+.more summary { cursor: pointer; padding: 11px 16px; color: var(--quiet); font-size: 14px; list-style: none; }
+.more summary::-webkit-details-marker { display: none; }
+.more summary::before { content: "＋ "; color: var(--accent-bright); }
+.more[open] summary::before { content: "－ "; }
+.more .inner { padding: 4px 16px 16px; }
+.more .inner p { font-size: 15px; }
+.ifthen { list-style: none; margin: 0; padding: 0; }
+.ifthen li { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 16px; padding: 14px 0; border-bottom: 1px solid var(--line); font-size: 15.5px; }
+.ifthen li span:first-child { color: var(--ink); }
+.ifthen li span:first-child::before { content: "看到 "; color: var(--quiet); font-size: 12px; }
+.ifthen li span:last-child { color: var(--muted); }
+.ifthen li span:last-child::before { content: "先做 "; color: var(--accent-bright); font-size: 12px; }
+@media (max-width: 520px) {
+  .bar { grid-template-columns: 84px minmax(0, 1fr) 40px; font-size: 13px; }
+  .ifthen li { grid-template-columns: 1fr; gap: 4px; }
+  .beforeafter div strong { font-size: 19px; }
+  .easy p { font-size: 16px; }
+}
