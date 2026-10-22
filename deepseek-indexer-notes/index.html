@@ -64,7 +64,7 @@
           <div class="portrait-index" aria-hidden="true">30 秒版</div>
           <div class="formula-frame">
             <ul class="tldr">
-              <li><span class="k">结果</span><span class="v">100 万 token<small>（模型读文字的最小单位，约一个字）</small>的长文本，等第一个字从 <strong>135 秒</strong>降到 <strong>61 秒</strong>。答题准确率没变。</span></li>
+              <li><span class="k">结果</span><span class="v">约 79 万 token<small>（token：模型读文字的单位，可能是一个汉字、半个汉字，或英文单词的一部分）</small>的长文本，等第一个字从 <strong>135 秒</strong>降到 <strong>61 秒</strong>。答题准确率没变。</span></li>
               <li><span class="k">做法</span><span class="v">先找时间花在哪 → 判断是哪种慢 → 算最多能快多少 → 先做小实验 → 证明没改坏。</span></li>
               <li><span class="k">最大的教训</span><span class="v">测量工具本身会骗你。</span></li>
             </ul>
@@ -84,8 +84,8 @@
         <div class="easy">
           <p class="big-idea">优化前先记账：<em>不知道钱花在哪，就省不了钱。</em></p>
           <div class="analogy"><b>比喻</b><span>想省钱，先打开账单看哪一项最贵，而不是先把咖啡戒了。</span></div>
-          <p>我们用工具记下模型读一篇 20 万 token长文时，显卡把时间花在了哪：</p>
-          <div class="bars" aria-label="20 万 token时的时间分布">
+          <p>我们用工具记下模型读一篇约 21 万 token 的长文时，显卡把时间花在了哪：</p>
+          <div class="bars" aria-label="约 21 万 token 时的时间分布">
             <div class="bar"><span>卡之间传数据</span><i style="width:100%"></i><b>40%</b></div>
             <div class="bar hot"><span>给前文打分</span><i style="width:80%"></i><b>32%</b></div>
             <div class="bar"><span>专家网络</span><i style="width:27%"></i><b>11%</b></div>
@@ -145,24 +145,24 @@
           <p>动手前写下预测。猜错了也有用。</p>
         </div>
         <div class="easy">
-          <p class="big-idea">一部分快了 13 倍，整体不会快 13 倍。<em>要看它占用户等待时间的几成。</em></p>
+          <p class="big-idea">一部分快了 13 倍，整体不会快 13 倍。<em>要看它原来占用户等待时间的几成。</em></p>
           <div class="analogy"><b>比喻</b><span>做一顿饭 1 小时，洗碗占 15 分钟。洗碗机快 13 倍，这顿饭也只省下 14 分钟左右。</span></div>
-          <p>我们把"打分"加速了 13 倍。它占用户等待时间的约 23%，所以预测整体变成原来的 0.785。</p>
-          <p>实测是 0.79。<strong>对上了，说明我们真的理解了这个系统。</strong></p>
-          <p>一个容易犯的错：如果用"显卡账单"里的 32% 去算，会得到 0.70，和实测对不上。因为用户等的时间里，还有显卡闲着的时间。<strong>比例要按用户真正等的时间算。</strong></p>
-          <div class="beforeafter" aria-label="1M 文本的预测和实测">
-            <div><span>100 万 token，事先预测</span><strong>约 100 s</strong></div>
+          <p>反过来也能算。约 79 万 token 的长文本，等待从 135 秒降到 61 秒，而打分快了 12–13 倍。倒推回去，打分原来占了约 6 成的等待时间。</p>
+          <p>所以动手前先估这个比例。<strong>比例很小的地方，改得再快也没用。</strong></p>
+          <div class="beforeafter" aria-label="约 79 万 token 的预测和实测">
+            <div><span>约 79 万 token，事先预测</span><strong>约 100 s</strong></div>
             <span class="arrow">≠</span>
             <div class="after"><span>实测</span><strong>135 s</strong></div>
           </div>
-          <p>这次猜错了 35%。<strong>猜错不丢人，差值就是线索</strong>：说明还有我们没算进去的东西。我们把它记下来，作为下一次要查的目标。</p>
+          <p>这次猜错了 35%。<strong>猜错不丢人，差值就是线索</strong>：说明还有我们没算进去的东西。改完以后也一样：推算约 42 秒，实测 61 秒，有约 19 秒还没找到原因。我们把它记下来，作为下一次要查的目标。</p>
           <details class="more">
-            <summary>想看细节：公式和算法</summary>
+            <summary>想看细节：公式、量法，和一个没对上的例子</summary>
             <div class="inner">
-              <p>Amdahl 定律：新时间 / 旧时间 = 1 − f + f / s。s 是这部分快了几倍（这里 23.7 ms → 1.77 ms，s = 13.4），f 是它原来占总时间的比例。</p>
-              <p>f 的正确量法：把这部分每次请求的实际耗时（秒）加起来，除以用户端测到的总等待时间，两个数要来自同一个程序版本。这里打分约 3.5 秒（由旧记录折算，是估算），总等待约 15 秒，f ≈ 0.23。</p>
-              <p>改完之后 100 万 token按每块推算应是 47.6 秒，实测 61 秒，还有约 13 秒没找到原因，其中约 2 秒后来找到了（每块有一次不必要的等待）。</p>
-              <p>同样的算法也让我们放弃了一个已经写好代码的方案：它最多再省 6 秒，不值得。</p>
+              <p>Amdahl 定律：新时间 / 旧时间 = 1 − f + f / s。s 是这部分快了几倍，f 是它原来占总时间的比例。上面的倒推：61 / 135 = 0.452 = 1 − f + f / 12，解得 f ≈ 0.6（两次测试的长度差 1.7%，忽略）。</p>
+              <p>f 的正确量法：把这部分每次请求的实际耗时（秒）加起来，除以用户端测到的总等待时间，两个数要来自同一个程序版本、同样长度的输入。不要直接用"显卡账单"里的百分比，用户等的时间里还有显卡闲着的时间。</p>
+              <p>一个没对上的例子。三篇 15.9 万–17.5 万 token 的测试文章，等待从 14.2–15.9 秒降到 11.3–12.5 秒，取中点是原来的 0.79 倍，倒推打分原来占约 23%。可我们事先按约 21 万 token 那条记录、再按长度平方缩放，估的是约 15%，预测 0.86 倍。实测比预测还快，原因还没查清。这里还有一个坑：这组测试叫"20 万"，那只是目标长度，实际只有 16 万左右，一开始我们就按 20 万算了。</p>
+              <p>改完后的推算：77.7 万 token 约 95 块，每块固定开销约 372 ms，合计约 35 秒，加上剩下的打分约 6.5 秒，约 42 秒。</p>
+              <p>同样的算法也让我们放弃了一个已经写好代码的方案：它最多再省约 6 秒，不值得。</p>
             </div>
           </details>
         </div>
@@ -207,7 +207,7 @@ for i in range(0, (last - first + stride - 1) // stride):
             <span class="arrow">→</span>
             <div class="after"><span>改完</span><strong>1.77 ms</strong></div>
           </div>
-          <p>快了 13 倍。100 万 token的等待从 135 秒降到 61 秒。</p>
+          <p>快了 13 倍。约 79 万 token 的长文本，等待从 135 秒降到 61 秒。</p>
           <details class="more">
             <summary>想看细节：用的是哪条指令，怎么确认</summary>
             <div class="inner">
@@ -240,7 +240,7 @@ print(set(re.findall(r"mma\.sync\.aligned\.[\w.:]+", h.asm["ptx"])))
           <details class="more">
             <summary>想看细节：测速度时的一个坑</summary>
             <div class="inner">
-              <p>这个模型会"先猜几个 token 再验证"（投机解码），每次猜中的比例不同，会让"每秒出几个 token"忽高忽低。比较时要换算成"每一步花多久"：100 万 token时，看每秒 token 数只快了 6%，换算成每一步其实快了 15%（12.6 ms → 10.8 ms）。</p>
+              <p>这个模型会"先猜几个 token 再验证"（投机解码），每次猜中的比例不同，会让"每秒出几个 token"忽高忽低。比较时要换算成"每一步花多久"：约 79 万 token 的测试里，看每秒 token 数只快了 6%，换算成每一步其实快了 15%（12.6 ms → 10.8 ms）。</p>
             </div>
           </details>
         </div>
@@ -277,6 +277,7 @@ print(set(re.findall(r"mma\.sync\.aligned\.[\w.:]+", h.asm["ptx"])))
             <li><span>问题只在开着测量工具时出现</span><span>关掉工具对比一次</span></li>
             <li><span>分数只差一两题</span><span>多测几次，看看本来就会跳多少</span></li>
             <li><span>预测和实测差很多</span><span>把差值记下来，下次就查它</span></li>
+            <li><span>测试名字里写着"20 万""100 万"</span><span>先查实际的 token 数，别按名字算</span></li>
           </ul>
         </div>
       </section>
