@@ -48,7 +48,7 @@
           <p class="eyebrow">LLM Inference / Blackwell SM120 / Engineering Notes</p>
           <h1>索引器提速 10 倍</h1>
           <p class="hero-statement">
-            DeepSeek-V4.1 的稀疏注意力先用一个"索引器"给每个 key 打分再挑前 512 个。长上下文里它是预填充的大头。
+            DeepSeek-V4.1 的稀疏注意力先用一个"索引器"给每个 key 打分，再挑前 512 个。200k 上下文时它占预填充 GPU 时间的三成，100 万 token 时超过一半。
             两处只碰这一个 kernel、不改数值的改动，把 100 万 token 的冷启动从 135 秒降到 61 秒。
           </p>
           <p class="hero-summary">
@@ -93,12 +93,12 @@
               <code>240 / 250 → 284 / 314 tok/s</code>
             </div>
             <div class="formula-row">
-              <span class="formula-tag">GSM8K / HumanEval / MMLU</span>
+              <span class="formula-tag">GSM8K / HumanEval / MMLU（同一权重前后对比）</span>
               <code>1277 / 157 / 11877 → 1277 / 157 / 11873</code>
             </div>
           </div>
           <figcaption>
-            <span>同一套测量脚本</span>
+            <span>同一套脚本、同一份权重</span>
             <span>关闭对外流量后测得</span>
           </figcaption>
         </figure>
@@ -116,7 +116,7 @@
           <p>
             DeepSeek-V4.1 的稀疏注意力（DSA）不对全部 key 做注意力，而是先用一个轻量的<strong>索引器</strong>给每个 query 行和缓存里的每个 key 打分
             ——32 个头 × 128 维的点积，再按头加权求和——取分数最高的 512 个 key，真正的注意力只在这 512 个上做。
-            打分的代价和上下文长度成正比：200k 上下文的冷启动预填充里它占 GPU 时间的三成，100 万 token 时超过一半。
+            打分的代价和上下文长度成正比。
           </p>
           <p>
             索引器的 q 和 K 缓存都是 <strong>MXFP4</strong> 格式：每个数只有 4 比特（e2m1，只能是 0、±0.5、±1、±1.5、±2、±3、±4、±6 十六种），
@@ -124,8 +124,7 @@
             把 4 比特的值解码成浮点，再用 bf16 做 <code>tl.dot</code>。
           </p>
           <p>
-            下面两处改动一个针对解码阶段的浪费，一个针对解码（decode）本身。为了避免混淆：本文的"解码"在说算子内部时指"把 4 比特翻译成浮点"，
-            在说推理阶段时指"逐 token 生成"。
+            改动一针对生成阶段的无用计算，改动二针对算子内部的 FP4 解码。下文把前者叫"生成阶段"，把后者叫"解码"或"翻译"，避免两个 decode 混用。
           </p>
         </div>
       </section>
@@ -208,9 +207,8 @@ for i in range(0, n):          # constant-step loop
             </tbody>
           </table>
           <p>
-            系统级：短上下文生成 +18%，150k 上下文 +22%，200k 冷启动 TTFT −6%。输出逐位一致，但还是跑了一次精度门。
-            归类的话，它是"跳过无用功 + grid-stride loop"：grid-stride loop 是 CUDA 的老套路，核心和线程池一样——工作线程数固定、任务数可变；
-            这里用它的理由不是并行度，而是录好的图不能改派人数。
+            系统级：短上下文生成 +18%，150k 上下文 +22%，200k 冷启动 TTFT −6%。输出逐位一致，精度门仍跑了一次。
+            grid-stride loop 是 CUDA 的常见写法，和线程池同理：工作线程数固定，任务数可变。通常用它是为了控制并行度，这里用它是因为录好的图不能改派人数。
           </p>
         </div>
       </section>
@@ -285,8 +283,8 @@ scores = tl.dot_scaled(q_bytes, q_scales, "e2m1",
             </tbody>
           </table>
           <p>
-            系统级：200k 冷启动 TTFT 14.2–15.9 → 11.3–12.5 s，1M 135 → 61 s，1M 每步生成 12.5 → 10.7 ms；短上下文持平——改动一之后索引器在短上下文里已经不到一步的 1%。
-            归类的话，它是"用硬件原生支持的数据格式，去掉格式转换"，和"用支持 bf16 的张量核心代替先转 fp32 再算"是同一个思路。
+            系统级：200k 冷启动 TTFT 14.2–15.9 → 11.3–12.5 s，1M 135 → 61 s，1M 每步生成 12.5 → 10.7 ms；短上下文持平，因为改动一之后索引器在短上下文里已不到一步的 1%。
+            思路和"用支持 bf16 的张量核心代替先转 fp32 再算"相同：硬件原生支持的格式，就不做格式转换。
           </p>
         </div>
       </section>
@@ -297,7 +295,7 @@ scores = tl.dot_scaled(q_bytes, q_scales, "e2m1",
             <span>04</span>
             <h2>数值与验收</h2>
           </div>
-          <p>改动一逐位一致；改动二只差累加顺序，所以多做了两步验收。</p>
+          <p>改动一逐位一致；改动二只差累加顺序，所以多做了两步验收。精度数字都是同一份权重、同一协议下的前后对比，不是官方模型的成绩。</p>
         </div>
         <div class="data-grid">
           <article>
@@ -308,7 +306,7 @@ scores = tl.dot_scaled(q_bytes, q_scales, "e2m1",
             </p>
           </article>
           <article>
-            <h3>为什么没关系</h3>
+            <h3>为什么可以接受</h3>
             <p>
               分数的用途只是排序挑前 512 个。在 11 种生产形状上（随机 MXFP4 数据，每种抽 16 行对 fp64 参考），
               新算子挑出的 top-512 和原算子、和 fp64 参考完全一致。
@@ -317,8 +315,8 @@ scores = tl.dot_scaled(q_bytes, q_scales, "e2m1",
           <article>
             <h3>精度门</h3>
             <p>
-              同一协议前后各跑一次：GSM8K 1277 / HumanEval 157 / MMLU 11873，对比改动前 1277 / 157 / 11877；
-              配对检验 p = 1.0 / 1.0 / 0.85。
+              同一份权重、同一协议前后各跑一次：GSM8K 1277 / HumanEval 157 / MMLU 11873，对比改动前 1277 / 157 / 11877；
+              配对检验 p = 1.0 / 1.0 / 0.85。这些数只说明改动前后持平，不能当作官方模型的成绩。
             </p>
           </article>
           <article>
@@ -337,7 +335,7 @@ scores = tl.dot_scaled(q_bytes, q_scales, "e2m1",
             <span>05</span>
             <h2>顺带的两个教训</h2>
           </div>
-          <p>追"离硬件极限还差多少"时踩到的，比改动本身更值得记。</p>
+          <p>追"离硬件极限还差多少"时踩到的。</p>
         </div>
         <div class="lesson-grid">
           <article>
@@ -346,7 +344,7 @@ scores = tl.dot_scaled(q_bytes, q_scales, "e2m1",
               带 torch profiler 的 8 卡 trace 里每步 19.8 ms，总有一张卡的 GPU 空转 30%、其余七张在集合通信里等它，看起来像 CPU 受限。
               逐一排除绑核、NUMA、PCIe 链路、专家不均衡之后发现：不带 profiler 时每步只有 12.8 ms，和这套算子的 GPU 下限（11.5–12.7 ms）只差 1–10%。
               生产里每步的 CPU 时间略低于 GPU 时间，profiler（CUPTI 回调）自己的 CPU 开销正好把它推过临界点。
-              CPU 和 GPU 每步耗时接近时，任何 CPU 侧的额外开销都会表现成"某张卡迟到"。
+              CPU 和 GPU 每步耗时接近时，CPU 侧的额外开销会表现成"某张卡迟到"。
             </p>
           </article>
           <article>
@@ -371,10 +369,10 @@ scores = tl.dot_scaled(q_bytes, q_scales, "e2m1",
           <p>
             两处改动都是把替换的 <code>dsv41_indexer.py</code> 挂载进容器覆盖 fork 里的同名文件，回滚只需换回原文件重启。
             算子级基准脚本对比的是公开 wrapper（<code>dsv41_mxfp4_dense_logits</code> / <code>dsv41_mxfp4_candidate_logits</code>）的输出，
-            改动一按逐位、改动二按 top-512 集合和 fp64 参考比较，任何 SM120 机器都能复现。
+            改动一按逐位、改动二按 top-512 集合和 fp64 参考比较，在 SM120 机器上可以复现。
           </p>
           <p class="note">
-            数字只代表这套机器和这个 fork。没有 NVLink 的 PCIe 机器上，集合通信的下限决定了下一步的瓶颈在别处；
+            数字只代表这套机器和这个 fork。在没有 NVLink 的 PCIe 机器上，下一步的瓶颈是集合通信；
             改动二的倍数在其他架构上取决于是否有原生块缩放 FP4 指令（SM100 有对应的 tcgen05 路径，SM89 没有）。
           </p>
         </div>
