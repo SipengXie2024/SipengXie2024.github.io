@@ -1,0 +1,385 @@
+<!doctype html>
+<html lang="zh-CN" data-theme="dark">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta
+      name="description"
+      content="在 8 张 RTX PRO 6000 Blackwell 上给 DeepSeek-V4.1-Flash 的稀疏注意力索引器提速 10 倍：跳过注定丢弃的列（grid-stride loop），以及让张量核心直接读 MXFP4 去掉解码（tl.dot_scaled）。两处改动都不改数值，100 万 token 冷启动从 135 秒降到 61 秒。"
+    />
+    <meta name="theme-color" content="#10140f" />
+    <title>给 DeepSeek-V4.1 的索引器提速 10 倍：两处不改数值的 kernel 改动 | Sipeng Xie</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,300..900;1,9..144,300..900&family=IBM+Plex+Mono:wght@400;500;600&family=IBM+Plex+Sans:wght@300;400;500;600;700&display=swap"
+      rel="stylesheet"
+    />
+    <link rel="stylesheet" href="../styles.css" />
+    <link rel="stylesheet" href="styles.css" />
+  </head>
+  <body>
+    <a class="skip-link" href="#main">跳到正文</a>
+
+    <header class="site-header">
+      <div class="header-inner">
+        <a class="brand" href="../index.html" aria-label="返回 Sipeng Xie 个人主页">
+          <span class="brand-mark" aria-hidden="true">SX</span>
+          <span class="brand-text">
+            <strong>DSA Indexer Notes</strong>
+            <span>Sipeng Xie · 推理优化笔记</span>
+          </span>
+        </a>
+        <nav class="nav" aria-label="文章导航">
+          <a href="#background">背景</a>
+          <a href="#skip">改动一</a>
+          <a href="#fp4">改动二</a>
+          <a href="#accept">验收</a>
+          <a href="#lessons">教训</a>
+          <a href="#repro">复现</a>
+        </nav>
+        <a class="header-cta" href="../index.html#projects">返回主页</a>
+      </div>
+    </header>
+
+    <main id="main">
+      <section class="hero shell">
+        <div class="hero-copy">
+          <p class="eyebrow">LLM Inference / Blackwell SM120 / Engineering Notes</p>
+          <h1>索引器提速 10 倍</h1>
+          <p class="hero-statement">
+            DeepSeek-V4.1 的稀疏注意力先用一个"索引器"给每个 key 打分再挑前 512 个。长上下文里它是预填充的大头。
+            两处只碰这一个 kernel、不改数值的改动，把 100 万 token 的冷启动从 135 秒降到 61 秒。
+          </p>
+          <p class="hero-summary">
+            环境：8 × RTX PRO 6000 Blackwell Server Edition（SM120，PCIe 5.0，无 NVLink），vLLM 社区 fork
+            <a href="https://github.com/yhfgyyf/vllm-deepseek-v4-sm89">yhfgyyf/vllm-deepseek-v4-sm89</a>，
+            TP8 + 专家并行，DSpark 投机解码 k=5，max-model-len 1,048,576。所有数字都在关闭对外流量后、用同一套脚本测得。
+          </p>
+          <div class="hero-actions" aria-label="相关链接">
+            <a class="button primary" href="#skip">看改动</a>
+            <a class="button" href="https://github.com/yhfgyyf/vllm-deepseek-v4-sm89">vLLM fork</a>
+            <a class="button" href="https://triton-lang.org/main/python-api/generated/triton.language.dot_scaled.html">tl.dot_scaled</a>
+          </div>
+          <dl class="profile-facts">
+            <div>
+              <dt>改动一</dt>
+              <dd>grid-stride 跳过越界列</dd>
+            </div>
+            <div>
+              <dt>改动二</dt>
+              <dd>张量核心直读 MXFP4</dd>
+            </div>
+            <div>
+              <dt>精度门</dt>
+              <dd>GSM8K / HumanEval / MMLU 持平</dd>
+            </div>
+          </dl>
+        </div>
+
+        <figure class="portrait-block formula-card">
+          <div class="portrait-index" aria-hidden="true">01 / BEFORE → AFTER</div>
+          <div class="formula-frame">
+            <div class="formula-row">
+              <span class="formula-tag">200k 冷启动 TTFT</span>
+              <code>15.1–17.1 s → 11.3–12.5 s</code>
+            </div>
+            <div class="formula-row">
+              <span class="formula-tag">1M 冷启动 TTFT</span>
+              <code>135 s → 61 s</code>
+            </div>
+            <div class="formula-row">
+              <span class="formula-tag">生成 2k / 150k 上下文</span>
+              <code>240 / 250 → 284 / 314 tok/s</code>
+            </div>
+            <div class="formula-row">
+              <span class="formula-tag">GSM8K / HumanEval / MMLU</span>
+              <code>1277 / 157 / 11877 → 1277 / 157 / 11873</code>
+            </div>
+          </div>
+          <figcaption>
+            <span>同一套测量脚本</span>
+            <span>关闭对外流量后测得</span>
+          </figcaption>
+        </figure>
+      </section>
+
+      <section id="background" class="section shell">
+        <div class="section-heading">
+          <div class="section-label">
+            <span>01</span>
+            <h2>背景：索引器在做什么</h2>
+          </div>
+          <p>稀疏注意力的"先打分、再挑 512 个"，代价和上下文长度成正比。</p>
+        </div>
+        <div class="prose">
+          <p>
+            DeepSeek-V4.1 的稀疏注意力（DSA）不对全部 key 做注意力，而是先用一个轻量的<strong>索引器</strong>给每个 query 行和缓存里的每个 key 打分
+            ——32 个头 × 128 维的点积，再按头加权求和——取分数最高的 512 个 key，真正的注意力只在这 512 个上做。
+            打分的代价和上下文长度成正比：200k 上下文的冷启动预填充里它占 GPU 时间的三成，100 万 token 时超过一半。
+          </p>
+          <p>
+            索引器的 q 和 K 缓存都是 <strong>MXFP4</strong> 格式：每个数只有 4 比特（e2m1，只能是 0、±0.5、±1、±1.5、±2、±3、±4、±6 十六种），
+            每 32 个数共用一个 8 比特的 2 的幂次倍率。原算子是 Triton 写的：每个 program 处理一行 × 16 个 key 的小块，
+            把 4 比特的值解码成浮点，再用 bf16 做 <code>tl.dot</code>。
+          </p>
+          <p>
+            下面两处改动一个针对解码阶段的浪费，一个针对解码（decode）本身。为了避免混淆：本文的"解码"在说算子内部时指"把 4 比特翻译成浮点"，
+            在说推理阶段时指"逐 token 生成"。
+          </p>
+        </div>
+      </section>
+
+      <section id="skip" class="section shell">
+        <div class="section-heading">
+          <div class="section-label">
+            <span>02</span>
+            <h2>改动一：别算注定要扔掉的列</h2>
+          </div>
+          <p>生成阶段的 CUDA Graph 把启动网格锁死在最大上下文，短请求每次都派出六万多个扑空的小块。</p>
+        </div>
+
+        <div class="steps">
+          <article class="step-card">
+            <div class="step-head">
+              <span class="step-index">问题</span>
+              <h3>网格按最大宽度录死</h3>
+            </div>
+            <p>
+              生成阶段用 CUDA Graph 重放整步，kernel 的启动网格在录图时就固定了。原算子的网格是"行数 × 列块数"，列块数按最大上下文
+              （1,048,576 或 524,288 个 key，取决于层）算，和请求实际有多长无关。一条 2k 上下文的请求，每次打分照样启动 65,536 个 16 列的小块，
+              其中只有 128 块真的有 key，其余到岗后写一个 -inf 就走——但派出一个块本身就有固定开销（调度、装载 q 向量）。
+              1M 宽度下一次调用 574 µs，有用的计算不到 1 µs；每步 8 次。
+            </p>
+          </article>
+
+          <article class="step-card">
+            <div class="step-head">
+              <span class="step-index">为什么不能直接 return</span>
+              <h3>空块仍要被调度，图也不能改派人数</h3>
+            </div>
+            <p>
+              "越界就 return"省不掉几万个空块的调度开销；而且图里的网格不能随上下文变，上下文每步都在涨。
+              所以要换分工方式：<strong>派出固定数量的 program，每个 program 负责的列数按实际上下文动态决定。</strong>
+            </p>
+          </article>
+
+          <article class="step-card">
+            <div class="step-head">
+              <span class="step-index">做法</span>
+              <h3>grid-stride loop</h3>
+            </div>
+            <p>
+              网格改成"行数 × 每行固定数量的 program"（每行 <code>min(列块数, max(8, 16384 / 行数))</code> 个，总数稳定在一万六左右），
+              第 i 个 program 处理第 i、i+N、i+2N…… 块，循环上限在重放时从 <code>row_ends</code> 里读，所以上下文增长不需要重新录图，
+              也不再有几万个块扑空。越界的列由一个很便宜的填充循环写 -inf（每次 256 列），输出缓冲区和原来逐位一致，
+              下游按整个宽度读 top-k 的代码一行不用改。
+            </p>
+            <div class="code-shell">
+              <div class="code-head"><span>grid-stride loop · row_ends read at replay time</span></div>
+              <pre><code>row, first_tile = tl.program_id(0), tl.program_id(1)
+tile_programs = tl.num_programs(1)
+stop = tl.minimum(tl.load(row_ends + row), width)      # this row's real context
+last_tile = (stop + BLOCK_N - 1) // BLOCK_N
+num_tiles = (last_tile - first_tile + tile_programs - 1) // tile_programs
+for i in range(0, num_tiles):                           # constant-step loop
+    col_tile = first_tile + i * tile_programs
+    ...score 16 keys, store...
+# columns in [last_tile*BLOCK_N, width) get -inf from a cheap fill loop</code></pre>
+            </div>
+          </article>
+        </div>
+
+        <div class="prose">
+          <p>
+            第一版按列块数定 program 数，满宽度时反而慢了 10%，预填充慢 13%；改成按行数定、循环用常数步长后，满宽度持平，
+            预填充慢 2–3%（可接受），候选块路径快 6%。
+          </p>
+          <table class="result-table">
+            <thead><tr><th>算子级（1 条请求，4 行）</th><th>改动前</th><th>改动后</th></tr></thead>
+            <tbody>
+              <tr><td>宽度 512k，上下文 2k</td><td>287 µs</td><td><strong>19 µs</strong></td></tr>
+              <tr><td>宽度 512k，上下文 200k</td><td>310 µs</td><td><strong>144 µs</strong></td></tr>
+              <tr><td>宽度 1M，上下文 2k</td><td>574 µs</td><td><strong>19 µs</strong></td></tr>
+              <tr><td>4 条请求，上下文 2k</td><td>1119 µs</td><td><strong>25 µs</strong></td></tr>
+              <tr><td>满宽度</td><td>357 µs</td><td>357 µs</td></tr>
+            </tbody>
+          </table>
+          <p>
+            系统级：短上下文生成 +18%，150k 上下文 +22%，200k 冷启动 TTFT −6%。输出逐位一致，但还是跑了一次精度门。
+            归类的话，它是"跳过无用功 + grid-stride loop"：grid-stride loop 是 CUDA 的老套路，核心和线程池一样——工作线程数固定、任务数可变；
+            这里用它的理由不是并行度，而是录好的图不能改派人数。
+          </p>
+        </div>
+      </section>
+
+      <section id="fp4" class="section shell">
+        <div class="section-heading">
+          <div class="section-label">
+            <span>03</span>
+            <h2>改动二：让张量核心直接读 FP4</h2>
+          </div>
+          <p>瓶颈不是矩阵乘，是把 4 比特翻译成浮点。Blackwell 的张量核心能直接吃原文。</p>
+        </div>
+
+        <div class="steps">
+          <article class="step-card">
+            <div class="step-head">
+              <span class="step-index">问题</span>
+              <h3>张量核心在等解码</h3>
+            </div>
+            <p>
+              原算子的流程是：读 4 比特 → 十几条整数指令拆半字节、查表、乘倍率 → 转 bf16 → <code>tl.dot</code>。
+              这个"翻译"跑在普通 CUDA 核上，每个 16 列的块要翻译 2048 个 K 值；而矩阵乘只有 32 个头那么"矮"，张量核心几微秒就算完。
+              之前把 q 的翻译外提成一个单独 kernel 只解决了一半，K 那一边每块仍要翻译。
+            </p>
+          </article>
+
+          <article class="step-card">
+            <div class="step-head">
+              <span class="step-index">做法</span>
+              <h3>tl.dot_scaled → mma.kind::mxf4nvf4</h3>
+            </div>
+            <p>
+              Blackwell 的张量核心新增了块缩放 FP4 的矩阵乘指令，直接吃 4 比特字节和 8 比特倍率。Triton 3.7 把它封装成
+              <code>tl.dot_scaled</code>。把"装载 → 翻译 → bf16 点积"换成"装载 → dot_scaled"，q 的预解码 kernel 也一起省掉。
+            </p>
+            <div class="code-shell">
+              <div class="code-head"><span>K stays packed · scales as [N, K/32]</span></div>
+              <pre><code>k_bytes  = tl.load(k_cache + value_offsets, mask=valid[None, :], other=0)   # [64 bytes, BLOCK_N]
+k_scales = tl.load(k_cache + scale_offsets, mask=valid[:, None], other=127) # [BLOCK_N, 4] ue8m0
+head_scores = tl.dot_scaled(q_bytes, q_scales, "e2m1",
+                            k_bytes, k_scales, "e2m1")                     # fp32 [32, BLOCK_N]</code></pre>
+            </div>
+          </article>
+
+          <article class="step-card">
+            <div class="step-head">
+              <span class="step-index">验证顺序</span>
+              <h3>先确认真的走了硬件</h3>
+            </div>
+            <p>
+              先用一个 16 列的探针 kernel 看 PTX：出现 <code>mma.sync.m16n8k64.kind::mxf4nvf4.block_scale</code>，而不是 Triton 的软件回退（把 FP4 升成 bf16 再乘），
+              且结果和原算子逐位相同。翻译没了之后，每块列数不再受翻译成本限制：扫了 16/32/64/128 列 × 1–3 级流水 × 4/8 warp，
+              128 列、1 级流水、4 warp 最好——每块的固定开销（算地址、读页表、读倍率）摊到了更多列上，所以总倍数比"去掉翻译"本身还高。
+            </p>
+          </article>
+        </div>
+
+        <div class="prose">
+          <table class="result-table">
+            <thead><tr><th>算子级（空闲 GPU）</th><th>改动前</th><th>改动后</th><th>倍数</th></tr></thead>
+            <tbody>
+              <tr><td>生成，上下文 2k</td><td>18.6 µs</td><td><strong>12.4 µs</strong></td><td>1.5</td></tr>
+              <tr><td>生成，上下文 200k</td><td>144 µs</td><td><strong>21 µs</strong></td><td>6.9</td></tr>
+              <tr><td>生成，1M 满宽</td><td>701 µs</td><td><strong>63 µs</strong></td><td>11.2</td></tr>
+              <tr><td>预填充 200k 块（644 行）</td><td>23.7 ms</td><td><strong>1.77 ms</strong></td><td>13.4</td></tr>
+              <tr><td>预填充候选路径（8192 行）</td><td>22.8 ms</td><td><strong>1.89 ms</strong></td><td>12.1</td></tr>
+            </tbody>
+          </table>
+          <p>
+            系统级：200k 冷启动 TTFT 14.2–15.9 → 11.3–12.5 s，1M 135 → 61 s，1M 每步生成 12.5 → 10.7 ms；短上下文持平——改动一之后索引器在短上下文里已经不到一步的 1%。
+            归类的话，它是"用硬件原生支持的数据格式，去掉格式转换"，和"用支持 bf16 的张量核心代替先转 fp32 再算"是同一个思路。
+          </p>
+        </div>
+      </section>
+
+      <section id="accept" class="section shell">
+        <div class="section-heading">
+          <div class="section-label">
+            <span>04</span>
+            <h2>数值与验收</h2>
+          </div>
+          <p>改动一逐位一致；改动二只差累加顺序，所以多做了两步验收。</p>
+        </div>
+        <div class="data-grid">
+          <article>
+            <h3>为什么不是逐位一致</h3>
+            <p>
+              4 比特的数乘 2 的幂在浮点里都能精确表示，所以每个乘积是精确的；差别只在张量核心内部累加 128 个乘积的顺序，
+              最大相对差 1.7e-7（fp32 的最后一位）。
+            </p>
+          </article>
+          <article>
+            <h3>为什么没关系</h3>
+            <p>
+              分数的用途只是排序挑前 512 个。在 11 种生产形状上（随机 MXFP4 数据，每种抽 16 行对 fp64 参考），
+              新算子挑出的 top-512 和原算子、和 fp64 参考完全一致。
+            </p>
+          </article>
+          <article>
+            <h3>精度门</h3>
+            <p>
+              同一协议前后各跑一次：GSM8K 1277 / HumanEval 157 / MMLU 11873，对比改动前 1277 / 157 / 11877；
+              配对检验 p = 1.0 / 1.0 / 0.85。
+            </p>
+          </article>
+          <article>
+            <h3>HumanEval 要多跑</h3>
+            <p>
+              164 题、一题 0.61 个百分点，同一配置重复跑的分布是 153–159，单次结果判不出 ±1 个百分点的差异。
+              改动前后各单独跑 10 次取均值：156.6 → 156.2。
+            </p>
+          </article>
+        </div>
+      </section>
+
+      <section id="lessons" class="section shell">
+        <div class="section-heading">
+          <div class="section-label">
+            <span>05</span>
+            <h2>顺带的两个教训</h2>
+          </div>
+          <p>追"离硬件极限还差多少"时踩到的，比改动本身更值得记。</p>
+        </div>
+        <div class="lesson-grid">
+          <article>
+            <h3>profiler 会制造假瓶颈</h3>
+            <p>
+              带 torch profiler 的 8 卡 trace 里每步 19.8 ms，总有一张卡的 GPU 空转 30%、其余七张在集合通信里等它，看起来像 CPU 受限。
+              逐一排除绑核、NUMA、PCIe 链路、专家不均衡之后发现：不带 profiler 时每步只有 12.8 ms，和这套算子的 GPU 下限（11.5–12.7 ms）只差 1–10%。
+              生产里每步的 CPU 时间略低于 GPU 时间，profiler（CUPTI 回调）自己的 CPU 开销正好把它推过临界点。
+              CPU 和 GPU 每步耗时接近时，任何 CPU 侧的额外开销都会表现成"某张卡迟到"。
+            </p>
+          </article>
+          <article>
+            <h3>生成阶段 MoE 已贴着显存带宽</h3>
+            <p>
+              每步 86 次 Marlin 调用、合计 1.9 ms，对应每卡每步约 3.4 GB 的专家权重读取，折合 1.8 TB/s，就是这张卡 HBM 的峰值。
+              所以把 MoE 换成原生 FP4 张量核心算子对单路生成没有意义——读权重的时间省不掉；它只对算力受限的预填充有用，而那里 MoE 只占 11%。
+            </p>
+          </article>
+        </div>
+      </section>
+
+      <section id="repro" class="section shell">
+        <div class="section-heading">
+          <div class="section-label">
+            <span>06</span>
+            <h2>回滚与复现</h2>
+          </div>
+          <p>两处改动都只是替换一个文件。</p>
+        </div>
+        <div class="prose">
+          <p>
+            两处改动都是把替换的 <code>dsv41_indexer.py</code> 挂载进容器覆盖 fork 里的同名文件，回滚只需换回原文件重启。
+            算子级基准脚本对比的是公开 wrapper（<code>dsv41_mxfp4_dense_logits</code> / <code>dsv41_mxfp4_candidate_logits</code>）的输出，
+            改动一按逐位、改动二按 top-512 集合和 fp64 参考比较，任何 SM120 机器都能复现。
+          </p>
+          <p class="note">
+            数字只代表这套机器和这个 fork。没有 NVLink 的 PCIe 机器上，集合通信的下限决定了下一步的瓶颈在别处；
+            改动二的倍数在其他架构上取决于是否有原生块缩放 FP4 指令（SM100 有对应的 tcgen05 路径，SM89 没有）。
+          </p>
+        </div>
+      </section>
+    </main>
+
+    <footer class="footer shell">
+      <div>
+        <strong>Sipeng Xie</strong>
+        <span>Systems, security, and verifiable infrastructure.</span>
+      </div>
+      <p><a href="../index.html">返回个人主页</a> · © 2026</p>
+    </footer>
+  </body>
+</html>

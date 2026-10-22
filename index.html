@@ -253,6 +253,23 @@
           <article>
             <div class="timeline-meta">
               <time>2026</time>
+              <span>LLM inference engineering notes</span>
+            </div>
+            <div>
+              <h3><a href="./deepseek-indexer-notes/">给 DeepSeek-V4.1 的索引器提速 10 倍：两处不改数值的 kernel 改动</a></h3>
+              <p>
+                Two changes to the sparse-attention indexer kernel of DeepSeek-V4.1-Flash on 8&times; RTX PRO 6000
+                (SM120, PCIe-only): a grid-stride loop that stops scoring columns beyond each row's real context
+                under CUDA graphs, and <code>tl.dot_scaled</code> feeding packed MXFP4 straight into Blackwell's
+                block-scaled tensor-core MMA so no decode is needed. Bit-identical or top-512-identical outputs,
+                accuracy gates unchanged, 1M-token cold TTFT 135 s &rarr; 61 s. With two lessons: profilers can
+                manufacture a CPU bottleneck, and decode-time MoE already sits at HBM bandwidth.
+              </p>
+            </div>
+          </article>
+          <article>
+            <div class="timeline-meta">
+              <time>2026</time>
               <span>Blockchain study notes</span>
             </div>
             <div>
