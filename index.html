@@ -256,14 +256,15 @@
               <span>LLM inference engineering notes</span>
             </div>
             <div>
-              <h3><a href="./deepseek-indexer-notes/">给 DeepSeek-V4.1 的索引器提速 10 倍：两处不改数值的 kernel 改动</a></h3>
+              <h3><a href="./deepseek-indexer-notes/">先量，再改：照着一次真实优化学推理 infra 调优</a></h3>
               <p>
-                Two changes to the sparse-attention indexer kernel of DeepSeek-V4.1-Flash on 8&times; RTX PRO 6000
-                (SM120, PCIe-only): a grid-stride loop that stops scoring columns beyond each row's real context
-                under CUDA graphs, and <code>tl.dot_scaled</code> feeding packed MXFP4 straight into Blackwell's
-                block-scaled tensor-core MMA so no decode is needed. Bit-identical or top-512-identical outputs,
-                accuracy gates unchanged, 1M-token cold TTFT 135 s &rarr; 61 s. With two lessons: profilers can
-                manufacture a CPU bottleneck, and decode-time MoE already sits at HBM bandwidth.
+                A tutorial built on one real optimization of DeepSeek-V4.1 serving on 8&times; RTX PRO 6000 (SM120,
+                PCIe-only): measure first, classify the bottleneck as compute, memory or overhead, bound the gain with
+                Amdahl's law (and pick the right denominator), probe that a Triton op really lowers to the native
+                instruction before building on it, and accept changes by bit-identity, top-k identity and statistically
+                resolvable accuracy gates. Estimation exercises, the detours and wrong predictions, and a portable
+                troubleshooting table. The two kernel changes cut 1M-token cold TTFT from 135 s to 61 s
+                (<a href="https://github.com/yhfgyyf/vllm-deepseek-v4-sm89/pull/156">upstream PR #156</a>).
               </p>
             </div>
           </article>

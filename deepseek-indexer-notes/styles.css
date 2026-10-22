@@ -1,4 +1,4 @@
-/* Abliteration study notes — page-local styles, layered on ../styles.css */
+/* DSA indexer tutorial — page-local styles, layered on ../styles.css */
 
 .brand-text {
   display: grid;
@@ -364,4 +364,164 @@
 .step-card .code-shell pre {
   white-space: pre-wrap;
   word-break: break-word;
+}
+
+/* ---------- Teaching components (tutorial rewrite) ---------- */
+
+/* Five-step loop in the hero card */
+.loop-row {
+  display: grid;
+  grid-template-columns: 34px minmax(0, 1fr);
+  gap: 12px;
+  align-items: baseline;
+  padding: 14px 18px;
+  border-bottom: 1px solid var(--line);
+}
+.loop-row:last-child { border-bottom: 0; }
+.loop-num {
+  color: var(--accent-bright);
+  font-family: var(--font-mono);
+  font-size: 13px;
+  font-weight: 600;
+}
+.loop-row strong { display: block; color: var(--ink); font-size: 15px; font-weight: 600; }
+.loop-row span:last-child { color: var(--quiet); font-size: 12.5px; }
+
+/* "Estimate first" boxes: native details, no JS */
+.guess {
+  margin: 18px 0 22px;
+  border: 1px solid var(--accent-soft);
+  border-left: 2px solid var(--accent);
+  border-radius: 8px;
+  background: rgba(76, 175, 125, 0.06);
+}
+.guess summary {
+  cursor: pointer;
+  padding: 12px 16px;
+  color: var(--ink);
+  font-size: 14.5px;
+  list-style: none;
+}
+.guess summary::-webkit-details-marker { display: none; }
+.guess summary::before {
+  content: "先估一下";
+  margin-right: 10px;
+  padding: 2px 7px;
+  border: 1px solid var(--accent-soft);
+  border-radius: 4px;
+  color: var(--accent-bright);
+  font-family: var(--font-mono);
+  font-size: 10.5px;
+  letter-spacing: 0.06em;
+}
+.guess[open] summary { border-bottom: 1px solid var(--accent-soft); }
+.guess .answer { padding: 12px 16px 14px; color: var(--muted); font-size: 14.5px; }
+.guess .answer p { margin: 0 0 8px; }
+.guess .answer p:last-child { margin-bottom: 0; }
+.guess code {
+  padding: 1px 5px;
+  border: 1px solid var(--line);
+  border-radius: 5px;
+  background: var(--surface-raised);
+  color: var(--accent-bright);
+  font-family: var(--font-mono);
+  font-size: 0.86em;
+}
+
+/* Worklog boxes: the detours, written as hypothesis -> measurement -> result -> next */
+.worklog {
+  margin: 18px 0 24px;
+  padding: 16px 18px 6px;
+  border: 1px solid var(--warm-soft);
+  border-left: 2px solid var(--warm);
+  border-radius: 8px;
+  background: rgba(208, 98, 42, 0.06);
+}
+.worklog-title {
+  margin: 0 0 10px;
+  color: var(--ink);
+  font-size: 15px;
+  font-weight: 600;
+}
+.worklog-title::before {
+  content: "弯路";
+  margin-right: 10px;
+  padding: 2px 7px;
+  border: 1px solid var(--warm-soft);
+  border-radius: 4px;
+  color: #e8875a;
+  font-family: var(--font-mono);
+  font-size: 10.5px;
+  letter-spacing: 0.06em;
+}
+.worklog dl { display: grid; grid-template-columns: 72px minmax(0, 1fr); gap: 6px 14px; margin: 0 0 10px; }
+.worklog dt { color: var(--quiet); font-family: var(--font-mono); font-size: 11px; padding-top: 3px; }
+.worklog dd { margin: 0; color: var(--muted); font-size: 14.5px; }
+.worklog code {
+  padding: 1px 5px;
+  border: 1px solid var(--line);
+  border-radius: 5px;
+  background: var(--surface-raised);
+  color: var(--accent-bright);
+  font-family: var(--font-mono);
+  font-size: 0.86em;
+}
+
+/* Lesson line after a case */
+.takeaway {
+  margin: 6px 0 18px;
+  padding-left: 14px;
+  border-left: 2px solid var(--accent);
+  color: var(--ink);
+  font-size: 15px;
+}
+
+/* Tables: scroll instead of overflowing on narrow screens */
+.table-wrap { overflow-x: auto; margin: 8px 0 22px; }
+.table-wrap .result-table { margin: 0; min-width: 520px; }
+.check-table td:not(:first-child) { font-family: var(--font-body); font-size: 13.5px; white-space: normal; }
+.check-table td:first-child { color: var(--ink); }
+
+.formula-line {
+  margin: 10px 0 16px;
+  color: var(--accent-bright);
+  font-family: var(--font-mono);
+  font-size: 15px;
+}
+
+@media (max-width: 520px) {
+  .worklog dl { grid-template-columns: 1fr; gap: 2px; }
+  .worklog dt { padding-top: 8px; }
+  .guess summary { font-size: 14px; }
+  .hero h1 { font-size: clamp(44px, 14vw, 64px); }
+}
+
+/* Checklist: stacked cards on phones instead of a scrolling 3-column table */
+@media (max-width: 520px) {
+  .table-wrap .check-table { min-width: 0; }
+  .check-table thead { display: none; }
+  .check-table tr { display: block; padding: 12px 0; border-bottom: 1px solid var(--line); }
+  .check-table td { display: block; padding: 3px 0; border: 0; white-space: normal; }
+  .check-table td:first-child { font-weight: 600; }
+  .check-table td:nth-child(2)::before { content: "先怀疑："; color: var(--quiet); }
+  .check-table td:nth-child(3)::before { content: "证据："; color: var(--quiet); }
+  .section-heading h2 { font-size: 32px; }
+}
+
+/* Phones: fit 3-4 column result tables in the viewport so the "after" column is visible */
+@media (max-width: 520px) {
+  .table-wrap .result-table { min-width: 0; font-size: 13px; }
+  .result-table th, .result-table td { padding: 8px 6px; }
+  .result-table td:not(:first-child) { white-space: normal; font-size: 12px; }
+}
+
+/* Code inside a code block is not inline code */
+.prose pre code,
+.step-card pre code {
+  padding: 0;
+  border: 0;
+  border-radius: 0;
+  background: none;
+  color: #cfe4d6;
+  font-size: 12.5px;
 }
