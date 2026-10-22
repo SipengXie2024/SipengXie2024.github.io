@@ -360,3 +360,8 @@
   color: var(--muted);
   font-size: 14.5px;
 }
+
+.step-card .code-shell pre {
+  white-space: pre-wrap;
+  word-break: break-word;
+}

@@ -177,15 +177,17 @@
             </p>
             <div class="code-shell">
               <div class="code-head"><span>grid-stride loop · row_ends read at replay time</span></div>
-              <pre><code>row, first_tile = tl.program_id(0), tl.program_id(1)
-tile_programs = tl.num_programs(1)
-stop = tl.minimum(tl.load(row_ends + row), width)      # this row's real context
-last_tile = (stop + BLOCK_N - 1) // BLOCK_N
-num_tiles = (last_tile - first_tile + tile_programs - 1) // tile_programs
-for i in range(0, num_tiles):                           # constant-step loop
-    col_tile = first_tile + i * tile_programs
-    ...score 16 keys, store...
-# columns in [last_tile*BLOCK_N, width) get -inf from a cheap fill loop</code></pre>
+              <pre><code>row = tl.program_id(0)
+first = tl.program_id(1)
+stride = tl.num_programs(1)
+# this row's real context, read at replay time
+stop = tl.minimum(tl.load(row_ends + row), width)
+last = (stop + BLOCK_N - 1) // BLOCK_N
+n = (last - first + stride - 1) // stride
+for i in range(0, n):          # constant-step loop
+    tile = first + i * stride
+    ...score BLOCK_N keys, store...
+# [last*BLOCK_N, width): -inf fill loop</code></pre>
             </div>
           </article>
         </div>
@@ -246,10 +248,15 @@ for i in range(0, num_tiles):                           # constant-step loop
             </p>
             <div class="code-shell">
               <div class="code-head"><span>K stays packed · scales as [N, K/32]</span></div>
-              <pre><code>k_bytes  = tl.load(k_cache + value_offsets, mask=valid[None, :], other=0)   # [64 bytes, BLOCK_N]
-k_scales = tl.load(k_cache + scale_offsets, mask=valid[:, None], other=127) # [BLOCK_N, 4] ue8m0
-head_scores = tl.dot_scaled(q_bytes, q_scales, "e2m1",
-                            k_bytes, k_scales, "e2m1")                     # fp32 [32, BLOCK_N]</code></pre>
+              <pre><code># K stays packed: [64 bytes, N] e2m1 pairs
+k_bytes = tl.load(k_cache + v_off,
+                  mask=valid[None, :], other=0)
+# ue8m0 scales as [N, K/32]
+k_scales = tl.load(k_cache + s_off,
+                   mask=valid[:, None], other=127)
+scores = tl.dot_scaled(q_bytes, q_scales, "e2m1",
+                       k_bytes, k_scales, "e2m1")
+# fp32 [32 heads, N]; no decode anywhere</code></pre>
             </div>
           </article>
 
