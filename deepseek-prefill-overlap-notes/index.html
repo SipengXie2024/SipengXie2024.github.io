@@ -1,0 +1,416 @@
+<!doctype html>
+<html lang="zh-CN" data-theme="dark">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta
+      name="description"
+      content="DeepSeek-V4.1 在 8 张只靠 PCIe 互联的显卡上做预填充，卡间通信占了六成时间。把每块切成两半、让一半的通信和另一半的计算同时进行，长文本首字等待从 60.6 秒降到 46.3 秒。附带四个发现：通信瓶颈、一个拷贝引擎死锁、一个没造出来的修法、两处不可复现。"
+    />
+    <meta name="theme-color" content="#10140f" />
+    <title>传不快，就藏起来：预填充两半交替，把卡间通信藏进计算 | Sipeng Xie</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,300..900;1,9..144,300..900&family=IBM+Plex+Mono:wght@400;500;600&family=IBM+Plex+Sans:wght@300;400;500;600;700&display=swap"
+      rel="stylesheet"
+    />
+    <link rel="stylesheet" href="../styles.css" />
+    <link rel="stylesheet" href="../responsive.css" />
+    <link rel="stylesheet" href="styles.css" />
+  </head>
+  <body>
+    <a class="skip-link" href="#main">跳到正文</a>
+
+    <header class="site-header">
+      <div class="header-inner">
+        <a class="brand" href="../index.html" aria-label="返回 Sipeng Xie 个人主页">
+          <span class="brand-mark" aria-hidden="true">SX</span>
+          <span class="brand-text">
+            <strong>Inference Infra, Step by Step</strong>
+            <span>Sipeng Xie · 推理优化入门</span>
+          </span>
+        </a>
+        <nav class="nav" aria-label="文章导航">
+          <a href="#s1">1 量</a>
+          <a href="#s2">2 上限</a>
+          <a href="#s3">3 做法</a>
+          <a href="#s4">4 验收</a>
+          <a href="#f1">发现</a>
+          <a href="#lesson">教训</a>
+          <a href="#take">带走</a>
+        </nav>
+        <a class="header-cta" href="../index.html#projects">返回主页</a>
+      </div>
+    </header>
+
+    <main id="main">
+      <section class="hero shell">
+        <div class="hero-copy">
+          <p class="eyebrow">LLM Inference / 只有 PCIe 的多卡推理</p>
+          <h1>传不快，<br /><span class="nowrap">就藏起来</span></h1>
+          <p class="hero-statement">
+            8 张卡之间的数据传输已经跑到线路上限。剩下的办法是让传输和计算同时进行。
+          </p>
+          <p class="hero-summary">
+            每节一个结论、一个比喻、一个数字。技术细节折叠在"＋ 想看细节"里，不点开也能读完全文。本文的数字后面标了 [推断] 的是推算，没标的来自实测记录。
+          </p>
+          <div class="hero-actions" aria-label="相关链接">
+            <a class="button primary" href="#s1">开始</a>
+            <a class="button" href="#take">只看结论</a>
+          </div>
+        </div>
+
+        <figure class="portrait-block formula-card">
+          <div class="portrait-index" aria-hidden="true">30 秒版</div>
+          <div class="formula-frame">
+            <ul class="tldr">
+              <li><span class="k">结果</span><span class="v">792,868 token 的长文本，等第一个字从 <strong>60.6 秒</strong>降到 <strong>46.3 秒</strong>（少 24%）；约 16 万 token 的文本从 11.3–12.5 秒降到 9.2–10.3 秒（约少 18%）。生成速度和答题准确率没变。</span></li>
+              <li><span class="k">做法</span><span class="v">把每块输入按行切成两半，一半在卡间传数据时，另一半在算。</span></li>
+              <li><span class="k">顺带的发现</span><span class="v">一个能让 all-reduce 快 23% 的开关，会让服务在启动时卡死。</span></li>
+            </ul>
+          </div>
+          <figcaption>
+            <span>8 张 RTX PRO 6000</span>
+            <span>DeepSeek-V4.1-Flash</span>
+          </figcaption>
+        </figure>
+      </section>
+
+      <section id="s1" class="section shell">
+        <div class="section-heading">
+          <div class="section-label"><span>1</span><h2>先量：时间花在卡间传数据上</h2></div>
+          <p>上一篇把"给前文打分"提速了 13 倍。打分变快以后，账单第一名换了人。</p>
+        </div>
+        <div class="easy">
+          <p class="big-idea">每读一块 8188 token，卡之间要做 41 次 all-reduce，共 311 ms，<em>约占这一块时间的六成，而且这段时间显卡的计算单元全在空等。</em></p>
+          <div class="analogy"><b>比喻</b><span>8 个人合写一份报告，每写完一段就停笔，等所有人把各自的草稿交换一遍、加总，再一起写下一段。交换草稿的时间比写字还长。</span></div>
+          <p>all-reduce（全归约：8 张卡各算出一份部分结果，加总后每张卡都拿到同一份总和）是张量并行（把一层的计算拆给 8 张卡分担）必须付的账。这台机器有 8 张 RTX PRO 6000 Blackwell，卡之间只有 PCIe 5.0，没有 NVLink（显卡之间的专用高速线），8 张卡分在两个 NUMA 节点（两颗 CPU 各管 4 张卡）。</p>
+          <div class="bars" aria-label="每个 8188 token 块的时间构成">
+            <div class="bar hot"><span>卡间 all-reduce（41 次）</span><i style="width:100%"></i><b>约 60%</b></div>
+            <div class="bar"><span>计算</span><i style="width:67%"></i><b>约 40%</b></div>
+          </div>
+          <p>第一个想法是让传输更快。可测下来，NCCL（NVIDIA 的多卡通信库）的带宽是 21.3–21.5 GB/s，已经贴着这条线路在"计算单元搬数据"模式下的上限（跨 CPU 插槽每方向 20.7 GB/s）。调协议、调线程数、调缓冲区，最好的也只快了不到 1%。</p>
+          <p>所以<strong>"传得更快"没有空间，只剩"让传输被计算遮住"</strong>。</p>
+          <details class="more">
+            <summary>想看细节：41 次从哪来、带宽怎么测、当时列过的五条路</summary>
+            <div class="inner">
+              <p>41 = 1 次（词嵌入）+ 20 层 × 2 次（注意力输出之后一次、MoE 专家层合并之后一次）。模型有 40 层，可只有前 20 层做全宽 all-reduce：从第 20 层开始，这个模型的 CED 结构（前 20 层把整块输入编码一遍，第 20 层起的层只在很小的窗口上计算）让后半部分不再需要全宽的通信。每次传的张量是 [8188, 5120] 的 bf16，83.8 MB。字节数核对：83.8 MB × 2 × 7/8 ÷ 21.5 GB/s = 6.82 ms，注意力侧实测中位数 6.6–6.8 ms，差 3%。把 all-reduce 和同一时间其他计算 kernel 的重叠算一遍，结果是 0。</p>
+              <p>带宽上限用 nvbandwidth 测，单位 GB/s：</p>
+              <div class="table-wrap">
+                <table class="result-table">
+                  <thead><tr><th>方式</th><th>同一插槽</th><th>跨插槽</th></tr></thead>
+                  <tbody>
+                    <tr><td>计算单元搬数据，双向同时，每方向</td><td>25.0</td><td>20.7</td></tr>
+                    <tr><td>拷贝引擎搬数据，单向</td><td>33.2</td><td>27.8</td></tr>
+                    <tr><td>拷贝引擎搬数据，双向同时，每方向</td><td>31.3</td><td>26.0</td></tr>
+                  </tbody>
+                </table>
+              </div>
+              <p>NCCL 默认用计算单元（SM）搬数据：80 MiB all-reduce 6.87 ms，21.4 GB/s。换协议 LL128 7.29 ms，换 Tree 算法 75.8 ms，开 8 个通道 7.01 ms，都没变快。拷贝引擎（copy engine：显卡上专门负责搬数据的硬件，不占计算单元）那一行的上限更高，第 6 节会讲到为什么没用上。FlashInfer 的 PCIe IPC all-reduce 在这个尺寸上是 7.89 ms，比 NCCL 慢。</p>
+              <p>当时列过五条路：(1) 调 NCCL 参数；(2) EPLB，给专家重新分卡，减少等最慢那张卡的时间，每块最多省约 41 ms；(3) 传之前压成 fp8，字节减半，但改数值、可能过不了精度检查；(4) 序列并行，传的字节数和 all-reduce 一样，省不了传输时间；(5) 块内切两半，让通信和计算重叠。测完带宽，(1) 没有空间，(5) 成了唯一的大杠杆。</p>
+            </div>
+          </details>
+        </div>
+      </section>
+
+      <section id="s2" class="section shell">
+        <div class="section-heading">
+          <div class="section-label"><span>2</span><h2>先算：藏得再好，最多快四成</h2></div>
+          <p>动手前写下预测。这次的预测没对上，差值写在下面。</p>
+        </div>
+        <div class="easy">
+          <p class="big-idea">通信完全藏进计算以后，一块的时间会趋近于通信时间本身。<em>通信占六成，所以首字等待最多少约四成。</em></p>
+          <div class="analogy"><b>比喻</b><span>洗衣机转 60 分钟，晾衣服 40 分钟。两批衣服交替着来，晾第一批的时候第二批在洗，最快也要等洗衣机转完，省下的最多是晾衣服那 40 分钟。</span></div>
+          <p>按层看也一样：普通的一层，通信约 15.6 ms（注意力侧 6.8 + MoE 侧 8.8），计算约 9 ms（注意力 5.3 + MoE 3–4）。通信比计算长，计算可以整个藏进通信，通信却藏不完。</p>
+          <div class="beforeafter" aria-label="理论上限和实测">
+            <div><span>事先算出的上限</span><strong>约 −40%</strong></div>
+            <span class="arrow">≠</span>
+            <div class="after"><span>实测首字等待</span><strong>−18% ～ −24%</strong></div>
+          </div>
+          <p>实测只拿到了上限的一半多。差值来自哪里，目前只有三个候选，都没有单独测过：</p>
+          <ul class="story">
+            <li><strong>半块的 all-reduce 效率</strong>：每次传的数据减半，带宽利用率可能下降 [推断]。</li>
+            <li><strong>抢计算单元</strong>：MoE 用的 Marlin kernel（GPU 上一次启动运行的一段程序）一次占满所有计算单元，NCCL 的 kernel 也要计算单元才能搬数据；轮到 NCCL 时可能没有空位 [推断]。</li>
+            <li><strong>CPU 下发翻倍</strong>：切成两半后，前 20 层要下发的 kernel 数量翻倍。在小模型上测到 CPU 下发时间约为原来的 2 倍；生产规模下有没有拖慢，没测 [推断]。</li>
+          </ul>
+          <details class="more">
+            <summary>想看细节：动手前做的一个小实验</summary>
+            <div class="inner">
+              <p>重叠在物理上能不能成立，先用两条 CUDA 流（stream：GPU 上一条按顺序执行的任务队列，不同的流可以同时跑）测：一条流做 42 MB 的 all-reduce，另一条流做计算。重叠效率 η = (单独通信 + 单独计算 − 一起跑) ÷ 两者中较短的那个，1 表示完全藏住。</p>
+              <ul>
+                <li>对手是 cuBLAS 矩阵乘：η = 0.91–1.01，先发哪个、流优先级怎么设都一样。</li>
+                <li>对手是一个"每个计算单元一个线程块、长时间不退出"的 kernel：先发 all-reduce 时 η = 0.90，先发计算时 η = 0.02。流优先级设成 −1 也没用，GPU 不会抢占已经在跑的 kernel。</li>
+              </ul>
+              <p>这条数据定下了实现上的硬约束：<strong>每次 all-reduce 都必须在另一半的长 kernel（Marlin MoE 正是占满全部计算单元的那种）之前下发。</strong>写完以后用 trace 核对了顺序。</p>
+            </div>
+          </details>
+        </div>
+      </section>
+
+      <section id="s3" class="section shell">
+        <div class="section-heading">
+          <div class="section-label"><span>3</span><h2>动手：切两半，交替走，第 20 层拼回</h2></div>
+          <p>思路一句话能说完，难的是让每一半都"以为"自己是完整的一块。</p>
+        </div>
+        <div class="easy">
+          <p class="big-idea">把一块输入按行切成 A、B 两半。<em>A 在传的时候 B 在算，B 在传的时候 A 在算。</em></p>
+          <div class="analogy"><b>比喻</b><span>两口锅轮流用一个传菜员：第一锅炒好交给传菜员，厨师马上炒第二锅；传菜员回来，第二锅也好了。</span></div>
+          <p>前 20 层每层按这个顺序走：A 的注意力 → 发出 A 的 all-reduce，同时算 B 的注意力 → 发出 B 的 all-reduce，同时算 A 的 MoE → ……all-reduce 放在一条专用的 CUDA 流上，和计算流之间用 CUDA 事件（event：流里的一个标记点，别的流可以等它）传递"数据已就绪"。</p>
+        </div>
+        <div class="steps">
+          <article class="step-card">
+            <div class="step-head"><span class="step-index">边界 · layer 20</span><h3>第 20 层按原行序拼回整块</h3></div>
+            <p>CED 结构（前 20 层是编码器，处理整块输入；第 20 层起只在很小的窗口上计算）在第 20 层要读整块的张量，行的顺序必须和原来一样。所以只有第 0–19 层分两半，第 20 层之后和生成阶段完全不变。</p>
+          </article>
+          <article class="step-card">
+            <div class="step-head"><span class="step-index">元数据 · metadata</span><h3>每一半有自己的注意力元数据</h3></div>
+            <p>注意力需要知道"这一行属于哪个请求、前文有多长"。每一半单独准备一份，只克隆含前 20 层的那 7 组（共 16 组），B 半能看到 A 半刚写进缓存的内容。</p>
+          </article>
+          <article class="step-card">
+            <div class="step-head"><span class="step-index">切点 · split row</span><h3>切点躲开图片，生成行留在 A 半</h3></div>
+            <p>同一步里如果混着正在生成的请求，它们的行全放在 A 半；切点如果落在一张图片的 token 中间，就挪到图片开头。只有预填充行数不少于 2050 的块才切，小块照旧。</p>
+          </article>
+        </div>
+        <div class="easy" style="margin-top:22px">
+          <p>补丁约 1100 行，改了 10 个文件，以挂载的方式覆盖镜像里的源码。开关是一个配置项 <code>prefill_ubatch: 2</code>，不写就是原来的行为。</p>
+          <details class="more">
+            <summary>想看细节：一层里的执行顺序和几个容易漏的地方</summary>
+            <div class="inner">
+              <div class="code-shell">
+                <div class="code-head"><span>layers 0-19, two halves</span></div>
+                <pre><code>xa = attn_phase(A);  ra = ar(xa)       # ar = enqueue on comm stream, return event
+xb = attn_phase(B);  rb = ar(xb)
+wait(ra); fa = ar(ffn_phase(A, ra))     # A's MoE overlaps B's attention all-reduce
+wait(rb); fb = ar(ffn_phase(B, rb))
+# layer 20: torch.cat the five boundary tensors in row order, restore full-chunk metadata</code></pre>
+              </div>
+              <ul>
+                <li>原来每层的 <code>forward</code> 拆成 <code>attn_phase</code> 和 <code>ffn_phase</code>，两处 all-reduce 改成显式调用。不切的时候依次调用这两段，数值和原来相同。</li>
+                <li>第 20 层要拼回五个张量（hidden、residual 和三个 hyper-connection 的混合系数），并换回整块的元数据。</li>
+                <li>每一半要有自己的 top-k 索引缓冲区视图；Engram（按 n-gram 查表的嵌入层，在第 1、14 层）读行时要加上 B 半的行偏移。</li>
+                <li>Engram 的 all-gather 也走通信流，保证一个通信器不会同时在两条流上有操作。</li>
+                <li>FlashInfer 有一条给小消息用的 PCIe IPC all-reduce 路径。第一次切分时断言：半块的元素数大于它的工作区上限，保证半块 all-reduce 只走 NCCL。生产日志：半块至少 5,248,000 个元素，工作区上限 1,966,080。</li>
+              </ul>
+            </div>
+          </details>
+        </div>
+      </section>
+
+      <section id="s4" class="section shell">
+        <div class="section-heading">
+          <div class="section-label"><span>4</span><h2>验收：先证明管道没接错，再证明误差没变大</h2></div>
+          <p>切开以后数值不可能逐位相同。那就把"不同"拆成可以逐位检查的几段。</p>
+        </div>
+        <div class="easy">
+          <p class="big-idea">在随机权重的小模型上，每一项都比到逐位相同：<em>逐位相同的东西不需要容差。</em></p>
+          <div class="analogy"><b>比喻</b><span>换了一条新水管，先关着阀门试压，再开阀门量水质，最后才接到家里。</span></div>
+          <ul class="story">
+            <li><strong>不切时等于原镜像。</strong>装了补丁但不开开关，前 20 层的 85 个张量和原镜像逐位相同。最终输出也相同，但要先把 top-k（得分最高的 512 个位置）的顺序排好再比，因为原镜像自己跑两次，最终输出就不一样（第 9 节）。</li>
+            <li><strong>两半依次跑等于两半重叠跑。</strong>把通信流换成计算流本身（两半严格先后），和真正重叠的版本逐位相同。这一项证明流、事件、缓冲区的接法是对的。</li>
+            <li><strong>每一半等于"这些请求单独成批"。</strong>A 半和 B 半，各自与"同样的请求单独组成一批"逐位相同；一个请求被切开时，两半和"把它分两块预填充"逐位相同。所以切分引入的误差，和调度器换一种组批方式时本来就有的误差是同一类。</li>
+          </ul>
+          <p>最早出现差异的位置是第 0 层的一次矩阵乘，最多 2 个 bf16 末位：cuBLAS 按行数挑计算配置，2000 行和 4000 行的求和顺序不同。</p>
+          <p>显存检查抓到了一个真正的 bug。通信流上的张量原来用 <code>record_stream</code> 管生命周期，CPU 跑在 GPU 前面时，每个还在路上的半块输入输出都不能释放。小模型上通信流的显存池涨到 140–160 MB，改成按事件顺序管理后是 20 MB，所有逐位比较结果不变。按生产宽度推算，最坏会占住约 6.7 GB，超过每卡空闲的 5.6 GB [推断]。</p>
+          <p>补丁交给两个不同的大语言模型各自独立审查，都没找到阻断性缺陷。有据的三条已修并重新验证：半块元数据只克隆含前 20 层的注意力组；FlashInfer IPC 路径的断言；Engram 只在切分时提前 all-gather，于是不切的时候显存和原镜像完全一样。</p>
+          <details class="more">
+            <summary>想看细节：生产上线后的数字</summary>
+            <div class="inner">
+              <div class="table-wrap">
+                <table class="result-table">
+                  <thead><tr><th>项目</th><th>上线前</th><th>上线后</th></tr></thead>
+                  <tbody>
+                    <tr><td>首字等待，约 16 万 token（三篇）</td><td>11.3–12.5 s</td><td><strong>9.22 / 9.71 / 10.25 s</strong></td></tr>
+                    <tr><td>首字等待，792,868 token</td><td>60.6 s</td><td><strong>46.32 s</strong></td></tr>
+                    <tr><td>预填充吞吐，792,868 token</td><td>13.1k tok/s</td><td><strong>17.1k tok/s</strong></td></tr>
+                    <tr><td>生成速度，2k 上下文（中位数）</td><td>约 284 tok/s</td><td>281.6 tok/s</td></tr>
+                    <tr><td>生成速度，15 万上下文</td><td>约 314 tok/s</td><td>318.6 tok/s</td></tr>
+                    <tr><td>HumanEval，10 次合计</td><td>157 / 164</td><td>157.3 / 164（1573 / 1640）</td></tr>
+                    <tr><td>HumanEval 长提示版，10 次合计</td><td>1565 / 1640</td><td>1565 / 1640</td></tr>
+                  </tbody>
+                </table>
+              </div>
+              <p>原版 HumanEval 的提示只有约 130 token，几乎不会触发切分，所以另做了一个长提示版：每道题前面放 2335–4849 token 的不同 Python 源码，保证每个预填充块都切分，也不会命中前缀缓存。切分的数值影响要靠它来验收，上线前后都是 1565 / 1640。这是同一个模型的前后对比。</p>
+              <p>生产日志里的确认：8 个进程都打印了开关已开、第一次切分，以及"metadata builder clones hold 577.8 MiB (7 of 16 attention groups per half)"，和上线前按小模型外推的 578 MiB 一致。</p>
+            </div>
+          </details>
+        </div>
+      </section>
+
+      <section id="s5" class="section shell">
+        <div class="section-heading">
+          <div class="section-label"><span>5</span><h2>代价：快了 24%，付了什么</h2></div>
+          <p>每一项都写清楚，以后升级镜像或者想撤回时要用到。</p>
+        </div>
+        <div class="easy">
+          <p class="big-idea">换来的是速度，<em>付出的是显存、逐位一致性、CPU 余量和维护量。</em></p>
+          <ul class="story">
+            <li><strong>显存：</strong>每卡常驻多约 0.8 GB。其中两套半块元数据 577.8 MiB 是生产日志里的实测；通信流显存池约 200 MB 是按小模型推算的 [推断]。第一次切分时才分配，不在启动时的显存规划里。</li>
+            <li><strong>数值：</strong>和不切分不再逐位相同，误差级别等于换一种组批方式本来就有的误差。</li>
+            <li><strong>CPU：</strong>前 20 层的 kernel 下发量翻倍。生产上 GPU 仍是瓶颈，但 CPU 的余量变少了 [推断]。</li>
+            <li><strong>维护：</strong>约 1100 行、10 个文件，挂载覆盖镜像源码，镜像升级要重新适配。</li>
+            <li><strong>风险种类：</strong>多了一类"两条流并发"的错误可能，靠断言和事件顺序防住。</li>
+            <li><strong>不受影响：</strong>生成阶段；不足 2050 行预填充的小块。</li>
+          </ul>
+          <details class="more">
+            <summary>想看细节：KV 缓存为什么少了 2.3%</summary>
+            <div class="inner">
+              <p>上线后 KV 缓存从 14,929,560 token 变成 14,584,608 token，少 2.3%，约每卡 0.43 GB。补丁的常驻显存在第一次切分时才分配，启动时的 KV 规划看不到它；同一次重启还去掉了每个请求的图片数量上限，差额更可能来自多模态画像预算的变化 [推断]。每卡已用 92.1 GB / 97.9 GB。</p>
+            </div>
+          </details>
+        </div>
+      </section>
+
+      <section id="f1" class="section shell">
+        <div class="section-heading">
+          <div class="section-label"><span>6</span><h2>发现一：只有 PCIe 的张量并行推理，瓶颈在通信</h2></div>
+          <p>前面的数字合在一起，就是这一条。</p>
+        </div>
+        <div class="easy">
+          <p class="big-idea">没有 NVLink 的机器上做张量并行预填充，<em>通信占六成，带宽已到线路上限，重叠的理论收益约四成，实测拿到 18–24%。</em></p>
+          <div class="analogy"><b>比喻</b><span>厨房再大，传菜只有一扇小门，菜炒得再快也要排队过门。</span></div>
+          <p>这条链上每一环都有实测：通信占比（trace）、带宽上限（nvbandwidth 和 NCCL 基准）、重叠能否成立（两条流的小实验）、最后的收益（生产首字等待）。只有"40% 和 24% 之间的差"还停在三个候选原因上。</p>
+          <p>还剩一个旋钮没用：拷贝引擎的带宽上限比 NCCL 默认模式高（跨插槽 27.8 GB/s 对 21.4 GB/s）。重叠和换传输方式可以叠加，因为重叠以后块时间由通信时间决定，通信每快一分，预填充就快一分 [推断]。下一节讲这个旋钮为什么暂时用不了。</p>
+        </div>
+      </section>
+
+      <section id="f2" class="section shell">
+        <div class="section-heading">
+          <div class="section-label"><span>7</span><h2>发现二：一个更快的开关，会让服务卡死</h2></div>
+          <p>NCCL 有一个开关，让卡间传输改用拷贝引擎。快、数值不变，但生产上用不了。</p>
+        </div>
+        <div class="easy">
+          <p class="big-idea">打开 <code>NCCL_P2P_USE_CUDA_MEMCPY=1</code>，80 MiB all-reduce 从 6.87 ms 降到 5.28 ms（带宽 21.4 → 27.8 GB/s），输出逐位相同。<em>可生产服务在第一次全尺寸前向时就卡死了。</em></p>
+          <div class="analogy"><b>比喻</b><span>两个人在窄走廊相遇：一个在等对方让路才能往前走，对方在等走廊空出来才肯动。谁都没错，谁都走不了。</span></div>
+          <p>小模型复现后，用 py-spy 和 gdb 看卡住的进程：两个进程都停在某个 kernel 的<strong>第一次</strong>启动上（视觉编码器里的 <code>silu_and_mul</code>；关掉图片输入后换成第 2 层一个投影 kernel 的首次加载），NCCL 最后一个 all-reduce 没有完成。</p>
+          <p>机制 [推断]：CUDA 默认按需加载 kernel（lazy loading），第一次启动某个 kernel 时可能要等设备上的工作停下来；而拷贝引擎模式下，NCCL 的 kernel 要等本进程的代理线程继续发起拷贝才能结束。一方等设备空闲，一方等 host 线程，形成环。NVIDIA 的 <a href="https://docs.nvidia.com/cuda/cuda-programming-guide/04-special-topics/lazy-loading.html">Lazy Loading 文档</a>写明了这一类死锁：需要跨 kernel 同步、而 kernel 执行被串行化时，会出现死锁。</p>
+          <ul class="story">
+            <li><strong>冷启动：</strong>all-reduce 进行中第一次启动一个 kernel → 卡死（超过 60 秒）。</li>
+            <li><strong>预热过：</strong>同一个 kernel 事先跑过一次 → 通过。</li>
+            <li><strong>关掉开关：</strong>拷贝引擎模式换回默认 → 通过。</li>
+          </ul>
+          <p>官方给的对策是 <code>CUDA_MODULE_LOADING=EAGER</code>（启动时一次性加载全部 kernel）。实测它<strong>补不全</strong>：冷 kernel 那种情况通过了，但 all-reduce 进行中第一次初始化 cuBLAS 仍然卡死，因为这类库在第一次使用时才加载。代价还很大：每个进程多占 1.12–1.38 GiB 显存（约为每卡 KV 缓存 18.82 GiB 的 6–7%），缓存为空时启动要先做 1579 秒 PTX 即时编译。</p>
+          <details class="more">
+            <summary>想看细节：复现脚本、EAGER 的账、以及一个没抓住它的测试</summary>
+            <div class="inner">
+              <p>独立复现脚本 <code>trackA_lazy_repro.py</code> 只用 torch 和 vLLM 的通信器，用 torchrun 起两个进程：每个进程像 vLLM 一样把一条专用 CUDA 流设为当前流，先用一个很小的 all-reduce 预热通信器；然后在一个线程里发出一个大 all-reduce，紧接着第一次启动 vLLM 的 <code>silu_and_mul</code>（或在另一条流上第一次做几种形状的 bf16 矩阵乘），60 秒内没结束就判定为卡死。</p>
+              <div class="table-wrap">
+                <table class="result-table check-table">
+                  <thead><tr><th>all-reduce 进行中第一次做的事</th><th>按需加载 + 拷贝引擎</th><th>EAGER + 拷贝引擎</th><th>EAGER + 默认</th></tr></thead>
+                  <tbody>
+                    <tr><td>启动 <code>silu_and_mul</code></td><td>卡死</td><td>通过 0.017 s</td><td></td></tr>
+                    <tr><td>cuBLAS 已初始化，做 8 种形状的矩阵乘</td><td>卡死</td><td>通过 0.022 s</td><td></td></tr>
+                    <tr><td>第一次使用 cuBLAS（建句柄、加载库、分配工作区）</td><td>卡死</td><td><strong>卡死</strong></td><td>通过 3.661 s</td></tr>
+                  </tbody>
+                </table>
+              </div>
+              <p>EAGER 的 1579 秒里，97.5% 的待编译 PTX 来自一个只带 sm_80 代码的 FlashAttention-2 库（682 MB PTX），在这张 sm_120 的卡上每次都要即时编译。编译结果可以缓存（1.19 GiB），缓存命中时启动只多 10–15 秒，但需要专门挂载缓存目录并调大缓存上限。即使付了这些，运行中即时编译出来的新 kernel（Triton、TileLang、FlashInfer）仍然有同样的风险 [推断]。</p>
+              <p><strong>小心：</strong>上线前做过一个 10,000 次的压力测试（专用流上反复 84 MB all-reduce 加一次阻塞拷贝），53 秒跑完、零卡死。这个测试里所有 kernel 早就加载过了，根本碰不到这个条件。测试通过只说明它测的那件事没问题。这次尝试让服务停了 49 分钟（含两次重启）。</p>
+            </div>
+          </details>
+        </div>
+      </section>
+
+      <section id="f3" class="section shell">
+        <div class="section-heading">
+          <div class="section-label"><span>8</span><h2>发现三：从另一头拆环的修法（只有设计）</h2></div>
+          <p>这一节是一个还没写代码、带宽也没测过的设计。</p>
+        </div>
+        <div class="easy">
+          <p class="big-idea">死锁要两个条件同时成立：GPU 在等 host 线程，host 线程在等 GPU。第二个条件堵不全，<em>那就让 GPU 侧根本不依赖 host 线程。</em></p>
+          <div class="analogy"><b>比喻</b><span>快递员出发前把所有单子都装上车，路上不用再回公司领单。</span></div>
+          <p>做法：大消息的 all-reduce 不走 NCCL，自己用拷贝引擎实现。</p>
+          <ul class="story">
+            <li><strong>启动时</strong>每张卡分配接收缓冲区和标志区，用 CUDA IPC（进程间共享显存）互相映射。</li>
+            <li><strong>reduce-scatter</strong>（每张卡负责汇总八分之一）：每张卡用 <code>cudaMemcpyAsync</code> 把数据拷进 7 个对端的缓冲区，最后再追加一个小拷贝写对端的标志。同一条流上的拷贝按顺序执行，标志一定在数据之后到。</li>
+            <li><strong>求和 kernel</strong> 自旋等 7 个标志。它等的是对端的拷贝引擎，所有拷贝在它之前就已入队，任何进程的 host 线程此刻在做什么都不会形成环。按固定的卡号顺序求和，同一输入每次结果逐位相同。</li>
+            <li><strong>all-gather</strong>（把各自汇总好的八分之一发给所有卡）用同样的"拷贝加标志"。</li>
+          </ul>
+          <p>拷贝引擎不占计算单元，所以它顺带解决第 2 节里"Marlin 占满计算单元、NCCL 没空位"的问题 [推断]。</p>
+          <p>第一个要测的量：两颗 CPU 插槽之间 7 路拷贝引擎流同时跑的实际吞吐。现有的 27.8–33.2 GB/s 是单条流的数，多流并发没测过。门槛定在总线带宽 25 GB/s，达不到就放弃这个方案。</p>
+        </div>
+      </section>
+
+      <section id="f4" class="section shell">
+        <div class="section-heading">
+          <div class="section-label"><span>9</span><h2>发现四：同一个镜像，两次运行结果可能不同</h2></div>
+          <p>验收时想做逐位比较，先发现原镜像自己就做不到。</p>
+        </div>
+        <div class="easy">
+          <p class="big-idea">两个和本次补丁无关的不确定来源：<em>top-k 的顺序，和投机解码按启动时计时定下的验证长度。</em></p>
+          <div class="analogy"><b>比喻</b><span>同样 512 个数，换个顺序相加，最后一位可能不同。这点差别一路传下去，某一层的专家选择就可能变。</span></div>
+          <ul class="story">
+            <li><strong>top-k 顺序：</strong>请求超过 1024 token 时，<code>persistent_topk</code> 每行选出的 512 个位置集合相同，顺序每次不同（一次 4092 行的测试里 3067 行顺序变了）。稀疏注意力按这个顺序累加，产生末位差异，再放大成 MoE 路由的翻转。不超过 1024 token 的请求逐位可复现。所以在这套软件上，长请求两次运行不保证逐位相同。</li>
+            <li><strong>并列时的选择：</strong>另有一种更少见的情况：两个位置的得分恰好相等、卡在第 512 名上，<code>persistent_topk</code> 每次可能选不同的那个，而且每张卡各选各的。</li>
+            <li><strong>验证长度：</strong>投机解码（先用一个小的草稿模型猜几个 token，再让大模型一次验证）这里的 adaptive verification，每次启动时用几次空跑的墙钟耗时建一张代价表，决定每步验证几个草稿 token。小模型上四次启动测到"验证 4 个 token"的耗时分别是 74.8、14.8、39.7、35.3 ms，验证长度跟着变，输出也就不同。把它关掉、固定验证长度以后，原镜像两次启动、补丁两次启动，四份结果逐位相同。</li>
+          </ul>
+          <p>结论：<strong>跨两次启动做逐位比较，要先固定验证长度；比较长请求，要先把 top-k 排好序再比。</strong></p>
+        </div>
+      </section>
+
+      <section id="lesson" class="section shell">
+        <div class="section-heading">
+          <div class="section-label"><span>!</span><h2>教训：上线那次停机 65 分钟</h2></div>
+          <p>停机来自重启脚本。</p>
+        </div>
+        <div class="easy">
+          <p class="big-idea">脚本把"启动命令已发出"当成了"容器已经在跑"。</p>
+          <ul class="story">
+            <li><strong>经过：</strong>脚本删除旧容器时卡了 10 分钟，删除还没完成就发了启动命令；新容器因为重名启动失败，服务进入失败状态。健康检查循环只问"服务有没有响应"，不查容器在不在，一直空等，直到有人发现，再手动启动。这一段约 38 分钟。</li>
+            <li><strong>第二段：</strong>手动启动后又用了 27 分钟：配置变了，FlashInfer 的自动调优缓存对不上，45 档 all-reduce 参数从头调，每档约 27 秒。这一段不管怎么查都省不掉，下一次启动会命中新缓存。</li>
+            <li><strong>规则：</strong>重启脚本在启动后一分钟内确认容器真的在跑，否则重试；操作者在预计就绪的时刻（这台机器正常启动约 7 分钟）主动核对一次。</li>
+          </ul>
+        </div>
+      </section>
+
+      <section id="related" class="section shell">
+        <div class="section-heading">
+          <div class="section-label"><span>§</span><h2>相关工作</h2></div>
+          <p>"切成两批、让通信和计算重叠"已经有不少先例。</p>
+        </div>
+        <div class="easy">
+          <ul class="story">
+            <li><strong>DeepSeek-AI, <a href="https://arxiv.org/abs/2412.19437">DeepSeek-V3 Technical Report</a></strong>（arXiv:2412.19437, 2024）：预填充阶段同时处理两个计算量相近的 micro-batch，用一个的注意力和 MoE 遮住另一个的 all-to-all 与 TP 通信。</li>
+            <li><strong>The SGLang Team, <a href="https://lmsys.org/blog/2025-05-05-large-scale-ep/">Deploying DeepSeek with PD Disaggregation and Large-Scale Expert Parallelism on 96 H100 GPUs</a></strong>（LMSYS blog, 2025-05-05）：Two-Batch Overlap，把一批切成两个 micro-batch，让注意力和 MLP 的计算遮住 DeepEP 的 dispatch 与 combine。</li>
+            <li><strong>vLLM, <a href="https://docs.vllm.ai/en/latest/design/dbo/">Dual Batch Overlap</a></strong>（设计文档）：用两个 CPU 线程轮流跑两个 micro-batch，遮住 MoE 层的 all-to-all，目前只面向 DP+EP 部署。</li>
+            <li><strong>Bin Xiao, Lei Su, <a href="https://arxiv.org/abs/2409.11155">ISO: Overlap of Computation and Communication within Seqenence For LLM Inference</a></strong>（arXiv:2409.11155, 2024；标题里的拼写照原文）：在序列内部切分，重叠张量并行的通信和计算，报告预填充在 RTX 4090 上省约 35%、A800 上省约 15%。和本文最接近。</li>
+            <li><strong>Guanhua Wang 等（Microsoft）, <a href="https://arxiv.org/abs/2409.15241">Domino: Eliminating Communication in LLM Training via Generic Tensor Slicing and Overlapping</a></strong>（arXiv:2409.15241, 2024）：训练侧把一批切成独立的小块，流水线式重叠张量并行通信。</li>
+            <li><strong>Kan Zhu 等, <a href="https://arxiv.org/abs/2408.12757">NanoFlow: Towards Optimal Large Language Model Serving Throughput</a></strong>（OSDI '25）：把一批切成更小的 nano-batch，让计算、访存、网络在一张卡内并行。</li>
+            <li><strong>Shibo Wang 等, <a href="https://doi.org/10.1145/3567955.3567959">Overlap Communication with Dependent Computation via Decomposition in Large Deep Learning Models</a></strong>（ASPLOS 2023）：把有依赖的通信和计算分解成小块，让它们重叠。</li>
+            <li><strong>Li-Wen Chang 等（ByteDance）, <a href="https://arxiv.org/abs/2406.06858">FLUX: Fast Software-based Communication Overlap On GPUs Through Kernel Fusion</a></strong>（arXiv:2406.06858, 2024）：把通信和矩阵乘切成小块后融合进同一个 kernel。</li>
+          </ul>
+          <p>本文的不同只在工程细节：CED 结构在第 20 层要读整块张量，所以只切前 20 层再拼回；全局稀疏注意力层和 Engram 要按半块准备元数据和行偏移；以及 PCIe 机器上通信比计算长，收益上限由通信时间决定。</p>
+        </div>
+      </section>
+
+      <section id="take" class="section shell">
+        <div class="section-heading">
+          <div class="section-label"><span>✓</span><h2>带走：PCIe 上的张量并行被通信卡住时</h2></div>
+          <p>按顺序做：先量占比，再算上限，先藏通信，最后换传输方式。</p>
+        </div>
+        <div class="easy">
+          <ul class="ifthen">
+            <li><span>卡间通信占了一大块时间</span><span>先算它和计算重叠了多少；这次是 0</span></li>
+            <li><span>想让通信更快</span><span>先测线路上限；已经贴着上限，就只剩重叠</span></li>
+            <li><span>准备做重叠</span><span>先算上限：块时间最多降到通信时间本身</span></li>
+            <li><span>实测达不到上限</span><span>把差值和候选原因记下来，一条条去测</span></li>
+            <li><span>重叠不起来</span><span>查下发顺序：占满计算单元的 kernel 先发，通信就排不上</span></li>
+            <li><span>通信流上的张量</span><span>按事件顺序管生命周期，盯住那条流的显存池</span></li>
+            <li><span>切开以后数值变了</span><span>把差异拆成能逐位比较的几段</span></li>
+            <li><span>换一种传输方式快了很多</span><span>在真实前向里试，压力测试碰不到首次加载</span></li>
+            <li><span>两次运行结果不同</span><span>先看原版自己能不能复现</span></li>
+            <li><span>重启脚本说"已启动"</span><span>一分钟内亲眼确认容器在跑</span></li>
+          </ul>
+        </div>
+      </section>
+    </main>
+
+    <footer class="footer shell">
+      <div>
+        <strong>Sipeng Xie</strong>
+        <span>Systems, security, and verifiable infrastructure.</span>
+      </div>
+      <p><a href="../index.html">返回个人主页</a> · <a href="../deepseek-indexer-notes/">上一篇：先量，再改</a> · © 2026</p>
+    </footer>
+  </body>
+</html>

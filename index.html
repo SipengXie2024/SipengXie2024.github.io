@@ -252,6 +252,22 @@
           </article>
           <article>
             <div class="timeline-meta">
+              <time datetime="2026-10-24">2026-10-24</time>
+              <span>LLM inference engineering notes</span>
+            </div>
+            <div>
+              <h3><a href="./deepseek-prefill-overlap-notes/">传不快，就藏起来：预填充两半交替，把卡间通信藏进计算</a></h3>
+              <p>
+                On 8 PCIe-only GPUs, tensor-parallel all-reduces took about 60% of each DeepSeek-V4.1 prefill chunk and
+                the link was already at its ceiling, so the remaining move was to hide them: split each chunk into two
+                row halves and overlap one half's communication with the other half's compute. Time to first token for
+                a 792,868-token prompt went from 60.6 s to 46.3 s. Plus four findings: the communication bound, a
+                copy-engine NCCL deadlock, an unbuilt fix for it, and two sources of run-to-run nondeterminism.
+              </p>
+            </div>
+          </article>
+          <article>
+            <div class="timeline-meta">
               <time>2026</time>
               <span>LLM inference engineering notes</span>
             </div>
