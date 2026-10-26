@@ -16,41 +16,28 @@
   align-items: center;
 }
 
-.eyebrow {
-  margin: 0 0 14px;
-  color: var(--green);
-  font-size: 11px;
-  font-weight: 800;
-}
-
 .hero-copy h1 {
   max-width: 720px;
-  margin: 0;
-  font-size: 62px;
-  line-height: 1.08;
+  margin: 0 0 14px;
+  font-size: 54px;
+  line-height: 1.18;
 }
 
 .hero-lede {
   max-width: 690px;
-  margin: 28px 0 0;
+  margin: 0;
   color: var(--muted);
   font-size: 18px;
   line-height: 1.82;
 }
 
 .hero-meta {
-  margin-top: 28px;
+  margin-top: 26px;
   display: flex;
   flex-wrap: wrap;
-  gap: 8px 18px;
+  gap: 6px 28px;
   color: var(--quiet);
-  font-size: 11px;
-}
-
-.hero-meta span + span::before {
-  content: "/";
-  margin-right: 18px;
-  color: var(--line-strong);
+  font-size: 14px;
 }
 
 .method-map {
@@ -64,8 +51,7 @@
   justify-content: space-between;
   border-bottom: 1px solid var(--line-strong);
   color: var(--quiet);
-  font-family: "SFMono-Regular", Consolas, monospace;
-  font-size: 9px;
+  font-size: 13px;
 }
 
 .method-map ol {
@@ -86,17 +72,18 @@
 
 .method-map li > span {
   color: var(--quiet);
-  font-family: "SFMono-Regular", Consolas, monospace;
-  font-size: 10px;
+  font-family: var(--font-mono);
+  font-size: 14px;
 }
 
 .method-map li strong {
-  font-size: 15px;
+  font-size: 17px;
+  font-weight: 600;
 }
 
 .method-map li small {
   color: var(--muted);
-  font-size: 11px;
+  font-size: 14px;
 }
 
 .map-blob strong { color: var(--warm); }
@@ -107,7 +94,7 @@
 .method-map figcaption {
   margin-top: 12px;
   color: var(--quiet);
-  font-size: 10px;
+  font-size: 13px;
   text-align: right;
 }
 
@@ -117,9 +104,7 @@
   z-index: 80;
   overflow-x: auto;
   border-bottom: 1px solid var(--line);
-  background: color-mix(in srgb, var(--page) 94%, transparent);
-  backdrop-filter: blur(12px);
-  -webkit-backdrop-filter: blur(12px);
+  background: var(--header-bg);
 }
 
 .article-strip .guide-shell {
@@ -132,8 +117,9 @@
 .article-strip a {
   flex: 0 0 auto;
   color: var(--muted);
-  font-size: 11px;
+  font-size: 14px;
   text-decoration: none;
+  transition: color 160ms ease;
 }
 
 .scope-band {
@@ -155,8 +141,8 @@
 .reference-section h2,
 .closing h2 {
   margin: 0;
-  font-size: 32px;
-  line-height: 1.28;
+  font-size: 34px;
+  line-height: 1.26;
 }
 
 .scope-copy {
@@ -172,26 +158,27 @@
 .scope-copy code,
 .guide-article code,
 .responsible-note code {
-  font-family: "SFMono-Regular", Consolas, monospace;
   font-size: 0.92em;
 }
 
 .responsible-note {
   grid-column: 2;
-  padding: 15px 0 0 16px;
-  border-top: 1px solid var(--line);
-  border-left: 3px solid var(--warm);
+  padding: 16px 20px;
+  border: 1px solid color-mix(in srgb, var(--warm) 32%, transparent);
+  border-radius: var(--radius);
+  background: color-mix(in srgb, var(--warm) 7%, transparent);
 }
 
 .responsible-note strong {
   color: var(--warm);
-  font-size: 11px;
+  font-size: 15px;
+  font-weight: 600;
 }
 
 .responsible-note p {
-  margin: 4px 0 0;
-  color: var(--muted);
-  font-size: 12px;
+  margin: 2px 0 0;
+  color: var(--ink);
+  font-size: 15px;
 }
 
 .selector-section {
@@ -237,10 +224,10 @@
 }
 
 .selector-controls legend {
-  margin-bottom: 9px;
+  margin-bottom: 8px;
   color: var(--quiet);
-  font-size: 10px;
-  font-weight: 760;
+  font-size: 14px;
+  font-weight: 500;
 }
 
 .segmented {
@@ -258,8 +245,8 @@
   border-right: 1px solid var(--line);
   color: var(--muted);
   background: transparent;
-  font-size: 11px;
-  font-weight: 650;
+  font-size: 14px;
+  font-weight: 500;
   cursor: pointer;
   transition: color 140ms ease, background-color 140ms ease, transform 140ms var(--ease-out);
 }
@@ -271,6 +258,7 @@
 .segmented button[aria-pressed="true"] {
   color: var(--green);
   background: var(--green-soft);
+  font-weight: 600;
 }
 
 .segmented button:active {
@@ -290,8 +278,8 @@
 .recommendation > p:first-child {
   margin: 0;
   color: var(--quiet);
-  font-size: 10px;
-  font-weight: 760;
+  font-size: 14px;
+  font-weight: 500;
 }
 
 .recommendation-title {
@@ -304,26 +292,30 @@
 
 .recommendation-title span {
   color: var(--green);
-  font-family: "SFMono-Regular", Consolas, monospace;
-  font-size: 11px;
+  font-family: var(--font-mono);
+  font-size: 15px;
 }
 
 .recommendation-title h3 {
   margin: 0;
-  font-size: 24px;
+  font-family: var(--font-display);
+  font-size: 26px;
+  font-weight: 580;
+  font-variation-settings: "opsz" 72;
+  line-height: 1.3;
 }
 
 .recommendation > p:nth-of-type(2) {
-  margin: 18px 0 24px;
+  margin: 16px 0 24px;
   color: var(--muted);
-  font-size: 13px;
+  font-size: 15px;
 }
 
 .recommendation a {
   margin-top: auto;
   color: var(--green);
-  font-size: 12px;
-  font-weight: 720;
+  font-size: 15px;
+  font-weight: 600;
   text-decoration: none;
 }
 
@@ -343,10 +335,11 @@
 
 .toc > p,
 .toc-related span {
-  margin: 0 0 11px;
+  display: block;
+  margin: 0 0 8px;
   color: var(--quiet);
-  font-size: 9px;
-  font-weight: 760;
+  font-size: 13px;
+  font-weight: 500;
 }
 
 .toc nav {
@@ -361,19 +354,20 @@
   gap: 8px;
   border-bottom: 1px solid var(--line);
   color: var(--muted);
-  font-size: 11px;
+  font-size: 14px;
   text-decoration: none;
+  transition: color 160ms ease;
 }
 
 .toc nav a span {
   color: var(--quiet);
-  font-family: "SFMono-Regular", Consolas, monospace;
-  font-size: 9px;
+  font-family: var(--font-mono);
+  font-size: 13px;
 }
 
 .toc nav a[aria-current="location"] {
   color: var(--ink);
-  font-weight: 680;
+  font-weight: 600;
 }
 
 .toc nav a[aria-current="location"] span {
@@ -387,8 +381,8 @@
 .toc-related a {
   display: block;
   color: var(--ink);
-  font-size: 11px;
-  font-weight: 680;
+  font-size: 14px;
+  font-weight: 600;
   text-decoration: none;
 }
 
@@ -413,16 +407,17 @@
 }
 
 .method-index {
-  padding-top: 4px;
+  padding-top: 12px;
   color: var(--quiet);
-  font-family: "SFMono-Regular", Consolas, monospace;
-  font-size: 12px;
+  font-family: var(--font-mono);
+  font-size: 15px;
 }
 
+/* Model and goal of each method, directly under its heading. */
 .method-label {
-  margin: 0 0 5px;
-  font-size: 10px;
-  font-weight: 800;
+  margin: 10px 0 0;
+  font-size: 16px;
+  font-weight: 500;
 }
 
 .label-blob { color: var(--warm); }
@@ -432,15 +427,15 @@
 
 .method-header h2 {
   margin: 0;
-  font-size: 42px;
-  line-height: 1.18;
+  font-size: 40px;
+  line-height: 1.2;
 }
 
 .method-header p:last-child {
   max-width: 760px;
-  margin: 18px 0 0;
+  margin: 16px 0 0;
   color: var(--muted);
-  font-size: 16px;
+  font-size: 16.5px;
 }
 
 .step-list {
@@ -456,23 +451,24 @@
 }
 
 .step-list li > span {
-  padding-top: 4px;
+  padding-top: 2px;
   color: var(--quiet);
-  font-family: "SFMono-Regular", Consolas, monospace;
-  font-size: 10px;
+  font-family: var(--font-mono);
+  font-size: 14px;
 }
 
 .step-list h3,
 .subsection h3,
 .known-issues h3 {
   margin: 0;
-  font-size: 18px;
+  font-size: 19px;
+  font-weight: 600;
 }
 
 .step-list p {
   margin: 4px 0 0;
   color: var(--muted);
-  font-size: 13px;
+  font-size: 15.5px;
 }
 
 .step-list-continued {
@@ -497,32 +493,31 @@
   justify-content: space-between;
   border-bottom: 1px solid var(--line);
   color: var(--muted);
-  font-family: "SFMono-Regular", Consolas, monospace;
-  font-size: 10px;
+  font-family: var(--font-mono);
+  font-size: 13px;
 }
 
 .copy-button {
-  width: 29px;
-  height: 29px;
-  flex: 0 0 29px;
-  display: grid;
-  place-items: center;
-  padding: 0;
+  flex: none;
+  padding: 3px 10px;
   border: 1px solid var(--line);
   border-radius: 5px;
-  color: var(--ink);
-  background: var(--surface);
+  color: var(--muted);
+  background: transparent;
+  font-family: var(--font-body);
+  font-size: 13px;
   cursor: pointer;
+  transition: color 140ms ease, border-color 140ms ease, background-color 140ms ease;
 }
 
 .code-shell pre {
   margin: 0;
   padding: 18px;
   overflow-x: auto;
-  color: var(--ink);
-  background: var(--surface-muted);
-  font-family: "SFMono-Regular", Consolas, monospace;
-  font-size: 12px;
+  color: var(--code-ink);
+  background: var(--code-bg);
+  font-family: var(--font-mono);
+  font-size: 13px;
   line-height: 1.65;
   tab-size: 2;
 }
@@ -550,7 +545,7 @@
 table {
   width: 100%;
   border-collapse: collapse;
-  font-size: 12px;
+  font-size: 15px;
 }
 
 th,
@@ -562,8 +557,13 @@ td {
 }
 
 th {
-  color: var(--quiet);
-  font-size: 10px;
+  color: var(--muted);
+  font-size: 14px;
+  font-weight: 600;
+}
+
+.table-wrap td:first-child {
+  white-space: nowrap;
 }
 
 tbody tr:last-child td {
@@ -587,45 +587,47 @@ tbody tr:last-child td {
   border-right: 0;
 }
 
-.evidence-grid span,
 .observation-band span,
 .format-head span {
   color: var(--quiet);
-  font-size: 9px;
-  font-weight: 760;
+  font-size: 14px;
+  font-weight: 500;
 }
 
 .evidence-grid strong {
-  margin-top: 4px;
   display: block;
-  font-size: 13px;
+  font-size: 16px;
+  font-weight: 600;
 }
 
 .evidence-grid p {
-  margin: 5px 0 0;
+  margin: 4px 0 0;
   color: var(--muted);
-  font-size: 11px;
+  font-size: 15px;
 }
 
 .limits,
 .method-note {
+  --tone: var(--warm);
   margin-top: 28px;
-  padding: 17px 18px;
-  border-left: 3px solid var(--warm);
-  background: var(--warm-soft);
+  padding: 16px 20px;
+  border: 1px solid color-mix(in srgb, var(--tone) 32%, transparent);
+  border-radius: var(--radius);
+  background: color-mix(in srgb, var(--tone) 7%, transparent);
 }
 
 .limits > strong,
 .method-note > strong {
-  color: var(--warm);
-  font-size: 11px;
+  color: var(--tone);
+  font-size: 15px;
+  font-weight: 600;
 }
 
 .limits ul {
-  margin: 8px 0 0;
+  margin: 6px 0 0;
   padding-left: 18px;
-  color: var(--muted);
-  font-size: 12px;
+  color: var(--ink);
+  font-size: 15px;
 }
 
 .format-grid,
@@ -649,7 +651,8 @@ tbody tr:last-child td {
 }
 
 .format-head strong {
-  font-size: 12px;
+  font-size: 15px;
+  font-weight: 600;
 }
 
 .format-grid .code-shell,
@@ -678,26 +681,23 @@ tbody tr:last-child td {
 }
 
 .observation-band strong {
-  margin-top: 4px;
+  margin-top: 2px;
   display: block;
   color: var(--blue);
-  font-size: 25px;
+  font-family: var(--font-mono);
+  font-size: 20px;
+  font-weight: 500;
 }
 
 .observation-band p,
 .method-note p {
-  margin: 5px 0 0;
+  margin: 4px 0 0;
   color: var(--muted);
-  font-size: 11px;
+  font-size: 15px;
 }
 
 .method-note {
-  border-left-color: var(--blue);
-  background: var(--blue-soft);
-}
-
-.method-note > strong {
-  color: var(--blue);
+  --tone: var(--blue);
 }
 
 .turns {
@@ -715,18 +715,19 @@ tbody tr:last-child td {
 
 .turns article > span {
   color: var(--purple);
-  font-family: "SFMono-Regular", Consolas, monospace;
-  font-size: 10px;
+  font-size: 14px;
+  font-weight: 600;
 }
 
 .turns strong {
-  font-size: 13px;
+  font-size: 16px;
+  font-weight: 600;
 }
 
 .turns p {
-  margin: 5px 0 0;
+  margin: 4px 0 0;
   color: var(--muted);
-  font-size: 12px;
+  font-size: 15px;
 }
 
 .decision-section,
@@ -752,8 +753,8 @@ tbody tr:last-child td {
 
 .decision-grid article > span {
   color: var(--green);
-  font-size: 10px;
-  font-weight: 800;
+  font-size: 15px;
+  font-weight: 600;
 }
 
 .decision-grid dl {
@@ -767,26 +768,27 @@ tbody tr:last-child td {
 
 .decision-grid dt {
   color: var(--quiet);
-  font-size: 9px;
+  font-size: 13px;
 }
 
 .decision-grid dd {
   margin: 2px 0 0;
   color: var(--ink);
-  font-size: 12px;
+  font-size: 15px;
 }
 
 .decision-grid a {
   text-underline-offset: 3px;
 }
 
-.decision-proof > span {
-  color: var(--warm) !important;
+.decision-grid .decision-proof > span {
+  color: var(--warm);
 }
 
 .reference-grid h3 {
   margin: 0 0 12px;
-  font-size: 15px;
+  font-size: 17px;
+  font-weight: 600;
 }
 
 .validation-command {
@@ -795,13 +797,14 @@ tbody tr:last-child td {
 
 .validation-command > h3 {
   margin: 0;
-  font-size: 15px;
+  font-size: 17px;
+  font-weight: 600;
 }
 
 .validation-command > p {
-  margin: 7px 0 0;
+  margin: 6px 0 0;
   color: var(--muted);
-  font-size: 12px;
+  font-size: 15px;
 }
 
 .known-issues {
@@ -824,18 +827,20 @@ tbody tr:last-child td {
 }
 
 .known-issues strong {
-  font-size: 12px;
+  font-size: 15px;
+  font-weight: 600;
 }
 
 .known-issues span {
   color: var(--muted);
-  font-size: 12px;
+  font-size: 15px;
 }
 
 .closing {
-  padding: 50px;
-  border-left: 4px solid var(--green);
-  background: var(--green-soft);
+  padding: 44px;
+  border: 1px solid color-mix(in srgb, var(--green) 32%, transparent);
+  border-radius: var(--radius);
+  background: color-mix(in srgb, var(--green) 7%, transparent);
 }
 
 .closing p:last-child {
@@ -846,7 +851,7 @@ tbody tr:last-child td {
 
 .closing a {
   color: var(--ink);
-  font-weight: 680;
+  font-weight: 600;
   text-underline-offset: 3px;
 }
 
@@ -861,7 +866,7 @@ tbody tr:last-child td {
   align-items: center;
   justify-content: space-between;
   color: var(--quiet);
-  font-size: 11px;
+  font-size: 14px;
 }
 
 .guide-footer div div {
@@ -872,11 +877,6 @@ tbody tr:last-child td {
 .guide-footer a {
   color: var(--ink);
   text-underline-offset: 3px;
-}
-
-:focus-visible {
-  outline: 2px solid var(--green);
-  outline-offset: 3px;
 }
 
 @media (hover: hover) and (pointer: fine) {
@@ -893,6 +893,7 @@ tbody tr:last-child td {
 
   .copy-button:hover {
     border-color: var(--line-strong);
+    color: var(--ink);
     background: var(--surface-muted);
   }
 }

@@ -11,10 +11,9 @@
     <title>先量，再改：一次推理优化拆成 5 个小动作 | Sipeng Xie</title>
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-    <link
-      href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,300..900;1,9..144,300..900&family=IBM+Plex+Mono:wght@400;500;600&family=IBM+Plex+Sans:wght@300;400;500;600;700&display=swap"
-      rel="stylesheet"
-    />
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400..700&amp;family=IBM+Plex+Mono:wght@400;500;600&amp;family=IBM+Plex+Sans:ital,wght@0,400;0,500;0,600;0,700;1,400&amp;family=Noto+Sans+SC:wght@400;500;700&amp;family=Noto+Serif+SC:wght@500;600;700&amp;display=swap" />
+    <link rel="stylesheet" href="../site-base.css" />
+    <link rel="icon" href="../favicon.svg" type="image/svg+xml" />
     <link rel="stylesheet" href="../styles.css" />
     <link rel="stylesheet" href="../responsive.css" />
     <link rel="stylesheet" href="styles.css" />
@@ -28,7 +27,7 @@
           <span class="brand-mark" aria-hidden="true">SX</span>
           <span class="brand-text">
             <strong>Inference Infra, Step by Step</strong>
-            <span>Sipeng Xie · 推理优化入门</span>
+            <span>Sipeng Xie 的推理优化入门</span>
           </span>
         </a>
         <nav class="nav" aria-label="文章导航">
@@ -39,20 +38,20 @@
           <a href="#s5">5 验收</a>
           <a href="#take">带走</a>
         </nav>
-        <a class="header-cta" href="../index.html#projects">返回主页</a>
+        <a class="header-cta" href="../index.html#notes">返回主页</a>
       </div>
     </header>
 
     <main id="main">
       <section class="hero shell">
         <div class="hero-copy">
-          <p class="eyebrow">LLM Inference / 写给第一次做优化的人</p>
           <h1>先量，再改</h1>
+          <p class="byline">LLM inference：写给第一次做优化的人</p>
           <p class="hero-statement">
             一次真实的大模型推理优化，拆成 5 个小动作。每节只讲一件事，1 分钟能读完。
           </p>
           <p class="hero-summary">
-            看不懂的技术细节都折叠在"＋ 想看细节"里，不点开也能读完全文。
+            看不懂的技术细节都折叠在"想看细节"里，不点开也能读完全文。
           </p>
           <div class="hero-actions" aria-label="相关链接">
             <a class="button primary" href="#s1">开始</a>
@@ -61,7 +60,7 @@
         </div>
 
         <figure class="portrait-block formula-card">
-          <div class="portrait-index" aria-hidden="true">30 秒版</div>
+          <div class="portrait-index" >30 秒版</div>
           <div class="formula-frame">
             <ul class="tldr">
               <li><span class="k">结果</span><span class="v">约 79 万 token<small>（token：模型读文字的单位，可能是一个汉字、半个汉字，或英文单词的一部分）</small>的长文本，等第一个字从 <strong>135 秒</strong>降到 <strong>61 秒</strong>。答题准确率没变。</span></li>
@@ -114,15 +113,15 @@
         </div>
         <div class="steps">
           <article class="step-card">
-            <div class="step-head"><span class="step-index">白跑腿 · overhead</span><h3>派了 6 万个快递员，只有 128 个有件</h3></div>
+            <div class="step-head"><span class="step-index">白跑腿（overhead）</span><h3>派了 6 万个快递员，只有 128 个有件</h3></div>
             <p>程序按"最长可能 100 万 token"派人干活。文章只有 2 千 token时，绝大多数人到了现场发现没事干，但派人本身就要花时间。</p>
           </article>
           <article class="step-card">
-            <div class="step-head"><span class="step-index">用错人 · compute</span><h3>请翻译念外文，会计在旁边等</h3></div>
+            <div class="step-head"><span class="step-index">用错人（compute）</span><h3>请翻译念外文，会计在旁边等</h3></div>
             <p>数据是一种压缩格式。程序先花大量时间把它"翻译"成普通数字，真正算账的部件只用了一点点时间。</p>
           </article>
           <article class="step-card">
-            <div class="step-head"><span class="step-index">路太窄 · memory</span><h3>搬家车已经开到限速</h3></div>
+            <div class="step-head"><span class="step-index">路太窄（memory）</span><h3>搬家车已经开到限速</h3></div>
             <p>"专家网络"每一步要从显存搬 3.4 GB 数据，已经用满了显存的带宽。换更聪明的司机也快不了。</p>
           </article>
         </div>
@@ -248,7 +247,7 @@ print(set(re.findall(r"mma\.sync\.aligned\.[\w.:]+", h.asm["ptx"])))
 
       <section id="s6" class="section shell">
         <div class="section-heading">
-          <div class="section-label"><span>+</span><h2>小心：测量工具会骗你</h2></div>
+          <div class="section-label"><h2>小心：测量工具会骗你</h2></div>
           <p>最贵的一课。</p>
         </div>
         <div class="easy">
@@ -265,7 +264,7 @@ print(set(re.findall(r"mma\.sync\.aligned\.[\w.:]+", h.asm["ptx"])))
 
       <section id="take" class="section shell">
         <div class="section-heading">
-          <div class="section-label"><span>✓</span><h2>带走：看到什么，先做什么</h2></div>
+          <div class="section-label"><h2>带走：看到什么，先做什么</h2></div>
           <p>不管你优化的是哪个系统，都可以照这张表来。</p>
         </div>
         <div class="easy">

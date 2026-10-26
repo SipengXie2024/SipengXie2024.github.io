@@ -11,10 +11,9 @@
     <title>微观 × 宏观路由笔记：同一道题的两个尺度 | Sipeng Xie</title>
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-    <link
-      href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,300..900;1,9..144,300..900&family=IBM+Plex+Mono:wght@400;500;600&family=IBM+Plex+Sans:wght@300;400;500;600;700&display=swap"
-      rel="stylesheet"
-    />
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400..700&amp;family=IBM+Plex+Mono:wght@400;500;600&amp;family=IBM+Plex+Sans:ital,wght@0,400;0,500;0,600;0,700;1,400&amp;family=Noto+Sans+SC:wght@400;500;700&amp;family=Noto+Serif+SC:wght@500;600;700&amp;display=swap" />
+    <link rel="stylesheet" href="../site-base.css" />
+    <link rel="icon" href="../favicon.svg" type="image/svg+xml" />
     <link rel="stylesheet" href="notes.css" />
     <link rel="stylesheet" href="responsive.css" />
   </head>
@@ -27,7 +26,7 @@
           <span class="brand-mark" aria-hidden="true">SX</span>
           <span class="brand-text">
             <strong>微观 × 宏观路由笔记</strong>
-            <span>Sipeng Xie · 研究笔记</span>
+            <span>Sipeng Xie 的研究笔记</span>
           </span>
         </a>
         <nav class="page-nav" aria-label="章节导航">
@@ -39,15 +38,15 @@
           <a href="#caveat">审慎</a>
           <a href="#references">文献</a>
         </nav>
-        <a class="nav-cta" href="../index.html#projects">返回主页</a>
+        <a class="nav-cta" href="../index.html#notes">返回主页</a>
       </div>
     </header>
 
     <main id="main">
       <section class="hero shell" id="top">
         <div class="hero-copy">
-          <p class="eyebrow">每日探索 · 笔记 02</p>
           <h1>微观 × 宏观路由：同一道题的两个尺度</h1>
+          <p class="byline">每日探索系列第 2 篇笔记</p>
           <p class="lede">
             上一篇笔记讲的是<strong>宏观路由</strong>——给每个 query 挑一个对的模型。但模型内部其实在做同样的事：MoE 架构里，每个
             token 都要挑一个 expert 来处理。这份交叉综述把一个大胆的想法讲清楚——这两层看似各干各的，其实是同一道「预算有限、怎么分最划算」的题；而且还没人真正把这两层打通。
@@ -63,7 +62,7 @@
         <figure class="scale-map" aria-labelledby="scale-caption">
           <p class="scale-map-caption" id="scale-caption">同一道题，两个尺度</p>
           <div class="scale-layer">
-            <span class="scale-layer-tag">宏观 · 模型级</span>
+            <span class="scale-layer-tag">宏观：模型级</span>
             <strong>每个 query 选一个模型</strong>
             <span class="scale-layer-sub">像决定病人送社区医院，还是三甲医院。</span>
           </div>
@@ -73,7 +72,7 @@
             <span class="scale-gap-line"></span>
           </div>
           <div class="scale-layer">
-            <span class="scale-layer-tag">微观 · token 级</span>
+            <span class="scale-layer-tag">微观：token 级</span>
             <strong>每个 token 选一个 expert</strong>
             <span class="scale-layer-sub">像病人进了医院，再分到哪个科室。</span>
           </div>
@@ -82,10 +81,7 @@
 
       <section class="section shell" id="thesis">
         <div class="section-heading">
-          <div class="kicker">
-            <span>01</span>
-            <h2>核心命题</h2>
-          </div>
+          <h2>核心命题</h2>
           <p>
             微观路由和宏观路由，看起来是两拨人在做两件事。这份综述的命题是——它们是同一类问题，只是发生在两个尺度。
           </p>
@@ -140,10 +136,7 @@
 
       <section class="section shell" id="cross">
         <div class="section-heading">
-          <div class="kicker">
-            <span>02</span>
-            <h2>三篇最直接的交叉</h2>
-          </div>
+          <h2>三篇最直接的交叉</h2>
           <p>
             已经有人开始互相「抄作业」了。这三篇最直接——前两篇一个往上搬、一个往下搬，第三篇先把模型内部的多个决策统一了起来。
           </p>
@@ -152,42 +145,36 @@
         <div class="paper-grid">
           <a class="paper-card reveal" href="https://arxiv.org/abs/2406.04692" target="_blank" rel="noreferrer">
             <div class="paper-topline">
-              <span class="paper-num">01</span>
               <span class="paper-role">微观 → 宏观</span>
             </div>
             <h3>Mixture-of-Agents (MoA)</h3>
             <p>原文明说「把 MoE 从 activation 级搬到 model 级」：让一群开源模型像 expert 一样分层提方案、再聚合（proposer / aggregator），结果超过 GPT-4 Omni。</p>
-            <span class="paper-link">在 arXiv 读原文 <span>2406.04692 · ICLR 2025</span></span>
+            <span class="paper-link">在 arXiv 读原文 <span><span>2406.04692</span><span>ICLR 2025</span></span></span>
           </a>
 
           <a class="paper-card reveal" href="https://arxiv.org/abs/2502.12325" target="_blank" rel="noreferrer" data-tone="blue">
             <div class="paper-topline">
-              <span class="paper-num">02</span>
               <span class="paper-role">宏观 → 微观</span>
             </div>
             <h3>DynaMoE</h3>
             <p>把宏观路由的「难度感知」搬进模型内部：预测每个 token 有多难，难 token 派大 expert、简单 token 派小 expert，token 级自适应计算。</p>
-            <span class="paper-link">在 arXiv 读原文 <span>2502.12325 · 2025-02</span></span>
+            <span class="paper-link">在 arXiv 读原文 <span><span>2502.12325</span><span>2025-02</span></span></span>
           </a>
 
           <a class="paper-card reveal" href="https://arxiv.org/abs/2607.06601" target="_blank" rel="noreferrer" data-tone="warm">
             <div class="paper-topline">
-              <span class="paper-num">03</span>
               <span class="paper-role">微观内部统一</span>
             </div>
             <h3>TriRoute</h3>
             <p>一个统一 controller，对每个 token 每一层同时决定 attention 模式、FFN expert、KV 位宽——还发现了一个「跨轴坍缩级联」现象。</p>
-            <span class="paper-link">在 arXiv 读原文 <span>2607.06601 · 2026-07</span></span>
+            <span class="paper-link">在 arXiv 读原文 <span><span>2607.06601</span><span>2026-07</span></span></span>
           </a>
         </div>
       </section>
 
       <section class="section shell" id="isomorphism">
         <div class="section-heading">
-          <div class="kicker">
-            <span>03</span>
-            <h2>同构现象：同一个问题反复出现</h2>
-          </div>
+          <h2>同构现象：同一个问题反复出现</h2>
           <p>
             最硬核的证据是——同一个问题、同一项技术，在两个尺度上各自被重新发明了一遍。这张对照表把它们一一对应。
           </p>
@@ -198,8 +185,8 @@
             <thead>
               <tr>
                 <th scope="col">问题 / 技术</th>
-                <th scope="col">微观 · token 级</th>
-                <th scope="col">宏观 · 模型级</th>
+                <th scope="col">微观：token 级</th>
+                <th scope="col">宏观：模型级</th>
               </tr>
             </thead>
             <tbody>
@@ -242,10 +229,7 @@
 
       <section class="section shell" id="theory">
         <div class="section-heading">
-          <div class="kicker">
-            <span>04</span>
-            <h2>理论地基在收敛</h2>
-          </div>
+          <h2>理论地基在收敛</h2>
           <p>
             不只是现象像，连理论工具都在往一块儿凑。两边开始用同一套数学语言描述路由。
           </p>
@@ -281,10 +265,7 @@
 
       <section class="section shell" id="gap">
         <div class="section-heading">
-          <div class="kicker">
-            <span>05</span>
-            <h2>空白 = 机会</h2>
-          </div>
+          <h2>空白 = 机会</h2>
           <p>
             上面这些工作几乎全是「单侧」的——要么只做 MoE 内部，要么只做模型之间。真正把两层放进同一框架联合优化的，一篇都没有。
           </p>
@@ -344,10 +325,7 @@
 
       <section class="section shell" id="caveat">
         <div class="section-heading">
-          <div class="kicker">
-            <span>06</span>
-            <h2>审慎一笔：这个统一框架可能收益存疑</h2>
-          </div>
+          <h2>审慎一笔：这个统一框架可能收益存疑</h2>
           <p>
             前面把「跨尺度统一」的前景讲得很诱人。但在真的投入之前，得先泼一盆冷水——下面五点疑虑，每一点都可能让「统一」的收益大打折扣。
           </p>
@@ -386,89 +364,75 @@
 
       <section class="section shell" id="references">
         <div class="section-heading">
-          <div class="kicker">
-            <span>07</span>
-            <h2>参考文献</h2>
-          </div>
+          <h2>参考文献</h2>
           <p>这份综述的核心来源，按尺度分成两组。有 arXiv 页面的都附了链接。</p>
         </div>
 
         <div class="ref-groups">
           <div class="ref-group">
-            <h3 class="ref-group-title">微观 · MoE / token 级</h3>
+            <h3 class="ref-group-title">微观：MoE / token 级</h3>
             <ol class="ref-list compact">
               <li class="ref">
-                <span class="ref-num">01</span>
                 <div class="ref-body">
                   <h3><a href="https://arxiv.org/abs/2404.02258" target="_blank" rel="noreferrer">Mixture-of-Depths (MoD)</a></h3>
-                  <p class="ref-meta">arXiv:2404.02258 · 2024-04</p>
+                  <p class="ref-meta"><span>arXiv:2404.02258</span><span>2024-04</span></p>
                 </div>
               </li>
               <li class="ref">
-                <span class="ref-num">02</span>
                 <div class="ref-body">
                   <h3><a href="https://arxiv.org/abs/2502.12325" target="_blank" rel="noreferrer">DynaMoE</a></h3>
-                  <p class="ref-meta">arXiv:2502.12325 · 2025-02</p>
+                  <p class="ref-meta"><span>arXiv:2502.12325</span><span>2025-02</span></p>
                 </div>
               </li>
               <li class="ref">
-                <span class="ref-num">03</span>
                 <div class="ref-body">
                   <h3><a href="https://arxiv.org/abs/2607.06601" target="_blank" rel="noreferrer">TriRoute</a></h3>
-                  <p class="ref-meta">arXiv:2607.06601 · 2026-07</p>
+                  <p class="ref-meta"><span>arXiv:2607.06601</span><span>2026-07</span></p>
                 </div>
               </li>
               <li class="ref">
-                <span class="ref-num">04</span>
                 <div class="ref-body">
                   <h3><a href="https://arxiv.org/abs/2605.08292" target="_blank" rel="noreferrer">Hi-MoE</a></h3>
                   <p class="ref-meta">arXiv:2605.08292</p>
                 </div>
               </li>
               <li class="ref">
-                <span class="ref-num">05</span>
                 <div class="ref-body">
                   <h3><a href="https://arxiv.org/abs/2604.23108" target="_blank" rel="noreferrer">MoHGE</a></h3>
                   <p class="ref-meta">arXiv:2604.23108</p>
                 </div>
               </li>
               <li class="ref">
-                <span class="ref-num">06</span>
                 <div class="ref-body">
                   <h3><a href="https://arxiv.org/abs/2503.22996" target="_blank" rel="noreferrer">USMoE</a></h3>
                   <p class="ref-meta">arXiv:2503.22996</p>
                 </div>
               </li>
               <li class="ref">
-                <span class="ref-num">07</span>
                 <div class="ref-body">
                   <h3><a href="https://arxiv.org/abs/2508.12801" target="_blank" rel="noreferrer">MaxScore</a></h3>
                   <p class="ref-meta">arXiv:2508.12801</p>
                 </div>
               </li>
               <li class="ref">
-                <span class="ref-num">08</span>
                 <div class="ref-body">
                   <h3><a href="https://arxiv.org/abs/2601.21349" target="_blank" rel="noreferrer">L2R</a></h3>
                   <p class="ref-meta">arXiv:2601.21349</p>
                 </div>
               </li>
               <li class="ref">
-                <span class="ref-num">09</span>
                 <div class="ref-body">
                   <h3>ERL（RL 训 MoE router）</h3>
-                  <p class="ref-meta">EMNLP 2025 · Findings</p>
+                  <p class="ref-meta"><span>EMNLP 2025</span><span>Findings</span></p>
                 </div>
               </li>
               <li class="ref">
-                <span class="ref-num">10</span>
                 <div class="ref-body">
                   <h3>RSPO（MoE RLVR 稳定性）</h3>
                   <p class="ref-meta">ACL 2026</p>
                 </div>
               </li>
               <li class="ref">
-                <span class="ref-num">11</span>
                 <div class="ref-body">
                   <h3><a href="https://arxiv.org/abs/2407.06204" target="_blank" rel="noreferrer">MoE Survey</a></h3>
                   <p class="ref-meta">arXiv:2407.06204</p>
@@ -478,87 +442,75 @@
           </div>
 
           <div class="ref-group">
-            <h3 class="ref-group-title">宏观 · 模型级</h3>
+            <h3 class="ref-group-title">宏观：模型级</h3>
             <ol class="ref-list compact">
               <li class="ref">
-                <span class="ref-num">12</span>
                 <div class="ref-body">
                   <h3><a href="https://arxiv.org/abs/2406.04692" target="_blank" rel="noreferrer">Mixture-of-Agents (MoA)</a></h3>
-                  <p class="ref-meta">arXiv:2406.04692 · ICLR 2025</p>
+                  <p class="ref-meta"><span>arXiv:2406.04692</span><span>ICLR 2025</span></p>
                 </div>
               </li>
               <li class="ref">
-                <span class="ref-num">13</span>
                 <div class="ref-body">
                   <h3><a href="https://arxiv.org/abs/2406.18665" target="_blank" rel="noreferrer">RouteLLM</a></h3>
-                  <p class="ref-meta">arXiv:2406.18665 · ICLR 2025</p>
+                  <p class="ref-meta"><span>arXiv:2406.18665</span><span>ICLR 2025</span></p>
                 </div>
               </li>
               <li class="ref">
-                <span class="ref-num">14</span>
                 <div class="ref-body">
                   <h3><a href="https://arxiv.org/abs/2506.09033" target="_blank" rel="noreferrer">Router-R1</a></h3>
                   <p class="ref-meta">arXiv:2506.09033</p>
                 </div>
               </li>
               <li class="ref">
-                <span class="ref-num">15</span>
                 <div class="ref-body">
                   <h3><a href="https://arxiv.org/abs/2606.07587" target="_blank" rel="noreferrer">The Routing Plateau</a></h3>
                   <p class="ref-meta">arXiv:2606.07587</p>
                 </div>
               </li>
               <li class="ref">
-                <span class="ref-num">16</span>
                 <div class="ref-body">
                   <h3><a href="https://arxiv.org/abs/2602.03478" target="_blank" rel="noreferrer">EquiRouter / When Routing Collapses</a></h3>
-                  <p class="ref-meta">arXiv:2602.03478 · 2026-02</p>
+                  <p class="ref-meta"><span>arXiv:2602.03478</span><span>2026-02</span></p>
                 </div>
               </li>
               <li class="ref">
-                <span class="ref-num">17</span>
                 <div class="ref-body">
                   <h3><a href="https://arxiv.org/abs/2601.05903" target="_blank" rel="noreferrer">HAPS</a></h3>
                   <p class="ref-meta">arXiv:2601.05903</p>
                 </div>
               </li>
               <li class="ref">
-                <span class="ref-num">18</span>
                 <div class="ref-body">
                   <h3><a href="https://arxiv.org/abs/2508.12491" target="_blank" rel="noreferrer">CSCR</a></h3>
                   <p class="ref-meta">arXiv:2508.12491</p>
                 </div>
               </li>
               <li class="ref">
-                <span class="ref-num">19</span>
                 <div class="ref-body">
                   <h3><a href="https://arxiv.org/abs/2502.03261" target="_blank" rel="noreferrer">CARROT</a></h3>
                   <p class="ref-meta">arXiv:2502.03261</p>
                 </div>
               </li>
               <li class="ref">
-                <span class="ref-num">20</span>
                 <div class="ref-body">
                   <h3>LLMRec（路由即推荐系统）</h3>
                   <p class="ref-meta">NeurIPS 2025</p>
                 </div>
               </li>
               <li class="ref">
-                <span class="ref-num">21</span>
                 <div class="ref-body">
                   <h3>Routing + Cascading 统一</h3>
-                  <p class="ref-meta">PMLR v267 · 2025-10</p>
+                  <p class="ref-meta"><span>PMLR v267</span><span>2025-10</span></p>
                 </div>
               </li>
               <li class="ref">
-                <span class="ref-num">22</span>
                 <div class="ref-body">
                   <h3><a href="https://arxiv.org/abs/2602.08003" target="_blank" rel="noreferrer">Ensemble selection 信息论</a></h3>
                   <p class="ref-meta">arXiv:2602.08003</p>
                 </div>
               </li>
               <li class="ref">
-                <span class="ref-num">23</span>
                 <div class="ref-body">
                   <h3><a href="https://arxiv.org/abs/2502.00409" target="_blank" rel="noreferrer">Doing More with Less（LLM 路由综述）</a></h3>
                   <p class="ref-meta">arXiv:2502.00409</p>
@@ -574,7 +526,7 @@
       <div class="shell footer-inner">
         <span>
           <strong>微观 × 宏观路由笔记</strong>
-          每日探索 · 笔记 02 · 2026
+          每日探索系列第 2 篇笔记，2026 年
         </span>
         <div class="footer-links">
           <a href="#references">参考文献</a>

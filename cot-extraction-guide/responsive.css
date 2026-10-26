@@ -59,8 +59,8 @@
 
   .series-nav a {
     min-width: 42px;
-    padding: 6px;
-    font-size: 11px;
+    padding: 5px 7px;
+    font-size: 14px;
   }
 
   .guide-hero {
@@ -68,7 +68,7 @@
   }
 
   .hero-copy h1 {
-    font-size: 42px;
+    font-size: 40px;
   }
 
   .hero-lede {
@@ -76,12 +76,8 @@
     font-size: 16px;
   }
 
-  .hero-meta span + span::before {
-    margin-right: 12px;
-  }
-
   .hero-meta {
-    gap: 8px 12px;
+    gap: 6px 20px;
   }
 
   .method-map li {
@@ -164,7 +160,7 @@
   }
 
   .method-header p:last-child {
-    font-size: 14px;
+    font-size: 16px;
   }
 
   .step-list {
@@ -173,7 +169,7 @@
 
   .code-shell pre {
     padding: 14px;
-    font-size: 11px;
+    font-size: 12.5px;
   }
 
   .evidence-grid,
@@ -234,7 +230,7 @@
   }
 
   .hero-copy h1 {
-    font-size: 37px;
+    font-size: 36px;
   }
 
   .map-axis {

@@ -16,7 +16,7 @@
     transform: translateY(-5px);
     border-color: var(--line-strong);
     background: var(--surface-raised);
-    box-shadow: 0 28px 52px -28px rgba(0, 0, 0, 0.65);
+    box-shadow: 0 28px 52px -28px var(--shadow);
   }
 
   .paper-link:hover {
@@ -35,20 +35,15 @@
   }
 
   .paper-grid {
-    grid-template-columns: 1fr;
+    grid-template-columns: minmax(0, 1fr);
   }
 
   .paper-card {
     min-height: 0;
   }
 
-  .section-heading {
-    grid-template-columns: 1fr;
-    gap: 16px;
-  }
-
   .paper-body {
-    grid-template-columns: 1fr;
+    grid-template-columns: minmax(0, 1fr);
     gap: 36px;
   }
 
@@ -114,15 +109,15 @@
   }
 
   .paper-aside {
-    grid-template-columns: 1fr;
+    grid-template-columns: minmax(0, 1fr);
   }
 
   .thesis-directions {
-    grid-template-columns: 1fr;
+    grid-template-columns: minmax(0, 1fr);
   }
 
   .ref-groups {
-    grid-template-columns: 1fr;
+    grid-template-columns: minmax(0, 1fr);
     gap: 44px;
   }
 }
@@ -166,9 +161,12 @@
   }
 
   .reveal {
+    transition: none;
+  }
+
+  .reveal.is-pending {
     opacity: 1;
     transform: none;
-    transition: none;
   }
 
   .nav-cta,

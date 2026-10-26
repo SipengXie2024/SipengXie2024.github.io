@@ -12,17 +12,18 @@ function loadMermaid() {
       securityLevel: "strict",
       theme: "base",
       themeVariables: {
+        // Values follow the site tokens in styles/base.css (Mermaid needs literal colours).
         background: "#171c15",
         primaryColor: "#1c2b21",
         primaryTextColor: "#e9ede6",
         primaryBorderColor: "#4caf7d",
-        lineColor: "#9aa398",
+        lineColor: "#a9b0a6",
         secondaryColor: "#2a2118",
         tertiaryColor: "#10140f",
         noteBkgColor: "#2a2118",
         noteTextColor: "#e9ede6",
-        noteBorderColor: "#d0622a",
-        fontFamily: '"IBM Plex Sans", "Segoe UI", "Microsoft YaHei", sans-serif',
+        noteBorderColor: "#e07a45",
+        fontFamily: '"IBM Plex Sans", "Noto Sans SC", "PingFang SC", "Microsoft YaHei", sans-serif',
         fontSize: "16px",
       },
       flowchart: { curve: "basis", htmlLabels: true },
@@ -74,7 +75,7 @@ function MermaidDiagram({ title, chart }: { title: string; chart: string }) {
 
   return (
     <figure className="diagram-block" ref={figureRef}>
-      <figcaption><span>MERMAID</span>{title}</figcaption>
+      <figcaption>{title}</figcaption>
       {svg ? (
         <div className="mermaid-output" dangerouslySetInnerHTML={{ __html: svg }} />
       ) : error ? (
@@ -92,7 +93,7 @@ function Header({ activeLesson, progressRef }: { activeLesson: number; progressR
       <div className="header-inner">
         <a className="brand" href="#top" aria-label="返回首页顶部">
           <span className="brand-mark" aria-hidden="true">π</span>
-          <span><strong>Pi Runtime</strong><small>Learning Journal</small></span>
+          <span><strong>Pi Runtime</strong><small>Sipeng Xie 的学习日记</small></span>
         </a>
         <nav aria-label="主导航">
           <a href="#course">课程</a>
@@ -101,7 +102,7 @@ function Header({ activeLesson, progressRef }: { activeLesson: number; progressR
           <a href="#sources">源码</a>
         </nav>
         <div className="header-actions">
-          <span className="header-position">LESSON {String(activeLesson).padStart(2, "0")} / 18</span>
+          <span className="header-position">第 {activeLesson} 课，共 18 课</span>
           <a className="github-link" href="https://github.com/SipengXie2024/pi-agent-learning-journal" target="_blank" rel="noreferrer">GitHub</a>
         </div>
       </div>
@@ -114,8 +115,8 @@ function Hero() {
   return (
     <section className="hero shell" id="top">
       <div className="hero-copy">
-        <span className="eyebrow"><i />Source-grounded field guide</span>
         <h1>Pi Agent Runtime<br /><em>学习日记</em></h1>
+        <p className="byline">Source-grounded field guide</p>
         <p>
           从 Agent Loop 出发，逐课进入 Context、Tool Runtime、可靠性、分布式调度与三条证据链。
           每一课都直接给出问题、知识讲解、架构图和工程结论。
@@ -128,7 +129,7 @@ function Hero() {
       <dl className="hero-meta">
         <div><dt>完整讲义</dt><dd>18<small>lessons</small></dd></div>
         <div><dt>架构图解</dt><dd>18<small>diagrams</small></dd></div>
-        <div><dt>固定版本</dt><dd>{baseline.release}<small>{baseline.commit.slice(0, 9)}</small></dd></div>
+        <div><dt>固定版本</dt><dd>{baseline.release}<small><code>{baseline.commit.slice(0, 9)}</code></small></dd></div>
       </dl>
     </section>
   );
@@ -141,10 +142,7 @@ function CourseSidebar({ activeLesson }: { activeLesson: number }) {
 
   return (
     <aside className="course-sidebar" aria-label="课程目录">
-      <div className="sidebar-title">
-        <span>COURSE INDEX</span>
-        <strong>课程目录</strong>
-      </div>
+      <h2 className="sidebar-title">课程目录</h2>
       <div className="sidebar-progress">
         <span>当前阅读</span>
         <strong>{String(activeLesson).padStart(2, "0")}<small>/ 18</small></strong>
@@ -152,7 +150,7 @@ function CourseSidebar({ activeLesson }: { activeLesson: number }) {
       <label className="mobile-course-picker" htmlFor="lesson-picker">
         <span>快速跳转</span>
         <select id="lesson-picker" value={activeLesson} onChange={(event) => jumpToLesson(Number(event.target.value))}>
-          {lessons.map((lesson) => <option value={lesson.id} key={lesson.id}>{String(lesson.id).padStart(2, "0")} / {lesson.title}</option>)}
+          {lessons.map((lesson) => <option value={lesson.id} key={lesson.id}>{String(lesson.id).padStart(2, "0")} {lesson.title}</option>)}
         </select>
       </label>
       <div className="desktop-course-index">
@@ -197,8 +195,8 @@ function LessonArticle({ lesson }: { lesson: Lesson }) {
   return (
     <article className="lesson" id={`lesson-${lesson.id}`}>
       <header className="lesson-header">
-        <div className="lesson-kicker"><span>LESSON {String(lesson.id).padStart(2, "0")}</span><i />{lesson.domain}</div>
         <h2>{lesson.title}</h2>
+        <p className="byline"><span>第 {lesson.id} 课</span><span>{lesson.domain}</span></p>
         <p className="lesson-lead">{lesson.lead}</p>
       </header>
 
@@ -208,15 +206,12 @@ function LessonArticle({ lesson }: { lesson: Lesson }) {
       </div>
 
       <div className="lesson-body">
-        {lesson.sections.map((section, index) => (
+        {lesson.sections.map((section) => (
           <section className="knowledge-section" key={section.title}>
-            <div className="knowledge-index">{lesson.id}.{index + 1}</div>
-            <div>
-              <h3>{section.title}</h3>
-              {section.paragraphs.map((paragraph) => <p key={paragraph}>{paragraph}</p>)}
-              {section.bullets && <ul>{section.bullets.map((bullet) => <li key={bullet}>{bullet}</li>)}</ul>}
-              {section.code && <pre className="code-block"><code>{section.code}</code></pre>}
-            </div>
+            <h3>{section.title}</h3>
+            {section.paragraphs.map((paragraph) => <p key={paragraph}>{paragraph}</p>)}
+            {section.bullets && <ul>{section.bullets.map((bullet) => <li key={bullet}>{bullet}</li>)}</ul>}
+            {section.code && <pre className="code-block"><code>{section.code}</code></pre>}
           </section>
         ))}
       </div>
@@ -224,7 +219,7 @@ function LessonArticle({ lesson }: { lesson: Lesson }) {
       <MermaidDiagram title={lesson.diagram.title} chart={lesson.diagram.chart} />
 
       <div className="engineer-takeaway">
-        <span>ENGINEER TAKEAWAY</span>
+        <span>工程结论</span>
         <strong>{lesson.takeaway}</strong>
       </div>
 
@@ -236,10 +231,17 @@ function LessonArticle({ lesson }: { lesson: Lesson }) {
   );
 }
 
+function ExternalMark() {
+  return (
+    <svg viewBox="0 0 12 12" aria-hidden="true" focusable="false">
+      <path d="M4 2.5h5.5V8M9.5 2.5 2.5 9.5" fill="none" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round" strokeLinejoin="round" />
+    </svg>
+  );
+}
+
 function SourceMap() {
   return (
     <section className="source-section" id="sources">
-      <span className="section-label">SOURCE MAP</span>
       <h2>继续回到源码验证</h2>
       <p>课程文字用于建立心智模型；实现细节仍应回到固定提交和官方文档。本站不复制 Pi 源码。</p>
       <dl className="baseline-grid">
@@ -250,7 +252,7 @@ function SourceMap() {
       </dl>
       <div className="source-links">
         {sourceLinks.map((source) => (
-          <a href={source.href} target="_blank" rel="noreferrer" key={source.label}><span aria-hidden="true">↗</span>{source.label}</a>
+          <a href={source.href} target="_blank" rel="noreferrer" key={source.label}><ExternalMark />{source.label}</a>
         ))}
       </div>
     </section>
@@ -310,7 +312,6 @@ export function App() {
           <CourseSidebar activeLesson={activeLesson} />
           <div className="course-content">
             <div className="course-intro">
-              <span className="section-label">READING MODE</span>
               <h2>按顺序读，也可以从目录跳转</h2>
               <p>每课先给出一个必须回答的问题，再展开概念边界、执行过程、失败路径与架构图。所有内容默认展开，不需要点击卡片。</p>
               <ChapterOverview />
@@ -323,7 +324,7 @@ export function App() {
       <footer className="site-footer">
         <div className="shell">
           <div><span className="brand-mark small" aria-hidden="true">π</span><p><strong>Pi Agent Runtime 学习日记</strong><small>理解执行、状态与信任，而不是背诵功能。</small></p></div>
-          <div className="footer-links"><a href="https://sipengxie2024.github.io/">Sipeng Xie</a><a href="#top">返回顶部 ↑</a></div>
+          <div className="footer-links"><a href="https://sipengxie2024.github.io/">Sipeng Xie</a><a href="#top">返回顶部</a></div>
         </div>
       </footer>
     </>

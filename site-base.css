@@ -1,0 +1,107 @@
+/* Shared foundation for every page of the site: canonical tokens and the
+   browser surfaces (selection, caret, scrollbars, focus, motion preference).
+   Page stylesheets load after this file and may override tokens for a light theme. */
+
+:root {
+  --page: #10140f;
+  --surface: #171c15;
+  --surface-raised: #1c221a;
+  --ink: #e9ede6;
+  --muted: #a9b0a6;
+  --quiet: #8a9186;
+  --line: rgba(233, 237, 230, 0.14);
+  --line-strong: rgba(233, 237, 230, 0.32);
+  --accent: #4caf7d;
+  --accent-bright: #6cc79a;
+  --accent-soft: rgba(76, 175, 125, 0.16);
+  --warm: #e07a45;
+  --warm-soft: rgba(224, 122, 69, 0.15);
+  --blue: #6ba8c4;
+  --blue-soft: rgba(107, 168, 196, 0.16);
+  --code-bg: #0d110c;
+  --code-ink: #cfe4d6;
+  --ring: #6cc79a;
+  --selection: rgba(76, 175, 125, 0.4);
+  --scrollbar: rgba(233, 237, 230, 0.22);
+  --ease-out: cubic-bezier(0.23, 1, 0.32, 1);
+  --font-display: "Fraunces", "Noto Serif SC", "Songti SC", "STSong", Georgia, serif;
+  --font-body: "IBM Plex Sans", "Noto Sans SC", "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", ui-sans-serif, sans-serif;
+  --font-mono: "IBM Plex Mono", ui-monospace, "SFMono-Regular", Menlo, Consolas, monospace;
+  color-scheme: dark;
+  accent-color: var(--accent);
+}
+
+html,
+body {
+  overflow-x: clip;
+}
+
+html {
+  scrollbar-color: var(--scrollbar) transparent;
+  -webkit-text-size-adjust: 100%;
+  text-size-adjust: 100%;
+}
+
+body {
+  caret-color: var(--accent-bright);
+  font-kerning: normal;
+}
+
+::selection {
+  background: var(--selection);
+  color: var(--ink);
+}
+
+::-webkit-scrollbar {
+  width: 10px;
+  height: 10px;
+}
+
+::-webkit-scrollbar-thumb {
+  border: 3px solid transparent;
+  border-radius: 999px;
+  background: var(--scrollbar) padding-box;
+}
+
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+a {
+  text-underline-offset: 0.22em;
+  text-decoration-thickness: 1px;
+}
+
+:focus-visible {
+  outline: 2px solid var(--ring);
+  outline-offset: 3px;
+}
+
+table,
+time,
+.num {
+  font-variant-numeric: tabular-nums;
+}
+
+/* CJK faces have no true italic; emphasise Chinese with weight instead. */
+:lang(zh) em,
+:lang(zh) i {
+  font-style: normal;
+  font-weight: 600;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  html {
+    scroll-behavior: auto;
+  }
+
+  *,
+  *::before,
+  *::after {
+    animation-duration: 1ms !important;
+    animation-iteration-count: 1 !important;
+    animation-delay: 0ms !important;
+    transition-duration: 1ms !important;
+    transition-delay: 0ms !important;
+  }
+}

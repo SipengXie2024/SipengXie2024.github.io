@@ -82,18 +82,11 @@
     margin-left: auto;
   }
 
-  .section-heading,
   .principles,
   .runtime-advisor,
   .beginner-route,
   .advanced-case .case-study {
     grid-template-columns: 1fr;
-  }
-
-  .section-heading {
-    align-items: start;
-    flex-direction: column;
-    gap: 12px;
   }
 
   .learning-workspace {
@@ -154,7 +147,7 @@
   }
 
   .overview h1 {
-    font-size: 40px;
+    font-size: 36px;
   }
 
   .overview-lede {
@@ -173,18 +166,23 @@
     padding-top: 10px;
   }
 
-  .metric-grid {
-    border-top: 0;
-  }
-
   .section {
     padding-top: 56px;
     padding-bottom: 62px;
   }
 
   .section-heading h2,
-  .principles h2 {
-    font-size: 28px;
+  .principles h2,
+  .advanced-gate h2 {
+    font-size: 26px;
+  }
+
+  .metric-grid {
+    row-gap: 0;
+  }
+
+  .first-goal {
+    padding: 22px 20px;
   }
 
   .concept-lab,
@@ -196,25 +194,18 @@
     grid-template-columns: repeat(2, minmax(0, 1fr));
   }
 
-  .concept-tabs button:nth-child(odd) {
-    border-right: 1px solid var(--line);
-  }
-
-  .concept-tabs button:nth-last-child(-n + 2) {
-    border-bottom: 0;
-  }
-
   .concept-panel {
     min-height: 380px;
     padding: 22px;
   }
 
   .concept-panel h3 {
-    font-size: 25px;
+    font-size: 24px;
   }
 
   .route-list label {
-    grid-template-columns: 18px 27px minmax(0, 1fr);
+    grid-template-columns: 18px 24px minmax(0, 1fr);
+    gap: 10px;
     padding: 14px;
   }
 
@@ -283,7 +274,7 @@
   }
 
   .module-header h3 {
-    font-size: 24px;
+    font-size: 25px;
   }
 
   .module-output {
@@ -301,7 +292,9 @@
   .runtime-tabs button,
   .snippet-tabs button {
     min-width: 0;
-    flex: 1 1 0;
+    flex: 1 1 auto;
+    padding-inline: 8px;
+    white-space: nowrap;
   }
 
   .api-lab pre {

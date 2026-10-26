@@ -30,7 +30,7 @@
 .ladder-list label {
   padding: 11px 0;
   display: grid;
-  grid-template-columns: 18px 1fr;
+  grid-template-columns: 18px minmax(0, 1fr);
   gap: 10px;
   align-items: start;
   cursor: pointer;
@@ -42,13 +42,14 @@
 }
 
 .ladder-list strong {
-  font-size: 12px;
+  font-size: 15px;
+  font-weight: 600;
 }
 
 .ladder-list small {
   margin-top: 2px;
-  color: var(--quiet);
-  font-size: 10px;
+  color: var(--muted);
+  font-size: 14px;
 }
 
 .api-lab {
@@ -77,25 +78,21 @@
 }
 
 .api-lab code {
-  font-family: "SFMono-Regular", Consolas, "Liberation Mono", monospace;
-  font-size: 11px;
+  font-family: var(--font-mono);
+  font-size: 13px;
 }
 
 .snippet-note {
   margin: 12px 0 0;
   color: var(--muted);
-  font-size: 11px;
+  font-size: 14px;
 }
 
 .copy-status {
-  min-height: 18px;
+  min-height: 22px;
   margin: 5px 0 0;
-  color: var(--accent);
-  font-size: 11px;
-}
-
-.troubleshooting-heading {
-  align-items: center;
+  color: var(--accent-bright);
+  font-size: 14px;
 }
 
 .search-box {
@@ -105,18 +102,24 @@
 
 .search-box input {
   height: 42px;
-  padding: 8px 12px 8px 36px;
-  font-size: 12px;
+  padding: 8px 12px 8px 38px;
+  font-size: 15px;
 }
 
 .search-icon {
   position: absolute;
-  left: 13px;
+  left: 12px;
   top: 50%;
   z-index: 1;
+  display: flex;
   color: var(--quiet);
-  font-family: "SFMono-Regular", Consolas, monospace;
   transform: translateY(-50%);
+  pointer-events: none;
+}
+
+.search-icon svg.icon {
+  width: 17px;
+  height: 17px;
 }
 
 .table-wrap {
@@ -141,21 +144,21 @@
 }
 
 .trouble-table th {
-  color: var(--quiet);
+  color: var(--muted);
   background: var(--surface-muted);
-  font-size: 10px;
-  font-weight: 760;
+  font-size: 13px;
+  font-weight: 600;
 }
 
 .trouble-table td {
   color: var(--muted);
-  font-size: 12px;
+  font-size: 15px;
 }
 
 .trouble-table td:first-child {
   width: 27%;
   color: var(--ink);
-  font-weight: 650;
+  font-weight: 600;
 }
 
 .trouble-table tr:last-child td {
@@ -164,8 +167,8 @@
 
 .result-count {
   margin: 10px 0 0;
-  color: var(--quiet);
-  font-size: 10px;
+  color: var(--muted);
+  font-size: 13px;
   text-align: right;
 }
 
@@ -173,7 +176,7 @@
   padding-top: 78px;
   padding-bottom: 84px;
   display: grid;
-  grid-template-columns: 0.85fr 1.15fr;
+  grid-template-columns: minmax(0, 0.85fr) minmax(0, 1.15fr);
   gap: 72px;
 }
 
@@ -185,22 +188,9 @@
 }
 
 .principle-list li {
-  padding: 15px 0;
-  display: grid;
-  grid-template-columns: 38px 1fr;
-  gap: 14px;
+  padding: 16px 0;
   border-bottom: 1px solid var(--line);
-}
-
-.principle-list span {
-  color: var(--quiet);
-  font-family: "SFMono-Regular", Consolas, monospace;
-  font-size: 10px;
-}
-
-.principle-list p {
-  margin: 0;
-  font-size: 13px;
+  font-size: 16px;
 }
 
 .site-footer {
@@ -215,7 +205,14 @@
   align-items: center;
   justify-content: space-between;
   gap: 20px;
-  font-size: 11px;
+  font-size: 14px;
+}
+
+.footer-inner p {
+  margin: 0;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px 16px;
 }
 
 .footer-inner div {
@@ -226,10 +223,4 @@
 
 .footer-inner a {
   color: var(--ink);
-  text-underline-offset: 3px;
-}
-
-:focus-visible {
-  outline: 2px solid var(--accent);
-  outline-offset: 3px;
 }

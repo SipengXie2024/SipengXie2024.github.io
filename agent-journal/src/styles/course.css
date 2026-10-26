@@ -29,10 +29,9 @@
 }
 
 .hero h1 {
-  margin: 22px 0 24px;
+  margin: 0 0 16px;
   font-size: 76px;
-  line-height: 1;
-  letter-spacing: 0;
+  line-height: 1.02;
 }
 
 .hero h1 em {
@@ -40,7 +39,11 @@
   font-style: normal;
 }
 
-.hero-copy > p {
+.hero-copy > .byline {
+  margin-bottom: 26px;
+}
+
+.hero-copy > p:not(.byline) {
   max-width: 760px;
   margin: 0;
   color: var(--muted);
@@ -69,12 +72,12 @@
 
 .hero-meta {
   margin: 0;
-  border-top: 2px solid var(--ink);
+  border-top: 1px solid var(--line-strong);
 }
 
 .hero-meta > div {
   display: grid;
-  grid-template-columns: 1fr auto;
+  grid-template-columns: minmax(0, 1fr) auto;
   align-items: center;
   gap: 20px;
   min-height: 92px;
@@ -82,15 +85,16 @@
 }
 
 .hero-meta dt {
-  color: var(--quiet);
-  font-size: 12px;
-  font-weight: 700;
+  color: var(--muted);
+  font-size: 14px;
+  font-weight: 500;
 }
 
 .hero-meta dd {
   margin: 0;
   font-size: 28px;
-  font-weight: 760;
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
   text-align: right;
 }
 
@@ -98,9 +102,12 @@
   display: block;
   margin-top: 2px;
   color: var(--quiet);
-  font-family: "IBM Plex Mono", ui-monospace, Consolas, monospace;
-  font-size: 11px;
-  font-weight: 500;
+  font-size: 13px;
+  font-weight: 400;
+}
+
+.hero-meta small code {
+  font-size: 13px;
 }
 
 .course-shell {
@@ -123,25 +130,14 @@
 }
 
 .sidebar-title {
-  padding-bottom: 15px;
-  border-bottom: 2px solid var(--ink);
-}
-
-.sidebar-title span,
-.sidebar-title strong {
-  display: block;
-}
-
-.sidebar-title span {
-  color: var(--accent);
-  font-family: "IBM Plex Mono", ui-monospace, Consolas, monospace;
-  font-size: 11px;
-  font-weight: 760;
-}
-
-.sidebar-title strong {
-  margin-top: 4px;
+  margin: 0;
+  padding-bottom: 14px;
+  border-bottom: 1px solid var(--line-strong);
+  font-family: var(--font-body);
+  font-variation-settings: normal;
   font-size: 16px;
+  font-weight: 600;
+  line-height: 1.4;
 }
 
 .sidebar-progress {
@@ -153,20 +149,21 @@
 }
 
 .sidebar-progress > span {
-  color: var(--quiet);
-  font-size: 11px;
+  color: var(--muted);
+  font-size: 13px;
 }
 
 .sidebar-progress strong {
-  color: var(--accent);
-  font-family: "IBM Plex Mono", ui-monospace, Consolas, monospace;
+  color: var(--accent-bright);
+  font-family: var(--font-mono);
   font-size: 20px;
+  font-weight: 500;
 }
 
 .sidebar-progress small {
   margin-left: 4px;
   color: var(--quiet);
-  font-size: 11px;
+  font-size: 13px;
 }
 
 .desktop-course-index section {
@@ -178,13 +175,15 @@
   align-items: center;
   gap: 8px;
   margin-bottom: 8px;
-  color: var(--quiet);
-  font-size: 11px;
+  color: var(--muted);
+  font-size: 13px;
+  font-weight: 500;
 }
 
 .desktop-course-index section header span {
-  color: var(--accent);
-  font-family: "IBM Plex Mono", ui-monospace, Consolas, monospace;
+  color: var(--accent-bright);
+  font-family: var(--font-mono);
+  font-weight: 400;
 }
 
 .desktop-course-index ol {
@@ -197,31 +196,31 @@
 
 .desktop-course-index li a {
   display: grid;
-  grid-template-columns: 26px minmax(0, 1fr);
+  grid-template-columns: 28px minmax(0, 1fr);
   align-items: center;
   min-height: 34px;
-  padding: 4px 8px;
+  padding: 5px 8px;
   border-radius: 4px;
   color: var(--muted);
-  font-size: 13px;
+  font-size: 14px;
+  line-height: 1.45;
   text-decoration: none;
   transition: background-color 140ms ease, color 140ms ease;
 }
 
 .desktop-course-index li a span {
   color: var(--quiet);
-  font-family: "IBM Plex Mono", ui-monospace, Consolas, monospace;
-  font-size: 11px;
+  font-family: var(--font-mono);
+  font-size: 13px;
 }
 
 .desktop-course-index li.active a {
   background: var(--accent-soft);
-  color: var(--accent-dark);
-  box-shadow: inset 2px 0 var(--accent);
+  color: var(--accent-bright);
 }
 
 .desktop-course-index li.active a span {
-  color: var(--accent);
+  color: var(--accent-bright);
 }
 
 .mobile-course-picker {
@@ -238,10 +237,9 @@
 }
 
 .course-intro h2 {
-  margin: 12px 0 17px;
+  margin: 0 0 18px;
   font-size: 48px;
-  line-height: 1.12;
-  letter-spacing: 0;
+  line-height: 1.15;
 }
 
 .course-intro > p {
@@ -272,27 +270,32 @@
   border-left: 1px solid var(--line);
 }
 
-.chapter-overview span,
+.chapter-overview span {
+  color: var(--accent-bright);
+  font-family: var(--font-mono);
+  font-size: 13px;
+}
+
 .chapter-overview small {
   color: var(--quiet);
-  font-family: "IBM Plex Mono", ui-monospace, Consolas, monospace;
-  font-size: 11px;
+  font-size: 13px;
 }
 
 .chapter-overview strong {
-  font-size: 14px;
+  font-size: 16px;
+  font-weight: 600;
 }
 
 .source-section {
   margin-top: 108px;
   padding: 48px 0 4px;
-  border-top: 2px solid var(--ink);
+  border-top: 1px solid var(--line-strong);
 }
 
 .source-section h2 {
-  margin: 11px 0 12px;
+  margin: 0 0 14px;
   font-size: 38px;
-  letter-spacing: 0;
+  line-height: 1.2;
 }
 
 .source-section > p {
@@ -323,8 +326,8 @@
 
 .baseline-grid dt {
   margin-bottom: 6px;
-  color: var(--quiet);
-  font-size: 11px;
+  color: var(--muted);
+  font-size: 14px;
 }
 
 .baseline-grid dd {
@@ -336,7 +339,7 @@
   display: block;
   overflow: hidden;
   color: var(--body);
-  font-size: 11px;
+  font-size: 13px;
   text-overflow: ellipsis;
 }
 
@@ -356,23 +359,26 @@
   border: 1px solid var(--line);
   border-radius: 6px;
   color: var(--muted);
-  font-size: 12px;
+  font-size: 14px;
   text-decoration: none;
   transition: transform 140ms var(--ease-out), border-color 160ms ease, background-color 160ms ease, color 160ms ease;
 }
 
-.source-links a span {
-  color: var(--accent);
+.source-links a svg {
+  flex: none;
+  width: 12px;
+  height: 12px;
+  color: var(--accent-bright);
 }
 
 @media (hover: hover) and (pointer: fine) {
   .desktop-course-index li a:hover {
-    background: rgba(76, 175, 125, 0.12);
+    background: var(--accent-faint);
     color: var(--ink);
   }
 
   .chapter-overview a:hover {
-    color: var(--accent-dark);
+    color: var(--accent-bright);
     text-decoration: none;
   }
 }
@@ -391,7 +397,7 @@
 
 @media (max-width: 900px) {
   .hero {
-    grid-template-columns: 1fr;
+    grid-template-columns: minmax(0, 1fr);
     gap: 46px;
     min-height: auto;
   }
@@ -417,7 +423,7 @@
   }
 
   .course-shell {
-    grid-template-columns: 1fr;
+    grid-template-columns: minmax(0, 1fr);
     gap: 44px;
   }
 
@@ -444,8 +450,8 @@
   }
 
   .mobile-course-picker > span {
-    color: var(--quiet);
-    font-size: 11px;
+    color: var(--muted);
+    font-size: 14px;
   }
 
   .mobile-course-picker select {
@@ -469,17 +475,17 @@
     font-size: 50px;
   }
 
-  .hero-copy > p {
+  .hero-copy > p:not(.byline) {
     font-size: 18px;
   }
 
   .hero-meta {
-    grid-template-columns: 1fr;
+    grid-template-columns: minmax(0, 1fr);
   }
 
   .hero-meta > div {
     display: grid;
-    grid-template-columns: 1fr auto;
+    grid-template-columns: minmax(0, 1fr) auto;
     padding: 0;
   }
 
@@ -505,7 +511,7 @@
   }
 
   .chapter-overview {
-    grid-template-columns: 1fr;
+    grid-template-columns: minmax(0, 1fr);
   }
 
   .chapter-overview a,
@@ -516,7 +522,7 @@
   }
 
   .baseline-grid {
-    grid-template-columns: 1fr;
+    grid-template-columns: minmax(0, 1fr);
   }
 
   .baseline-grid > div,
@@ -530,9 +536,5 @@
   .hero-copy,
   .hero-meta {
     animation: none;
-  }
-
-  .source-links a {
-    transition-duration: 0ms;
   }
 }

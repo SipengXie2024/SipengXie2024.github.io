@@ -11,10 +11,9 @@
     <title>传不快，就藏起来：预填充两半交替，把卡间通信藏进计算 | Sipeng Xie</title>
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-    <link
-      href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,300..900;1,9..144,300..900&family=IBM+Plex+Mono:wght@400;500;600&family=IBM+Plex+Sans:wght@300;400;500;600;700&display=swap"
-      rel="stylesheet"
-    />
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400..700&amp;family=IBM+Plex+Mono:wght@400;500;600&amp;family=IBM+Plex+Sans:ital,wght@0,400;0,500;0,600;0,700;1,400&amp;family=Noto+Sans+SC:wght@400;500;700&amp;family=Noto+Serif+SC:wght@500;600;700&amp;display=swap" />
+    <link rel="stylesheet" href="../site-base.css" />
+    <link rel="icon" href="../favicon.svg" type="image/svg+xml" />
     <link rel="stylesheet" href="../styles.css" />
     <link rel="stylesheet" href="../responsive.css" />
     <link rel="stylesheet" href="styles.css" />
@@ -28,7 +27,7 @@
           <span class="brand-mark" aria-hidden="true">SX</span>
           <span class="brand-text">
             <strong>Inference Infra, Step by Step</strong>
-            <span>Sipeng Xie · 推理优化入门</span>
+            <span>Sipeng Xie 的推理优化入门</span>
           </span>
         </a>
         <nav class="nav" aria-label="文章导航">
@@ -40,20 +39,20 @@
           <a href="#lesson">教训</a>
           <a href="#take">带走</a>
         </nav>
-        <a class="header-cta" href="../index.html#projects">返回主页</a>
+        <a class="header-cta" href="../index.html#notes">返回主页</a>
       </div>
     </header>
 
     <main id="main">
       <section class="hero shell">
         <div class="hero-copy">
-          <p class="eyebrow">LLM Inference / 只有 PCIe 的多卡推理</p>
           <h1>传不快，<br /><span class="nowrap">就藏起来</span></h1>
+          <p class="byline">LLM inference：只有 PCIe 的多卡推理</p>
           <p class="hero-statement">
             8 张卡之间的数据传输已经跑到线路上限。剩下的办法是让传输和计算同时进行。
           </p>
           <p class="hero-summary">
-            每节一个结论、一个比喻、一个数字。技术细节折叠在"＋ 想看细节"里，不点开也能读完全文。本文的数字后面标了 [推断] 的是推算，没标的来自实测记录。
+            每节一个结论、一个比喻、一个数字。技术细节折叠在"想看细节"里，不点开也能读完全文。本文的数字后面标了 [推断] 的是推算，没标的来自实测记录。
           </p>
           <div class="hero-actions" aria-label="相关链接">
             <a class="button primary" href="#s1">开始</a>
@@ -62,7 +61,7 @@
         </div>
 
         <figure class="portrait-block formula-card">
-          <div class="portrait-index" aria-hidden="true">30 秒版</div>
+          <div class="portrait-index" >30 秒版</div>
           <div class="formula-frame">
             <ul class="tldr">
               <li><span class="k">结果</span><span class="v">792,868 token 的长文本，等第一个字从 <strong>60.6 秒</strong>降到 <strong>46.3 秒</strong>（少 24%）；约 16 万 token 的文本从 11.3–12.5 秒降到 9.2–10.3 秒（约少 18%）。生成速度和答题准确率没变。</span></li>
@@ -160,15 +159,15 @@
         </div>
         <div class="steps">
           <article class="step-card">
-            <div class="step-head"><span class="step-index">边界 · layer 20</span><h3>第 20 层按原行序拼回整块</h3></div>
+            <div class="step-head"><span class="step-index">边界（layer 20）</span><h3>第 20 层按原行序拼回整块</h3></div>
             <p>CED 结构（前 20 层是编码器，处理整块输入；第 20 层起只在很小的窗口上计算）在第 20 层要读整块的张量，行的顺序必须和原来一样。所以只有第 0–19 层分两半，第 20 层之后和生成阶段完全不变。</p>
           </article>
           <article class="step-card">
-            <div class="step-head"><span class="step-index">元数据 · metadata</span><h3>每一半有自己的注意力元数据</h3></div>
+            <div class="step-head"><span class="step-index">元数据（metadata）</span><h3>每一半有自己的注意力元数据</h3></div>
             <p>注意力需要知道"这一行属于哪个请求、前文有多长"。每一半单独准备一份，只克隆含前 20 层的那 7 组（共 16 组），B 半能看到 A 半刚写进缓存的内容。</p>
           </article>
           <article class="step-card">
-            <div class="step-head"><span class="step-index">切点 · split row</span><h3>切点躲开图片，生成行留在 A 半</h3></div>
+            <div class="step-head"><span class="step-index">切点（split row）</span><h3>切点躲开图片，生成行留在 A 半</h3></div>
             <p>同一步里如果混着正在生成的请求，它们的行全放在 A 半；切点如果落在一张图片的 token 中间，就挪到图片开头。只有预填充行数不少于 2050 的块才切，小块照旧。</p>
           </article>
         </div>
@@ -350,7 +349,7 @@ wait(rb); fb = ar(ffn_phase(B, rb))
 
       <section id="lesson" class="section shell">
         <div class="section-heading">
-          <div class="section-label"><span>!</span><h2>教训：上线那次停机 65 分钟</h2></div>
+          <div class="section-label"><h2>教训：上线那次停机 65 分钟</h2></div>
           <p>停机来自重启脚本。</p>
         </div>
         <div class="easy">
@@ -365,7 +364,7 @@ wait(rb); fb = ar(ffn_phase(B, rb))
 
       <section id="related" class="section shell">
         <div class="section-heading">
-          <div class="section-label"><span>§</span><h2>相关工作</h2></div>
+          <div class="section-label"><h2>相关工作</h2></div>
           <p>"切成两批、让通信和计算重叠"已经有不少先例。</p>
         </div>
         <div class="easy">
@@ -385,7 +384,7 @@ wait(rb); fb = ar(ffn_phase(B, rb))
 
       <section id="take" class="section shell">
         <div class="section-heading">
-          <div class="section-label"><span>✓</span><h2>带走：PCIe 上的张量并行被通信卡住时</h2></div>
+          <div class="section-label"><h2>带走：PCIe 上的张量并行被通信卡住时</h2></div>
           <p>按顺序做：先量占比，再算上限，先藏通信，最后换传输方式。</p>
         </div>
         <div class="easy">

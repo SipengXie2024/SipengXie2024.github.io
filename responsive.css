@@ -23,7 +23,7 @@
     color: var(--page);
     text-decoration: none;
     transform: translateY(-1px);
-    box-shadow: 0 12px 28px -8px rgba(108, 199, 154, 0.5);
+    box-shadow: 0 12px 26px -10px rgba(4, 8, 4, 0.85);
   }
 
   .research-item:hover {
@@ -220,10 +220,6 @@
 
   .research-item {
     padding: 22px 20px 24px;
-  }
-
-  .research-item::before {
-    margin: -22px 0 16px;
   }
 
   .item-meta {

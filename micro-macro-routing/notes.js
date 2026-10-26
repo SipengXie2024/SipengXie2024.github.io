@@ -1,5 +1,5 @@
-/* Micro × Macro Routing Notes — progressive enhancement only.
-   Scroll-spy for the section nav + reveal-on-scroll. Safe to no-op without JS. */
+/* Study notes pages — progressive enhancement only.
+   Scroll-spy for the section nav + reveal-on-scroll. Without JS every block is visible. */
 (function () {
   "use strict";
 
@@ -30,22 +30,26 @@
     sections.forEach(function (s) { spy.observe(s.el); });
   }
 
-  /* Reveal-on-scroll for content blocks. */
-  var revealEls = Array.prototype.slice.call(document.querySelectorAll(".reveal"));
-  if (reduceMotion || !("IntersectionObserver" in window)) {
-    revealEls.forEach(function (el) { el.classList.add("visible"); });
-    return;
-  }
+  /* Reveal-on-scroll: only blocks that start below the fold are hidden, and only
+     once this script runs, so nothing already on screen flashes. */
+  if (reduceMotion || !("IntersectionObserver" in window)) return;
+
+  var revealEls = Array.prototype.slice.call(document.querySelectorAll(".reveal")).filter(function (el) {
+    return el.getBoundingClientRect().top > window.innerHeight;
+  });
 
   var revealer = new IntersectionObserver(
     function (entries, observer) {
       entries.forEach(function (entry) {
         if (!entry.isIntersecting) return;
-        entry.target.classList.add("visible");
+        entry.target.classList.remove("is-pending");
         observer.unobserve(entry.target);
       });
     },
     { rootMargin: "0px 0px -10% 0px", threshold: 0.08 }
   );
-  revealEls.forEach(function (el) { revealer.observe(el); });
+  revealEls.forEach(function (el) {
+    el.classList.add("is-pending");
+    revealer.observe(el);
+  });
 })();

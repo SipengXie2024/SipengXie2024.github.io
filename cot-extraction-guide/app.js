@@ -1,6 +1,5 @@
 const root = document.documentElement;
 const themeToggle = document.getElementById('themeToggle');
-const themeIcon = themeToggle.querySelector('span');
 
 let savedTheme = null;
 try {
@@ -11,7 +10,6 @@ if (savedTheme === 'light' || savedTheme === 'dark') root.dataset.theme = savedT
 
 function syncTheme() {
   const dark = root.dataset.theme === 'dark';
-  themeIcon.textContent = dark ? '\u263C' : '\u263E';
   themeToggle.setAttribute('aria-pressed', String(dark));
 }
 
@@ -155,14 +153,14 @@ document.querySelectorAll('.copy-button').forEach((button) => {
     const code = button.closest('.code-shell').querySelector('code').textContent;
     try {
       await copyText(code);
-      button.textContent = '\u2713';
+      button.textContent = '已复制';
       button.setAttribute('aria-label', '代码已复制');
       setTimeout(() => {
-        button.textContent = '\u29C9';
+        button.textContent = '复制';
         button.setAttribute('aria-label', '复制代码');
       }, 1400);
     } catch (_) {
-      button.textContent = '!';
+      button.textContent = '复制失败';
       button.setAttribute('aria-label', '复制失败，请手动选择代码');
     }
   });

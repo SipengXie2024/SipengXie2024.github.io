@@ -1,6 +1,5 @@
 const themeRoot = document.documentElement;
 const themeToggle = document.getElementById('themeToggle');
-const themeIcon = themeToggle.querySelector('span');
 
 function readStorage(key, fallback) {
   try {
@@ -22,7 +21,6 @@ if (savedTheme === 'light' || savedTheme === 'dark') themeRoot.dataset.theme = s
 
 function syncTheme() {
   const isDark = themeRoot.dataset.theme === 'dark';
-  themeIcon.textContent = isDark ? '\u263C' : '\u263E';
   themeToggle.setAttribute('aria-pressed', String(isDark));
 }
 
@@ -334,7 +332,7 @@ function updateCourseProgress() {
 function selectModule(index) {
   activeModule = Math.max(0, Math.min(index, modules.length - 1));
   const module = modules[activeModule];
-  moduleIndex.textContent = `MODULE ${String(activeModule + 1).padStart(2, '0')} / ${module.duration} MIN`;
+  moduleIndex.textContent = `第 ${activeModule + 1} 模块，${module.duration} 分钟`;
   moduleTitle.textContent = module.title;
   moduleSummary.textContent = module.summary;
   moduleOutput.textContent = module.output;

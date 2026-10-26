@@ -229,7 +229,8 @@ function buildRoutePanel(mount, index) {
   const commandHeading = routeElement('div', 'route-command-heading');
   commandHeading.append(routeElement('span', '', '执行命令'));
 
-  const copyButton = routeElement('button', 'icon-button compact route-copy-button', '\u29C9');
+  const copyButton = routeElement('button', 'icon-button compact route-copy-button');
+  copyButton.append(document.getElementById('routeCopyIcons').content.cloneNode(true));
   copyButton.type = 'button';
   copyButton.setAttribute('aria-label', '复制本步命令');
   copyButton.title = '复制命令';
@@ -262,14 +263,14 @@ function buildRoutePanel(mount, index) {
     const os = selectedTab ? selectedTab.dataset.routeOs : 'unix';
     try {
       await copyText(routeLabData[step][os].command);
-      copyButton.textContent = '\u2713';
+      copyButton.dataset.state = 'copied';
       copyButton.setAttribute('aria-label', '命令已复制');
       setTimeout(() => {
-        copyButton.textContent = '\u29C9';
+        delete copyButton.dataset.state;
         copyButton.setAttribute('aria-label', '复制本步命令');
       }, 1400);
     } catch (_) {
-      copyButton.textContent = '!';
+      copyButton.dataset.state = 'failed';
       copyButton.setAttribute('aria-label', '复制失败，请手动选择命令');
     }
   });

@@ -11,11 +11,11 @@
     <title>消融"拒绝"：定位并移除 LLM 的拒绝方向 | Sipeng Xie</title>
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-    <link
-      href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,300..900;1,9..144,300..900&family=IBM+Plex+Mono:wght@400;500;600&family=IBM+Plex+Sans:wght@300;400;500;600;700&display=swap"
-      rel="stylesheet"
-    />
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400..700&amp;family=IBM+Plex+Mono:wght@400;500;600&amp;family=IBM+Plex+Sans:ital,wght@0,400;0,500;0,600;0,700;1,400&amp;family=Noto+Sans+SC:wght@400;500;700&amp;family=Noto+Serif+SC:wght@500;600;700&amp;display=swap" />
+    <link rel="stylesheet" href="../site-base.css" />
+    <link rel="icon" href="../favicon.svg" type="image/svg+xml" />
     <link rel="stylesheet" href="../styles.css" />
+    <link rel="stylesheet" href="../responsive.css" />
     <link rel="stylesheet" href="styles.css" />
   </head>
   <body>
@@ -27,7 +27,7 @@
           <span class="brand-mark" aria-hidden="true">SX</span>
           <span class="brand-text">
             <strong>Refusal Direction Notes</strong>
-            <span>Sipeng Xie · 研究笔记</span>
+            <span>Sipeng Xie 的研究笔记</span>
           </span>
         </a>
         <nav class="nav" aria-label="文章导航">
@@ -37,15 +37,15 @@
           <a href="#data">数据</a>
           <a href="#scope">边界</a>
         </nav>
-        <a class="header-cta" href="../index.html#projects">返回主页</a>
+        <a class="header-cta" href="../index.html#notes">返回主页</a>
       </div>
     </header>
 
     <main id="main">
       <section class="hero shell">
         <div class="hero-copy">
-          <p class="eyebrow">Mechanistic Interpretability / Study Notes</p>
           <h1>消融"拒绝"</h1>
+          <p class="byline">Mechanistic interpretability 学习笔记</p>
           <p class="hero-statement">
             LLM 的拒绝行为，在激活空间里近似由一个单一方向编码。算出它，再把它从每层激活（或直接写入权重）中正交投影掉，模型就不再拒绝。
           </p>
@@ -75,7 +75,6 @@
         </div>
 
         <figure class="portrait-block formula-card">
-          <div class="portrait-index" aria-hidden="true">01 / CORE MATH</div>
           <div class="formula-frame">
             <div class="formula-row">
               <span class="formula-tag">方向提取</span>
@@ -99,10 +98,7 @@
 
       <section id="idea" class="section shell">
         <div class="section-heading">
-          <div class="section-label">
-            <span>01</span>
-            <h2>核心思路</h2>
-          </div>
+          <h2>核心思路</h2>
           <p>为什么"拒绝"能被如此干净地拿掉，而不是一个模糊的权衡。</p>
         </div>
         <div class="prose">
@@ -124,17 +120,14 @@
 
       <section id="method" class="section shell">
         <div class="section-heading">
-          <div class="section-label">
-            <span>02</span>
-            <h2>方法：三步</h2>
-          </div>
+          <h2>方法：三步</h2>
           <p>参考实现的最小可行流程——方向提取、运行时消融、（进阶）权重级永久消融。</p>
         </div>
 
         <div class="steps">
           <article class="step-card">
             <div class="step-head">
-              <span class="step-index">STEP 1</span>
+              <span class="step-index">第 1 步</span>
               <h3>计算拒绝方向</h3>
             </div>
             <p>
@@ -150,7 +143,7 @@ refusal_dir = refusal_dir / refusal_dir.norm()</code></pre>
 
           <article class="step-card">
             <div class="step-head">
-              <span class="step-index">STEP 2</span>
+              <span class="step-index">第 2 步</span>
               <h3>运行时消融</h3>
             </div>
             <p>
@@ -167,7 +160,7 @@ refusal_dir = refusal_dir / refusal_dir.norm()</code></pre>
 
           <article class="step-card">
             <div class="step-head">
-              <span class="step-index">STEP 3</span>
+              <span class="step-index">第 3 步</span>
               <h3>权重级永久消融</h3>
             </div>
             <p>
@@ -185,10 +178,7 @@ refusal_dir = refusal_dir / refusal_dir.norm()</code></pre>
 
       <section id="optimize" class="section shell">
         <div class="section-heading">
-          <div class="section-label">
-            <span>03</span>
-            <h2>把 PoC 打磨成工具</h2>
-          </div>
+          <h2>把 PoC 打磨成工具</h2>
           <p>参考实现自称"crude"。按收益排序的优化方向如下。</p>
         </div>
 
@@ -238,10 +228,7 @@ refusal_dir = refusal_dir / refusal_dir.norm()</code></pre>
 
       <section id="data" class="section shell">
         <div class="section-heading">
-          <div class="section-label">
-            <span>04</span>
-            <h2>数据质量决定方向质量</h2>
-          </div>
+          <h2>数据质量决定方向质量</h2>
           <p>方向是均值差，两组数据的任何系统性差异都会被吸进方向。四条原则。</p>
         </div>
 
@@ -273,10 +260,7 @@ refusal_dir = refusal_dir / refusal_dir.norm()</code></pre>
 
       <section id="scope" class="section shell">
         <div class="section-heading">
-          <div class="section-label">
-            <span>05</span>
-            <h2>适用边界与定位</h2>
-          </div>
+          <h2>适用边界与定位</h2>
           <p>这篇笔记是机制可解释性的学习记录，目的在理解对齐的内部结构。</p>
         </div>
         <div class="prose">

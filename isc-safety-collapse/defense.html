@@ -4,14 +4,13 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <meta name="description" content="ISC 防御缓解篇：沿失效链逐环映射防御点 —— 环路独立安全门、出口校验、表征层对齐，以及攻防一体的 Qwen3Guard 闸门复用。" />
-    <meta name="theme-color" content="#111512" />
+    <meta name="theme-color" content="#10140f" />
     <title>防御缓解 · 自循环之外的安全门 | ISC Notes</title>
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-    <link
-      href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,300..900;1,9..144,300..900&family=IBM+Plex+Mono:wght@400;500;600&family=IBM+Plex+Sans:wght@300;400;500;600;700&display=swap"
-      rel="stylesheet"
-    />
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400..700&amp;family=IBM+Plex+Mono:wght@400;500;600&amp;family=IBM+Plex+Sans:ital,wght@0,400;0,500;0,600;0,700;1,400&amp;family=Noto+Sans+SC:wght@400;500;700&amp;family=Noto+Serif+SC:wght@500;600;700&amp;display=swap" />
+    <link rel="stylesheet" href="../site-base.css" />
+    <link rel="icon" href="../favicon.svg" type="image/svg+xml" />
     <link rel="stylesheet" href="shared.css" />
     <link rel="stylesheet" href="isc.css" />
     <link rel="stylesheet" href="responsive.css" />
@@ -25,7 +24,7 @@
           <span class="brand-mark" aria-hidden="true">SX</span>
           <span class="brand-text">
             <strong>Internal Safety Collapse</strong>
-            <span>Sipeng Xie · Research Notes</span>
+            <span>Sipeng Xie 的研究笔记</span>
           </span>
         </a>
         <nav class="series-nav" aria-label="专题导航">
@@ -34,7 +33,8 @@
           <a class="series-defense" href="defense.html" aria-current="page">防御缓解</a>
         </nav>
         <button class="theme-toggle" id="themeToggle" type="button" aria-label="切换深浅色主题" title="切换主题">
-          <span aria-hidden="true">&#9728;</span>
+          <svg class="icon-sun" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" aria-hidden="true"><circle cx="12" cy="12" r="4" /><path d="M12 2.5v2M12 19.5v2M4.6 4.6 6 6M18 18l1.4 1.4M2.5 12h2M19.5 12h2M4.6 19.4 6 18M18 6l1.4-1.4" /></svg>
+          <svg class="icon-moon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linejoin="round" aria-hidden="true"><path d="M20 14.5A8 8 0 1 1 9.5 4a6.5 6.5 0 0 0 10.5 10.5Z" /></svg>
         </button>
       </div>
     </header>
@@ -42,8 +42,8 @@
     <main id="main">
       <div class="article-shell">
         <section class="article-hero" style="border-top:0; --mode: var(--green);">
-          <p class="eyebrow">MITIGATION · 02</p>
           <h1>把安全门架在自循环之外</h1>
+          <p class="byline">防御缓解篇，本专题第 2 篇</p>
           <p class="lede">
             ISC 证明了一件事：在自循环编码场景里，模型的"完成欲"会压倒"拒绝欲"。
             所以防御的杠杆点不在"让模型更会拒绝"，而在"环路架构与产物出口"。
@@ -59,7 +59,7 @@
         <div class="article-body" style="--mode: var(--green);">
           <!-- 1. 失效链 → 防御点 -->
           <section>
-            <h2><span class="sec-index">01</span>沿失效链逐环设防</h2>
+            <h2>沿失效链逐环设防</h2>
             <p class="section-intro">
               ISC 的失效可以拆成四个环节。每个环节都对应一个可独立落地的防御点 —
               它们彼此叠加，构成纵深防御，而不是依赖任何单一闸门。
@@ -67,51 +67,51 @@
             <div class="chain-map">
               <div class="chain-row">
                 <div class="chain-attack">
-                  <span class="chain-tag">失效环节 ①</span>
+                  <span class="chain-tag">失效环节 1</span>
                   <strong>合法叙事包装</strong>
                 </div>
-                <div class="chain-arrow" aria-hidden="true">&#8594;</div>
+                <div class="chain-arrow" aria-hidden="true"><span class="connector"></span></div>
                 <div class="chain-defense">
-                  <span class="chain-tag">防御 1 · 输入层</span>
+                  <span class="chain-tag">防御 1：输入层</span>
                   <strong>看任务整体语义，而非单条请求</strong>
                 </div>
               </div>
               <div class="chain-row">
                 <div class="chain-attack">
-                  <span class="chain-tag">失效环节 ②</span>
+                  <span class="chain-tag">失效环节 2</span>
                   <strong>任务目标重定向</strong>
                 </div>
-                <div class="chain-arrow" aria-hidden="true">&#8594;</div>
+                <div class="chain-arrow" aria-hidden="true"><span class="connector"></span></div>
                 <div class="chain-defense">
-                  <span class="chain-tag">防御 2 · 对齐层</span>
+                  <span class="chain-tag">防御 2：对齐层</span>
                   <strong>把拒绝从行为层下沉到能力表征层</strong>
                 </div>
               </div>
               <div class="chain-row">
                 <div class="chain-attack">
-                  <span class="chain-tag">失效环节 ③</span>
+                  <span class="chain-tag">失效环节 3</span>
                   <strong>报错驱动的自循环</strong>
                 </div>
-                <div class="chain-arrow" aria-hidden="true">&#8594;</div>
+                <div class="chain-arrow" aria-hidden="true"><span class="connector"></span></div>
                 <div class="chain-defense">
-                  <span class="chain-tag">防御 3 · 运行时</span>
+                  <span class="chain-tag">防御 3：运行时</span>
                   <strong>环路内挂独立安全门，切断收敛改写</strong>
                 </div>
               </div>
               <div class="chain-row">
                 <div class="chain-attack">
-                  <span class="chain-tag">失效环节 ④</span>
+                  <span class="chain-tag">失效环节 4</span>
                   <strong>有害内容落盘 / 外发</strong>
                 </div>
-                <div class="chain-arrow" aria-hidden="true">&#8594;</div>
+                <div class="chain-arrow" aria-hidden="true"><span class="connector"></span></div>
                 <div class="chain-defense">
-                  <span class="chain-tag">防御 4 · 出口层</span>
+                  <span class="chain-tag">防御 4：出口层</span>
                   <strong>产物写入 / 离开沙箱前的批量校验</strong>
                 </div>
               </div>
             </div>
 
-            <h3>防御 1 · 识别叙事包装（输入层）</h3>
+            <h3>防御 1：识别叙事包装（输入层）</h3>
             <p>
               ISC 依赖一个貌似合法的工程外壳。防御方不能只看单条请求是否违规，而要看
               <strong>任务的"通过条件"是否等价于"生成有害内容"</strong>。这需要对校验器逻辑做语义分析，
@@ -126,7 +126,7 @@
               </p>
             </div>
 
-            <h3>防御 2 · 守住目标重定向（对齐层，治本）</h3>
+            <h3>防御 2：守住目标重定向（对齐层，治本）</h3>
             <p>
               这是 ISC 的根因所在。把"拒绝"从对话行为层下沉到能力表征层：当模型识别出
               "完成任务需要输出 X 类内容"时，无论 X 被包装成问答还是测试补全，都应触发同一条拒绝。
@@ -139,13 +139,13 @@
               这条路径治本，但成本高、依赖重训。它适合作为模型提供方的长期工程，而非部署方的应急手段。
             </p>
 
-            <h3>防御 3 · 打破报错自循环（运行时，最快落地）</h3>
+            <h3>防御 3：打破报错自循环（运行时，最快落地）</h3>
             <p>
               ISC 的引擎是"失败 → 报错 → 改写"的闭环。防御可以切断或监控这个环，
-              而且<strong>不要求改动模型本身</strong>。这是部署方本周就能做的一道闸，下文第 02 节会展开它的实现。
+              而且<strong>不要求改动模型本身</strong>。这是部署方本周就能做的一道闸，下一节会展开它的实现。
             </p>
 
-            <h3>防御 4 · 把住产物出口（出口层）</h3>
+            <h3>防御 4：把住产物出口（出口层）</h3>
             <p>
               有害内容最终要落成数据集、SDF 文件、或被外发。在产物写入磁盘或离开沙箱时做最后一道校验
               （对生成的分子做受控物质比对、对文本做安全分类）。因为 ISC 能数据集级地产出，
@@ -155,7 +155,7 @@
 
           <!-- 2. 环路安全门架构 -->
           <section>
-            <h2><span class="sec-index">02</span>环路安全门：一个不依赖重训的部署方案</h2>
+            <h2>环路安全门：一个不依赖重训的部署方案</h2>
             <p class="section-intro">
               原仓库自带的自动化红队实验里有一个 <code>completion_gate</code>，
               用小型安全分类器裁决 Agent 的输出。它本是<strong>攻击方</strong>用来确认"是否越狱成功"的闸门，
@@ -169,13 +169,13 @@
             </p>
             <div class="flip-grid">
               <div class="flip-card flip-offense">
-                <span class="flip-tag">攻击方 · 验证越狱</span>
+                <span class="flip-tag">攻击方：验证越狱</span>
                 <pre><span class="c-com"># 同时满足"不安全"且"未拒答"才算成功</span>
 <span class="c-kw">return</span> label == <span class="c-str">"Unsafe"</span> \
    <span class="c-kw">and</span> refusal == <span class="c-str">"No"</span></pre>
               </div>
               <div class="flip-card flip-defense">
-                <span class="flip-tag">防御方 · 输出闸门</span>
+                <span class="flip-tag">防御方：输出闸门</span>
                 <pre><span class="c-com"># 只有被判 Safe 才放行，其余拦截</span>
 <span class="c-kw">return</span> label == <span class="c-str">"Safe"</span></pre>
               </div>
@@ -225,7 +225,7 @@
 
           <!-- 3. 现状与路线图 -->
           <section>
-            <h2><span class="sec-index">03</span>现状判断与从业者路线图</h2>
+            <h2>现状判断与从业者路线图</h2>
             <p class="section-intro">
               诚实地说：原研究目前以攻击面为主，成型的防御方案尚未发布。
               它最大的防御价值，不是给出现成答案，而是提供了一套可复现的评测基准，
@@ -294,15 +294,15 @@
         </div>
 
         <nav class="next-nav" aria-label="篇间导航">
-          <a class="next-attack" href="attack.html"><span class="next-dir">上一篇 / 攻击机制</span><strong>← TVD：任务、校验器、缺失数据</strong></a>
-          <a href="index.html"><span class="next-dir">返回 / 总览</span><strong>Internal Safety Collapse 专题首页</strong></a>
+          <a class="next-attack" href="attack.html"><span class="next-dir">上一篇：攻击机制</span><strong>TVD：任务、校验器、缺失数据</strong></a>
+          <a href="index.html"><span class="next-dir">返回总览</span><strong>Internal Safety Collapse 专题首页</strong></a>
         </nav>
       </div>
     </main>
 
     <footer class="series-footer">
       <div class="index-shell footer-inner">
-        <span>Internal Safety Collapse · 防御缓解 · 2026</span>
+        <span>Internal Safety Collapse 防御缓解篇，2026</span>
         <a href="../index.html">返回 Sipeng Xie 个人主页</a>
       </div>
     </footer>
@@ -310,13 +310,11 @@
     <script>
       const root = document.documentElement;
       const themeToggle = document.getElementById('themeToggle');
-      const themeIcon = themeToggle.querySelector('span');
       let savedTheme = null;
       try { savedTheme = localStorage.getItem('reasoning-security-theme'); } catch (_) {}
       if (savedTheme) root.dataset.theme = savedTheme;
       function syncTheme() {
         const dark = root.dataset.theme === 'dark';
-        themeIcon.textContent = dark ? '☀' : '☾';
         themeToggle.setAttribute('aria-pressed', String(dark));
       }
       syncTheme();

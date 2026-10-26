@@ -11,29 +11,34 @@
     <title>L3LLM 阅读笔记:缓存驻留推理 | Sipeng Xie</title>
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-    <link
-      href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,300..900;1,9..144,300..900&family=IBM+Plex+Mono:wght@400;500;600&family=IBM+Plex+Sans:wght@300;400;500;600;700&display=swap"
-      rel="stylesheet"
-    />
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400..700&amp;family=IBM+Plex+Mono:wght@400;500;600&amp;family=IBM+Plex+Sans:ital,wght@0,400;0,500;0,600;0,700;1,400&amp;family=Noto+Sans+SC:wght@400;500;700&amp;family=Noto+Serif+SC:wght@500;600;700&amp;display=swap" />
+    <link rel="stylesheet" href="../site-base.css" />
+    <link rel="icon" href="../favicon.svg" type="image/svg+xml" />
     <style>
       :root {
-        --page: #10140f;
-        --panel: #171c15;
-        --panel-2: #1c221a;
-        --ink: #e9ede6;
-        --ink-2: #a9b0a6;
-        --ink-3: #767d72;
-        --accent: #4caf7d;
-        --accent-2: #6cc79a;
-        --warm: #d0622a;
-        --line: rgba(169, 176, 166, 0.16);
+        /* Page-local names, mapped onto the site-base tokens. */
+        --panel: var(--surface);
+        --panel-2: var(--surface-raised);
+        --ink-2: var(--muted);
+        --ink-3: var(--quiet);
+        --accent-2: var(--accent-bright);
+        --header-bg: rgba(16, 20, 15, 0.95);
+        --glow-accent: rgba(76, 175, 125, 0.08);
+        --glow-warm: rgba(224, 122, 69, 0.06);
+        --quote-line: rgba(76, 175, 125, 0.3);
+        --quote-bg: rgba(76, 175, 125, 0.06);
+        --cell-idle: #12160f;
+        --cell-idle-line: rgba(233, 237, 230, 0.08);
+        --grid-line: rgba(233, 237, 230, 0.12);
+        --grid-line-strong: rgba(233, 237, 230, 0.25);
       }
       * { box-sizing: border-box; }
       body {
         margin: 0;
         background: var(--page);
         color: var(--ink);
-        font-family: "IBM Plex Sans", system-ui, sans-serif;
+        font-family: var(--font-body);
+        font-size: 16px;
         font-weight: 400;
         line-height: 1.75;
         -webkit-font-smoothing: antialiased;
@@ -44,8 +49,8 @@
         inset: 0;
         pointer-events: none;
         background:
-          radial-gradient(60% 40% at 20% 0%, rgba(76, 175, 125, 0.08), transparent 70%),
-          radial-gradient(50% 35% at 85% 5%, rgba(208, 98, 42, 0.06), transparent 70%);
+          radial-gradient(60% 40% at 20% 0%, var(--glow-accent), transparent 70%),
+          radial-gradient(50% 35% at 85% 5%, var(--glow-warm), transparent 70%);
         z-index: 0;
       }
       a { color: var(--accent-2); text-decoration: none; }
@@ -64,60 +69,88 @@
       /* Topbar */
       .topbar {
         border-bottom: 1px solid var(--line);
-        background: rgba(16, 20, 15, 0.85);
-        backdrop-filter: blur(8px);
+        background: var(--header-bg);
         position: sticky; top: 0; z-index: 5;
       }
       .topbar-inner {
-        max-width: 880px; margin: 0 auto; padding: 14px 24px;
-        display: flex; align-items: center; gap: 14px;
+        max-width: 880px; margin: 0 auto; padding: 12px 24px;
+        display: flex; align-items: center; justify-content: space-between; gap: 14px;
       }
-      .brand { display: flex; align-items: center; gap: 12px; color: var(--ink); }
+      .brand { display: flex; align-items: center; gap: 12px; min-width: 0; color: var(--ink); }
       .brand:hover { text-decoration: none; }
       .brand-mark {
-        font-family: "IBM Plex Mono", monospace; font-weight: 600; font-size: 13px;
-        background: var(--accent); color: #0b0f0c;
+        flex: none;
+        font-family: var(--font-mono); font-weight: 600; font-size: 13px;
+        background: var(--accent); color: var(--page);
         width: 32px; height: 32px; border-radius: 8px;
         display: inline-flex; align-items: center; justify-content: center;
       }
-      .brand-text { display: flex; flex-direction: column; line-height: 1.25; }
-      .brand-text strong { font-family: "Fraunces", serif; font-weight: 600; font-size: 15px; }
-      .brand-text span { font-family: "IBM Plex Mono", monospace; font-size: 11px; color: var(--ink-3); letter-spacing: 0.04em; }
+      .brand-text { display: flex; flex-direction: column; min-width: 0; line-height: 1.3; }
+      .brand-text strong { font-family: var(--font-display); font-weight: 600; font-size: 15px; }
+      .brand-text span { font-size: 13px; color: var(--ink-3); }
+      .header-cta {
+        flex: none;
+        display: inline-flex; align-items: center; min-height: 38px; padding: 0 16px;
+        border: 1px solid var(--line-strong); border-radius: 999px;
+        background: var(--panel);
+        color: var(--ink); font-size: 14px; font-weight: 600; white-space: nowrap;
+        transition: transform 160ms var(--ease-out), border-color 180ms ease, background-color 180ms ease;
+      }
+      .header-cta:hover { text-decoration: none; border-color: var(--accent); }
+      .header-cta:active { transform: scale(0.96); }
 
       /* Hero */
       .hero { padding: 72px 0 40px; }
-      .kicker {
-        font-family: "IBM Plex Mono", monospace; font-size: 12px; font-weight: 500;
-        letter-spacing: 0.14em; text-transform: uppercase;
-        color: var(--accent); margin: 0 0 18px;
-      }
       h1 {
-        font-family: "Fraunces", serif; font-weight: 600;
-        font-size: clamp(32px, 5.5vw, 48px); line-height: 1.15;
-        margin: 0 0 20px; letter-spacing: -0.01em;
+        font-family: var(--font-display); font-weight: 600;
+        font-variation-settings: "opsz" 72;
+        font-size: clamp(32px, 5.5vw, 48px); line-height: 1.2;
+        text-wrap: balance;
+        margin: 0 0 12px; letter-spacing: -0.01em;
       }
-      .lede { font-size: 18px; color: var(--ink-2); max-width: 44em; margin: 0 0 26px; }
+      /* Who/what line directly under the page title. */
+      .byline {
+        margin: 0 0 22px;
+        color: var(--accent-bright);
+        font-size: 16px;
+        font-weight: 500;
+        line-height: 1.5;
+      }
+      .lede { font-size: 18px; color: var(--ink-2); max-width: 44em; margin: 0 0 22px; }
       .lede a { color: var(--accent-2); }
       .meta-row {
-        display: flex; flex-wrap: wrap; gap: 10px 22px;
-        font-family: "IBM Plex Mono", monospace; font-size: 12px; color: var(--ink-3);
-        letter-spacing: 0.04em;
+        display: flex; flex-wrap: wrap; gap: 6px 28px;
+        font-size: 14px; color: var(--ink-3);
       }
-      .meta-row span::before { content: "·"; margin-right: 22px; color: var(--accent); }
-      .meta-row span:first-child::before { content: ""; margin: 0; }
 
-      /* Sections */
-      section.note { padding: 34px 0 6px; }
-      .sec-head { display: flex; align-items: baseline; gap: 16px; margin-bottom: 14px; }
-      .sec-num {
-        font-family: "IBM Plex Mono", monospace; font-size: 13px; font-weight: 600;
-        color: var(--warm); letter-spacing: 0.08em;
+      /* Key results: a ruled list, number then what it measures */
+      .results { margin: 32px 0 0; padding: 0; border-bottom: 1px solid var(--line); }
+      .results > div {
+        display: grid; grid-template-columns: minmax(0, 8.5rem) minmax(0, 1fr);
+        gap: 4px 24px; align-items: baseline;
+        padding: 12px 0; border-top: 1px solid var(--line);
       }
+      .results dt {
+        font-family: var(--font-mono); font-size: 22px; font-weight: 600;
+        color: var(--ink); font-variant-numeric: tabular-nums; white-space: nowrap;
+      }
+      .results dd { margin: 0; font-size: 15px; color: var(--ink-2); }
+
+      /* Sections: numbered in the order the reading questions came up */
+      section.note { padding: 34px 0 6px; }
+      .sec-head { display: flex; align-items: baseline; gap: 14px; margin-bottom: 14px; }
+      .sec-num {
+        flex: none;
+        font-size: 16px; font-weight: 500;
+        color: var(--accent-2); font-variant-numeric: tabular-nums;
+      }
+      .sec-head h2 { min-width: 0; }
       h2 {
-        font-family: "Fraunces", serif; font-weight: 600; font-size: 26px;
+        font-family: var(--font-display); font-weight: 600; font-size: 26px; line-height: 1.35;
+        text-wrap: balance;
         margin: 0; letter-spacing: -0.01em;
       }
-      h3 { font-family: "Fraunces", serif; font-weight: 600; font-size: 19px; margin: 26px 0 8px; }
+      h3 { font-family: var(--font-display); font-weight: 600; font-size: 19px; margin: 26px 0 8px; }
       p { margin: 0 0 14px; color: var(--ink-2); }
       p strong, li strong { color: var(--ink); font-weight: 600; }
       ul, ol { margin: 0 0 14px; padding-left: 22px; color: var(--ink-2); }
@@ -125,21 +158,21 @@
 
       blockquote {
         margin: 18px 0; padding: 14px 20px;
-        border-left: 3px solid var(--accent);
-        background: var(--panel);
-        border-radius: 0 10px 10px 0;
+        border: 1px solid var(--quote-line);
+        background: var(--quote-bg);
+        border-radius: 10px;
         color: var(--ink);
       }
       blockquote p { margin: 0; color: var(--ink); }
 
       pre {
-        background: #0c100b;
+        background: var(--code-bg);
         border: 1px solid var(--line);
         border-radius: 10px;
         padding: 16px 18px;
         overflow-x: auto;
-        font-family: "IBM Plex Mono", monospace;
-        font-size: 13px; line-height: 1.7;
+        font-family: var(--font-mono);
+        font-size: 14px; line-height: 1.7;
         color: var(--ink-2);
         margin: 16px 0 18px;
       }
@@ -149,15 +182,14 @@
         margin: 16px 0 20px; font-size: 14px;
         background: var(--panel); border-radius: 10px; overflow: hidden;
       }
-      th, td { padding: 10px 14px; text-align: left; border-bottom: 1px solid var(--line); }
+      th, td { padding: 10px 14px; text-align: left; vertical-align: top; border-bottom: 1px solid var(--line); }
       th {
-        font-family: "IBM Plex Mono", monospace; font-size: 11px; font-weight: 600;
-        letter-spacing: 0.08em; text-transform: uppercase; color: var(--ink-3);
+        font-size: 13px; font-weight: 600; color: var(--ink-2);
         background: var(--panel-2);
       }
       td { color: var(--ink-2); }
       tr:last-child td { border-bottom: none; }
-      td strong { color: var(--ink); }
+      td strong { color: var(--ink); white-space: nowrap; }
 
       /* Findings band */
       .band {
@@ -172,20 +204,17 @@
       .finding:last-child { border-bottom: none; }
       .finding span {
         flex: 0 0 128px;
-        font-family: "IBM Plex Mono", monospace; font-size: 11px; font-weight: 600;
-        letter-spacing: 0.08em; text-transform: uppercase; color: var(--accent);
-        padding-top: 4px;
+        font-size: 15px; font-weight: 600; color: var(--accent-2);
       }
       .finding strong { font-weight: 500; color: var(--ink); }
 
       .scope {
         margin: 40px 0 20px;
         padding: 18px 22px;
-        border: 1px dashed var(--line);
+        border: 1px dashed var(--line-strong);
         border-radius: 12px;
-        font-size: 14px;
       }
-      .scope p { margin: 0; color: var(--ink-3); }
+      .scope p { margin: 0; font-size: 14px; color: var(--ink-3); }
 
       footer.site-footer {
         border-top: 1px solid var(--line);
@@ -194,45 +223,52 @@
       }
       .footer-inner {
         display: flex; justify-content: space-between; align-items: center; gap: 16px;
-        font-family: "IBM Plex Mono", monospace; font-size: 12px; color: var(--ink-3);
-        letter-spacing: 0.04em;
+        font-size: 14px; color: var(--ink-3);
       }
 
       /* Viz cards */
-      .viz-card { background: var(--panel); border: 1px solid var(--line); border-radius: 14px; padding: 22px 22px 16px; margin: 20px 0 24px; }
-      .viz-title { font-family: "IBM Plex Mono", monospace; font-size: 11px; font-weight: 600; letter-spacing: 0.12em; text-transform: uppercase; color: var(--ink-3); margin: 0 0 14px; }
-      .viz-sub { font-family: "IBM Plex Mono", monospace; font-size: 11px; font-weight: 600; letter-spacing: 0.08em; color: var(--ink-3); margin: 0 0 10px; }
-      .viz-caption { font-size: 13px; color: var(--ink-3); margin: 12px 0 4px; line-height: 1.6; }
-      .viz-legend { display: flex; flex-wrap: wrap; gap: 10px 20px; font-size: 12px; color: var(--ink-2); margin-bottom: 14px; }
+      .viz-card { min-width: 0; background: var(--panel); border: 1px solid var(--line); border-radius: 14px; padding: 22px 22px 16px; margin: 20px 0 24px; }
+      .viz-title { font-size: 15px; font-weight: 600; line-height: 1.5; color: var(--ink); margin: 0 0 14px; }
+      .fig-no { margin-right: 10px; color: var(--accent-2); }
+      .viz-sub { font-size: 13px; font-weight: 500; color: var(--ink-3); margin: 0 0 10px; }
+      .viz-caption { font-size: 14px; color: var(--ink-3); margin: 12px 0 4px; line-height: 1.6; }
+      .viz-legend { display: flex; flex-wrap: wrap; gap: 6px 20px; font-size: 13px; color: var(--ink-2); margin-bottom: 14px; }
       .viz-legend .sw { width: 10px; height: 10px; border-radius: 2px; display: inline-block; margin-right: 7px; vertical-align: -1px; }
-      .viz-grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }
-      svg text { font-family: "IBM Plex Sans", sans-serif; }
-      svg .mono { font-family: "IBM Plex Mono", monospace; }
+      .viz-grid-2 { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 20px; }
+      .viz-grid-2 > div { min-width: 0; }
+      .viz-card svg { display: block; width: 100%; height: auto; }
+      /* Full-width figures keep a legible text size on phones and scroll inside this box. */
+      .viz-scroll { overflow-x: auto; }
+      .viz-scroll svg { min-width: 620px; }
+      svg text { font-family: var(--font-body); }
+      svg .mono { font-family: var(--font-mono); }
 
       /* Gantt / KV grids — 2px page-colored gaps act as surface gaps */
       .gantt, .kvgrid { display: grid; gap: 2px; background: var(--page); border-radius: 10px; padding: 2px; margin-bottom: 6px; }
-      .gantt { grid-template-columns: 64px repeat(8, 1fr); }
-      .kvgrid { grid-template-columns: 64px repeat(4, 1fr); }
-      .gcell { min-height: 30px; border-radius: 4px; display: flex; align-items: center; justify-content: center; font-family: "IBM Plex Mono", monospace; font-size: 12px; }
-      .gcell.busy { background: #48a874; color: #0b0f0c; font-weight: 600; }
-      .gcell.idle { background: #12160f; border: 1px solid rgba(169,176,166,0.10); }
-      .gcell.m2 { background: #d0622a; color: #14100b; font-weight: 600; }
-      .gcell.ghead, .gcell.glabel { background: transparent; border: none; color: var(--ink-3); font-size: 11px; min-height: 22px; }
-      .gcell.glabel { justify-content: flex-end; padding-right: 10px; }
-
-      /* Hero stats */
-      .stats { display: grid; grid-template-columns: repeat(3, 1fr); gap: 14px; margin-top: 30px; }
-      .stat { background: var(--panel); border: 1px solid var(--line); border-radius: 12px; padding: 16px 18px 14px; }
-      .stat b { display: block; font-size: 32px; font-weight: 600; line-height: 1.1; color: var(--ink); }
-      .stat span { display: block; margin-top: 6px; font-family: "IBM Plex Mono", monospace; font-size: 11px; letter-spacing: 0.06em; color: var(--ink-3); }
+      .gantt { grid-template-columns: 64px repeat(8, minmax(0, 1fr)); }
+      .kvgrid { grid-template-columns: 64px repeat(4, minmax(0, 1fr)); }
+      .gcell { min-height: 30px; border-radius: 4px; display: flex; align-items: center; justify-content: center; font-family: var(--font-mono); font-size: 13px; }
+      .gcell.busy { background: var(--accent); color: var(--page); font-weight: 600; }
+      .gcell.idle { background: var(--cell-idle); border: 1px solid var(--cell-idle-line); }
+      .gcell.m2 { background: var(--warm); color: var(--page); font-weight: 600; }
+      .gcell.ghead, .gcell.glabel { background: transparent; border: none; color: var(--ink-3); font-family: var(--font-body); font-size: 13px; min-height: 22px; }
+      .gcell.glabel { justify-content: flex-end; padding-right: 10px; white-space: nowrap; }
 
       @media (max-width: 640px) {
         .hero { padding: 48px 0 28px; }
+        .topbar-inner { padding: 10px 16px; }
+        .shell { padding: 0 18px; }
         .finding { flex-direction: column; gap: 4px; }
         .finding span { flex: none; }
+        .band { padding: 24px 18px 16px; }
+        .viz-card { padding: 18px 14px 12px; }
         .footer-inner { flex-direction: column; align-items: flex-start; }
-        .viz-grid-2 { grid-template-columns: 1fr; }
-        .stats { grid-template-columns: 1fr; }
+        .viz-grid-2 { grid-template-columns: minmax(0, 1fr); }
+        .results > div { grid-template-columns: minmax(0, 7.5rem) minmax(0, 1fr); gap: 2px 16px; }
+        .results dt { font-size: 19px; }
+        .gantt { grid-template-columns: 48px repeat(8, minmax(0, 1fr)); }
+        .kvgrid { grid-template-columns: 48px repeat(4, minmax(0, 1fr)); }
+        .gcell.glabel { padding-right: 6px; }
       }
     </style>
   </head>
@@ -245,16 +281,17 @@
           <span class="brand-mark" aria-hidden="true">SX</span>
           <span class="brand-text">
             <strong>L3LLM 阅读笔记</strong>
-            <span>Sipeng Xie · Paper Notes</span>
+            <span>Sipeng Xie 的研究笔记</span>
           </span>
         </a>
+        <a class="header-cta" href="../index.html#notes">返回主页</a>
       </div>
     </header>
 
     <main id="main" class="shell">
       <section class="hero">
-        <p class="kicker">Systems Paper Notes / SOSP 2026 Submission</p>
         <h1>把 LLM 推理塞进 CPU 的 GB 级缓存</h1>
+        <p class="byline">系统论文阅读笔记，论文为 SOSP 2026 投稿</p>
         <p class="lede">
           《L3LLM: Cache-Resident LLM Inference in GB-Scale Last-Level Caches》的追问式阅读笔记。
           不按论文章节顺序,按我阅读时真实追问的顺序组织:每一节都是一个"没看懂 / 我不信"的问题,
@@ -265,11 +302,11 @@
           <span>约 20 分钟</span>
           <span>个人学习笔记,非论文官方解读</span>
         </div>
-        <div class="stats">
-          <div class="stat"><b>11.51×</b><span>最大 TPOT 加速 · 3B / batch 1 / 实测</span></div>
-          <div class="stat"><b>1152 MB</b><span>单 socket L3 · 96 核 × 12MB</span></div>
-          <div class="stat"><b>2.04×</b><span>batch 32 时的实测下限 · 7B</span></div>
-        </div>
+        <dl class="results" aria-label="论文关键数字">
+          <div><dt>11.51×</dt><dd>最大 TPOT 加速（3B，batch 1，实测）</dd></div>
+          <div><dt>1152 MB</dt><dd>单 socket L3（96 核 × 12MB）</dd></div>
+          <div><dt>2.04×</dt><dd>batch 32 时的实测下限（7B）</dd></div>
+        </dl>
       </section>
 
       <section class="note">
@@ -306,16 +343,16 @@
           tensor core 利用率可能不到 1%,瓶颈完全卡在"每秒能从显存流出多少字节"。
         </p>
         <div class="viz-card">
-          <p class="viz-title">Fig. A · 算术强度错配:GPU 算力在 decoding 上为何闲置(FLOPs/Byte)</p>
-          <svg viewBox="0 0 720 132" role="img" aria-label="打满 H100 算力需要约 600 FLOPs/Byte,而 decoding 实际只有 2 到 5">
-            <text x="162" y="42" text-anchor="end" font-size="13" fill="#a9b0a6">打满 H100 算力所需</text>
-            <rect x="170" y="26" width="500" height="24" rx="4" fill="#d0622a"><title>约 600 FLOPs/Byte(INT8 约 2000 TFLOPS ÷ HBM 约 3.3TB/s)</title></rect>
-            <rect x="170" y="26" width="4" height="24" fill="#d0622a"></rect>
-            <text x="678" y="43" font-size="12" class="mono" fill="#a9b0a6">≈600</text>
-            <text x="162" y="98" text-anchor="end" font-size="13" fill="#a9b0a6">decoding 实际(GEMV)</text>
-            <rect x="170" y="82" width="5" height="24" rx="2" fill="#48a874"><title>2–5 FLOPs/Byte(论文 Fig. 2,context 4096)</title></rect>
-            <text x="184" y="99" font-size="12" class="mono" fill="#a9b0a6">2–5</text>
-          </svg>
+          <p class="viz-title"><span class="fig-no">Fig. A</span>算术强度错配:GPU 算力在 decoding 上为何闲置(FLOPs/Byte)</p>
+          <div class="viz-scroll"><svg viewBox="0 0 720 132" role="img" aria-label="打满 H100 算力需要约 600 FLOPs/Byte,而 decoding 实际只有 2 到 5">
+            <text x="162" y="42" text-anchor="end" font-size="13" fill="var(--muted)">打满 H100 算力所需</text>
+            <rect x="170" y="26" width="500" height="24" rx="4" fill="var(--warm)"><title>约 600 FLOPs/Byte(INT8 约 2000 TFLOPS ÷ HBM 约 3.3TB/s)</title></rect>
+            <rect x="170" y="26" width="4" height="24" fill="var(--warm)"></rect>
+            <text x="678" y="43" font-size="12" class="mono" fill="var(--muted)">≈600</text>
+            <text x="162" y="98" text-anchor="end" font-size="13" fill="var(--muted)">decoding 实际(GEMV)</text>
+            <rect x="170" y="82" width="5" height="24" rx="2" fill="var(--accent)"><title>2–5 FLOPs/Byte(论文 Fig. 2,context 4096)</title></rect>
+            <text x="184" y="99" font-size="12" class="mono" fill="var(--muted)">2–5</text>
+          </svg></div>
           <p class="viz-caption">数量级估算。差距约两个数量级:瓶颈在数据流出速度,不在乘加算力——这就是"CPU + 大 L3"有资格上桌的原因。</p>
         </div>
         <p>
@@ -347,40 +384,40 @@
           <li><strong>上下文长度</strong>:聊得越长,攒的越多。</li>
         </ul>
         <div class="viz-card">
-          <p class="viz-title">Fig. B · KV cache 的结构:层 × 时间 × 对话</p>
+          <p class="viz-title"><span class="fig-no">Fig. B</span>KV cache 的结构:层 × 时间 × 对话</p>
           <div class="viz-legend">
-            <span><span class="sw" style="background:#48a874"></span>已积累的历史 K/V</span>
-            <span><span class="sw" style="background:#d0622a"></span>本 token 新追加</span>
+            <span><span class="sw" style="background: var(--accent)"></span>已积累的历史 K/V</span>
+            <span><span class="sw" style="background: var(--warm)"></span>本 token 新追加</span>
           </div>
-          <svg viewBox="0 0 720 200" role="img" aria-label="两条对话各自的 KV 存储:每条 4 层,每层随 token 增长向右追加">
-            <text x="96" y="42" font-size="13" font-weight="600" fill="#e9ede6">对话 A</text>
-            <text x="88" y="73" text-anchor="end" font-size="10" class="mono" fill="#767d72">层1</text>
-            <text x="88" y="98" text-anchor="end" font-size="10" class="mono" fill="#767d72">层2</text>
-            <text x="88" y="123" text-anchor="end" font-size="10" class="mono" fill="#767d72">层3</text>
-            <text x="88" y="148" text-anchor="end" font-size="10" class="mono" fill="#767d72">层4</text>
-            <g fill="#48a874" fill-opacity="0.25" stroke="#48a874" stroke-opacity="0.9" stroke-width="1">
+          <div class="viz-scroll"><svg viewBox="0 0 720 200" role="img" aria-label="两条对话各自的 KV 存储:每条 4 层,每层随 token 增长向右追加">
+            <text x="96" y="42" font-size="13" font-weight="600" fill="var(--ink)">对话 A</text>
+            <text x="88" y="73" text-anchor="end" font-size="10" class="mono" fill="var(--quiet)">层1</text>
+            <text x="88" y="98" text-anchor="end" font-size="10" class="mono" fill="var(--quiet)">层2</text>
+            <text x="88" y="123" text-anchor="end" font-size="10" class="mono" fill="var(--quiet)">层3</text>
+            <text x="88" y="148" text-anchor="end" font-size="10" class="mono" fill="var(--quiet)">层4</text>
+            <g fill="var(--accent)" fill-opacity="0.25" stroke="var(--accent)" stroke-opacity="0.9" stroke-width="1">
               <rect x="96" y="58" width="34" height="22" rx="3"/><rect x="133" y="58" width="34" height="22" rx="3"/><rect x="170" y="58" width="34" height="22" rx="3"/><rect x="207" y="58" width="34" height="22" rx="3"/><rect x="244" y="58" width="34" height="22" rx="3"/>
               <rect x="96" y="83" width="34" height="22" rx="3"/><rect x="133" y="83" width="34" height="22" rx="3"/><rect x="170" y="83" width="34" height="22" rx="3"/><rect x="207" y="83" width="34" height="22" rx="3"/><rect x="244" y="83" width="34" height="22" rx="3"/>
               <rect x="96" y="108" width="34" height="22" rx="3"/><rect x="133" y="108" width="34" height="22" rx="3"/><rect x="170" y="108" width="34" height="22" rx="3"/><rect x="207" y="108" width="34" height="22" rx="3"/><rect x="244" y="108" width="34" height="22" rx="3"/>
               <rect x="96" y="133" width="34" height="22" rx="3"/><rect x="133" y="133" width="34" height="22" rx="3"/><rect x="170" y="133" width="34" height="22" rx="3"/><rect x="207" y="133" width="34" height="22" rx="3"/><rect x="244" y="133" width="34" height="22" rx="3"/>
             </g>
-            <g fill="#d0622a" fill-opacity="0.3" stroke="#d0622a" stroke-width="1">
+            <g fill="var(--warm)" fill-opacity="0.3" stroke="var(--warm)" stroke-width="1">
               <rect x="281" y="58" width="34" height="22" rx="3"/><rect x="281" y="83" width="34" height="22" rx="3"/><rect x="281" y="108" width="34" height="22" rx="3"/><rect x="281" y="133" width="34" height="22" rx="3"/>
             </g>
-            <text x="205" y="180" text-anchor="middle" font-size="10" class="mono" fill="#767d72">随生成向右增长 →</text>
-            <line x1="372" y1="40" x2="372" y2="168" stroke="#767d72" stroke-opacity="0.5" stroke-dasharray="4 4"/>
-            <text x="372" y="188" text-anchor="middle" font-size="11" class="mono" fill="#767d72">互不共享</text>
-            <text x="430" y="42" font-size="13" font-weight="600" fill="#e9ede6">对话 B</text>
-            <g fill="#48a874" fill-opacity="0.25" stroke="#48a874" stroke-opacity="0.9" stroke-width="1">
+            <text x="205" y="180" text-anchor="middle" font-size="10" class="mono" fill="var(--quiet)">随生成向右增长 →</text>
+            <line x1="372" y1="40" x2="372" y2="168" stroke="var(--quiet)" stroke-opacity="0.5" stroke-dasharray="4 4"/>
+            <text x="372" y="188" text-anchor="middle" font-size="11" class="mono" fill="var(--quiet)">互不共享</text>
+            <text x="430" y="42" font-size="13" font-weight="600" fill="var(--ink)">对话 B</text>
+            <g fill="var(--accent)" fill-opacity="0.25" stroke="var(--accent)" stroke-opacity="0.9" stroke-width="1">
               <rect x="430" y="58" width="34" height="22" rx="3"/><rect x="467" y="58" width="34" height="22" rx="3"/><rect x="504" y="58" width="34" height="22" rx="3"/><rect x="541" y="58" width="34" height="22" rx="3"/><rect x="578" y="58" width="34" height="22" rx="3"/>
               <rect x="430" y="83" width="34" height="22" rx="3"/><rect x="467" y="83" width="34" height="22" rx="3"/><rect x="504" y="83" width="34" height="22" rx="3"/><rect x="541" y="83" width="34" height="22" rx="3"/><rect x="578" y="83" width="34" height="22" rx="3"/>
               <rect x="430" y="108" width="34" height="22" rx="3"/><rect x="467" y="108" width="34" height="22" rx="3"/><rect x="504" y="108" width="34" height="22" rx="3"/><rect x="541" y="108" width="34" height="22" rx="3"/><rect x="578" y="108" width="34" height="22" rx="3"/>
               <rect x="430" y="133" width="34" height="22" rx="3"/><rect x="467" y="133" width="34" height="22" rx="3"/><rect x="504" y="133" width="34" height="22" rx="3"/><rect x="541" y="133" width="34" height="22" rx="3"/><rect x="578" y="133" width="34" height="22" rx="3"/>
             </g>
-            <g fill="#d0622a" fill-opacity="0.3" stroke="#d0622a" stroke-width="1">
+            <g fill="var(--warm)" fill-opacity="0.3" stroke="var(--warm)" stroke-width="1">
               <rect x="615" y="58" width="34" height="22" rx="3"/><rect x="615" y="83" width="34" height="22" rx="3"/><rect x="615" y="108" width="34" height="22" rx="3"/><rect x="615" y="133" width="34" height="22" rx="3"/>
             </g>
-          </svg>
+          </svg></div>
           <p class="viz-caption">每生成一个 token,每条对话的每一层都向右追加一格。层数翻倍 → 份数翻倍;对话翻倍 → 整摞翻倍;上下文变长 → 向右无限延伸。</p>
         </div>
       </section>
@@ -399,7 +436,7 @@
         </ul>
         <p>为什么机器多了,对话数就<strong>必须</strong>多?看 4 台机器的时间轴(每一格 = 一台机器在一个时间片处理一条对话):</p>
         <div class="viz-card">
-          <p class="viz-title">Fig. C · 流水线为什么要喂饱:机器 × 时间</p>
+          <p class="viz-title"><span class="fig-no">Fig. C</span>流水线为什么要喂饱:机器 × 时间</p>
           <p class="viz-sub">只有 1 条对话 —— 对角线式推进,每台 3/4 时间空转</p>
           <div class="gantt">
             <div class="gcell glabel">机器1</div>
@@ -437,45 +474,45 @@
         <pre>对话A~H 的第1层 KV,各一份 = 8MB</pre>
         <p>随机器数变化的只是 8MB 的组成方式(层越来越少 × 对话越来越多),总量不变。</p>
         <div class="viz-card">
-          <p class="viz-title">Fig. D · KV 悖论的图形化:加机器,权重一路变瘦,KV 纹丝不动</p>
+          <p class="viz-title"><span class="fig-no">Fig. D</span>KV 悖论的图形化:加机器,权重一路变瘦,KV 纹丝不动</p>
           <div class="viz-grid-2">
             <div>
               <p class="viz-sub">每台持有的权重(GB)</p>
               <svg viewBox="0 0 340 210" role="img" aria-label="每台权重随机器数下降:2 台 4GB,4 台 2GB,8 台 1GB">
-                <line x1="44" y1="45" x2="316" y2="45" stroke="rgba(169,176,166,0.12)" stroke-width="1"/>
-                <line x1="44" y1="110" x2="316" y2="110" stroke="rgba(169,176,166,0.12)" stroke-width="1"/>
-                <line x1="44" y1="175" x2="316" y2="175" stroke="rgba(169,176,166,0.25)" stroke-width="1"/>
-                <text x="38" y="49" text-anchor="end" font-size="10" class="mono" fill="#767d72">4</text>
-                <text x="38" y="114" text-anchor="end" font-size="10" class="mono" fill="#767d72">2</text>
-                <text x="38" y="179" text-anchor="end" font-size="10" class="mono" fill="#767d72">0</text>
-                <rect x="88" y="45" width="24" height="130" rx="4" fill="#48a874"><title>2 台机器:每台 4GB 权重</title></rect><rect x="88" y="171" width="24" height="4" fill="#48a874"/>
-                <rect x="168" y="110" width="24" height="65" rx="4" fill="#48a874"><title>4 台机器:每台 2GB 权重</title></rect><rect x="168" y="171" width="24" height="4" fill="#48a874"/>
-                <rect x="248" y="142.5" width="24" height="32.5" rx="4" fill="#48a874"><title>8 台机器:每台 1GB 权重</title></rect><rect x="248" y="171" width="24" height="4" fill="#48a874"/>
-                <text x="100" y="37" text-anchor="middle" font-size="11" class="mono" fill="#a9b0a6">4GB</text>
-                <text x="180" y="102" text-anchor="middle" font-size="11" class="mono" fill="#a9b0a6">2GB</text>
-                <text x="260" y="134" text-anchor="middle" font-size="11" class="mono" fill="#a9b0a6">1GB</text>
-                <text x="100" y="196" text-anchor="middle" font-size="10" class="mono" fill="#767d72">2 台</text>
-                <text x="180" y="196" text-anchor="middle" font-size="10" class="mono" fill="#767d72">4 台</text>
-                <text x="260" y="196" text-anchor="middle" font-size="10" class="mono" fill="#767d72">8 台</text>
+                <line x1="44" y1="45" x2="316" y2="45" stroke="var(--grid-line)" stroke-width="1"/>
+                <line x1="44" y1="110" x2="316" y2="110" stroke="var(--grid-line)" stroke-width="1"/>
+                <line x1="44" y1="175" x2="316" y2="175" stroke="var(--grid-line-strong)" stroke-width="1"/>
+                <text x="38" y="49" text-anchor="end" font-size="10" class="mono" fill="var(--quiet)">4</text>
+                <text x="38" y="114" text-anchor="end" font-size="10" class="mono" fill="var(--quiet)">2</text>
+                <text x="38" y="179" text-anchor="end" font-size="10" class="mono" fill="var(--quiet)">0</text>
+                <rect x="88" y="45" width="24" height="130" rx="4" fill="var(--accent)"><title>2 台机器:每台 4GB 权重</title></rect><rect x="88" y="171" width="24" height="4" fill="var(--accent)"/>
+                <rect x="168" y="110" width="24" height="65" rx="4" fill="var(--accent)"><title>4 台机器:每台 2GB 权重</title></rect><rect x="168" y="171" width="24" height="4" fill="var(--accent)"/>
+                <rect x="248" y="142.5" width="24" height="32.5" rx="4" fill="var(--accent)"><title>8 台机器:每台 1GB 权重</title></rect><rect x="248" y="171" width="24" height="4" fill="var(--accent)"/>
+                <text x="100" y="37" text-anchor="middle" font-size="11" class="mono" fill="var(--muted)">4GB</text>
+                <text x="180" y="102" text-anchor="middle" font-size="11" class="mono" fill="var(--muted)">2GB</text>
+                <text x="260" y="134" text-anchor="middle" font-size="11" class="mono" fill="var(--muted)">1GB</text>
+                <text x="100" y="196" text-anchor="middle" font-size="10" class="mono" fill="var(--quiet)">2 台</text>
+                <text x="180" y="196" text-anchor="middle" font-size="10" class="mono" fill="var(--quiet)">4 台</text>
+                <text x="260" y="196" text-anchor="middle" font-size="10" class="mono" fill="var(--quiet)">8 台</text>
               </svg>
             </div>
             <div>
               <p class="viz-sub">每台持有的 KV(MB)</p>
               <svg viewBox="0 0 340 210" role="img" aria-label="每台 KV 不随机器数变化:恒为 8MB">
-                <line x1="44" y1="45" x2="316" y2="45" stroke="rgba(169,176,166,0.12)" stroke-width="1"/>
-                <line x1="44" y1="110" x2="316" y2="110" stroke="rgba(169,176,166,0.12)" stroke-width="1"/>
-                <line x1="44" y1="175" x2="316" y2="175" stroke="rgba(169,176,166,0.25)" stroke-width="1"/>
-                <text x="38" y="49" text-anchor="end" font-size="10" class="mono" fill="#767d72">8</text>
-                <text x="38" y="114" text-anchor="end" font-size="10" class="mono" fill="#767d72">4</text>
-                <text x="38" y="179" text-anchor="end" font-size="10" class="mono" fill="#767d72">0</text>
-                <line x1="100" y1="45" x2="260" y2="45" stroke="#a9b0a6" stroke-opacity="0.6" stroke-width="1" stroke-dasharray="3 3"/>
-                <rect x="88" y="45" width="24" height="130" rx="4" fill="#d0622a"><title>2 台机器:每台 8MB KV</title></rect><rect x="88" y="171" width="24" height="4" fill="#d0622a"/>
-                <rect x="168" y="45" width="24" height="130" rx="4" fill="#d0622a"><title>4 台机器:每台 8MB KV</title></rect><rect x="168" y="171" width="24" height="4" fill="#d0622a"/>
-                <rect x="248" y="45" width="24" height="130" rx="4" fill="#d0622a"><title>8 台机器:每台 8MB KV</title></rect><rect x="248" y="171" width="24" height="4" fill="#d0622a"/>
-                <text x="180" y="30" text-anchor="middle" font-size="11" class="mono" fill="#a9b0a6">8MB · 不变</text>
-                <text x="100" y="196" text-anchor="middle" font-size="10" class="mono" fill="#767d72">2 台</text>
-                <text x="180" y="196" text-anchor="middle" font-size="10" class="mono" fill="#767d72">4 台</text>
-                <text x="260" y="196" text-anchor="middle" font-size="10" class="mono" fill="#767d72">8 台</text>
+                <line x1="44" y1="45" x2="316" y2="45" stroke="var(--grid-line)" stroke-width="1"/>
+                <line x1="44" y1="110" x2="316" y2="110" stroke="var(--grid-line)" stroke-width="1"/>
+                <line x1="44" y1="175" x2="316" y2="175" stroke="var(--grid-line-strong)" stroke-width="1"/>
+                <text x="38" y="49" text-anchor="end" font-size="10" class="mono" fill="var(--quiet)">8</text>
+                <text x="38" y="114" text-anchor="end" font-size="10" class="mono" fill="var(--quiet)">4</text>
+                <text x="38" y="179" text-anchor="end" font-size="10" class="mono" fill="var(--quiet)">0</text>
+                <line x1="100" y1="45" x2="260" y2="45" stroke="var(--muted)" stroke-opacity="0.6" stroke-width="1" stroke-dasharray="3 3"/>
+                <rect x="88" y="45" width="24" height="130" rx="4" fill="var(--warm)"><title>2 台机器:每台 8MB KV</title></rect><rect x="88" y="171" width="24" height="4" fill="var(--warm)"/>
+                <rect x="168" y="45" width="24" height="130" rx="4" fill="var(--warm)"><title>4 台机器:每台 8MB KV</title></rect><rect x="168" y="171" width="24" height="4" fill="var(--warm)"/>
+                <rect x="248" y="45" width="24" height="130" rx="4" fill="var(--warm)"><title>8 台机器:每台 8MB KV</title></rect><rect x="248" y="171" width="24" height="4" fill="var(--warm)"/>
+                <text x="180" y="30" text-anchor="middle" font-size="11" class="mono" fill="var(--muted)">8MB · 不变</text>
+                <text x="100" y="196" text-anchor="middle" font-size="10" class="mono" fill="var(--quiet)">2 台</text>
+                <text x="180" y="196" text-anchor="middle" font-size="10" class="mono" fill="var(--quiet)">4 台</text>
+                <text x="260" y="196" text-anchor="middle" font-size="10" class="mono" fill="var(--quiet)">8 台</text>
               </svg>
             </div>
           </div>
@@ -508,10 +545,10 @@
           (2 条对话、4 层),每个格子是"某层 × 某对话"的一份 KV:
         </p>
         <div class="viz-card">
-          <p class="viz-title">Fig. E · KV 的两种摆法(颜色 = 归属机器)</p>
+          <p class="viz-title"><span class="fig-no">Fig. E</span>KV 的两种摆法(颜色 = 归属机器)</p>
           <div class="viz-legend">
-            <span><span class="sw" style="background:#48a874"></span>机器 1</span>
-            <span><span class="sw" style="background:#d0622a"></span>机器 2</span>
+            <span><span class="sw" style="background: var(--accent)"></span>机器 1</span>
+            <span><span class="sw" style="background: var(--warm)"></span>机器 2</span>
           </div>
           <div class="viz-grid-2">
             <div>
@@ -597,48 +634,48 @@
           前两句是流水线常识,第三句指出两个旋钮:切机器拧小数据量(KV 拧不动,见悖论),驻留 L3 拧大带宽。
         </p>
         <div class="viz-card">
-          <p class="viz-title">Fig. F · 实测 TPOT 对比:LLaMA-3.2-3B,ctx 4096(越低越好)</p>
+          <p class="viz-title"><span class="fig-no">Fig. F</span>实测 TPOT 对比:LLaMA-3.2-3B,ctx 4096(越低越好)</p>
           <div class="viz-legend">
-            <span><span class="sw" style="background:#d0622a"></span>llama.cpp</span>
-            <span><span class="sw" style="background:#48a874"></span>L3LLM</span>
+            <span><span class="sw" style="background: var(--warm)"></span>llama.cpp</span>
+            <span><span class="sw" style="background: var(--accent)"></span>L3LLM</span>
           </div>
-          <svg viewBox="0 0 720 310" role="img" aria-label="分组柱状图:各 batch 下 llama.cpp 与 L3LLM 的 TPOT 毫秒数,L3LLM 全面更低">
-            <line x1="52" y1="22" x2="700" y2="22" stroke="rgba(169,176,166,0.12)"/><line x1="52" y1="70" x2="700" y2="70" stroke="rgba(169,176,166,0.12)"/><line x1="52" y1="118" x2="700" y2="118" stroke="rgba(169,176,166,0.12)"/><line x1="52" y1="166" x2="700" y2="166" stroke="rgba(169,176,166,0.12)"/><line x1="52" y1="214" x2="700" y2="214" stroke="rgba(169,176,166,0.12)"/>
-            <line x1="52" y1="262" x2="700" y2="262" stroke="rgba(169,176,166,0.25)"/>
-            <text x="44" y="266" text-anchor="end" font-size="10" class="mono" fill="#767d72">0</text>
-            <text x="44" y="218" text-anchor="end" font-size="10" class="mono" fill="#767d72">50</text>
-            <text x="44" y="170" text-anchor="end" font-size="10" class="mono" fill="#767d72">100</text>
-            <text x="44" y="122" text-anchor="end" font-size="10" class="mono" fill="#767d72">150</text>
-            <text x="44" y="74" text-anchor="end" font-size="10" class="mono" fill="#767d72">200</text>
-            <text x="44" y="26" text-anchor="end" font-size="10" class="mono" fill="#767d72">250</text>
+          <div class="viz-scroll"><svg viewBox="0 0 720 310" role="img" aria-label="分组柱状图:各 batch 下 llama.cpp 与 L3LLM 的 TPOT 毫秒数,L3LLM 全面更低">
+            <line x1="52" y1="22" x2="700" y2="22" stroke="var(--grid-line)"/><line x1="52" y1="70" x2="700" y2="70" stroke="var(--grid-line)"/><line x1="52" y1="118" x2="700" y2="118" stroke="var(--grid-line)"/><line x1="52" y1="166" x2="700" y2="166" stroke="var(--grid-line)"/><line x1="52" y1="214" x2="700" y2="214" stroke="var(--grid-line)"/>
+            <line x1="52" y1="262" x2="700" y2="262" stroke="var(--grid-line-strong)"/>
+            <text x="44" y="266" text-anchor="end" font-size="10" class="mono" fill="var(--quiet)">0</text>
+            <text x="44" y="218" text-anchor="end" font-size="10" class="mono" fill="var(--quiet)">50</text>
+            <text x="44" y="170" text-anchor="end" font-size="10" class="mono" fill="var(--quiet)">100</text>
+            <text x="44" y="122" text-anchor="end" font-size="10" class="mono" fill="var(--quiet)">150</text>
+            <text x="44" y="74" text-anchor="end" font-size="10" class="mono" fill="var(--quiet)">200</text>
+            <text x="44" y="26" text-anchor="end" font-size="10" class="mono" fill="var(--quiet)">250</text>
             <g>
-              <rect x="81" y="215.3" width="24" height="46.7" rx="4" fill="#d0622a"><title>llama.cpp · batch 1 · 48.6 ms</title></rect><rect x="81" y="258" width="24" height="4" fill="#d0622a"/>
-              <rect x="107" y="258" width="24" height="4" rx="2" fill="#48a874"><title>L3LLM · batch 1 · 4.2 ms</title></rect>
-              <rect x="189" y="215" width="24" height="47" rx="4" fill="#d0622a"><title>llama.cpp · batch 2 · 49.0 ms</title></rect><rect x="189" y="258" width="24" height="4" fill="#d0622a"/>
-              <rect x="215" y="253.9" width="24" height="8.1" rx="2" fill="#48a874"><title>L3LLM · batch 2 · 8.4 ms</title></rect><rect x="215" y="258" width="24" height="4" fill="#48a874"/>
-              <rect x="297" y="210.4" width="24" height="51.6" rx="4" fill="#d0622a"><title>llama.cpp · batch 4 · 53.7 ms</title></rect><rect x="297" y="258" width="24" height="4" fill="#d0622a"/>
-              <rect x="323" y="246.9" width="24" height="15.1" rx="4" fill="#48a874"><title>L3LLM · batch 4 · 15.7 ms</title></rect><rect x="323" y="258" width="24" height="4" fill="#48a874"/>
-              <rect x="405" y="183.2" width="24" height="78.8" rx="4" fill="#d0622a"><title>llama.cpp · batch 8 · 82.1 ms</title></rect><rect x="405" y="258" width="24" height="4" fill="#d0622a"/>
-              <rect x="431" y="238.6" width="24" height="23.4" rx="4" fill="#48a874"><title>L3LLM · batch 8 · 24.4 ms</title></rect><rect x="431" y="258" width="24" height="4" fill="#48a874"/>
-              <rect x="513" y="129" width="24" height="133" rx="4" fill="#d0622a"><title>llama.cpp · batch 16 · 138.5 ms</title></rect><rect x="513" y="258" width="24" height="4" fill="#d0622a"/>
-              <rect x="539" y="220" width="24" height="42" rx="4" fill="#48a874"><title>L3LLM · batch 16 · 43.8 ms</title></rect><rect x="539" y="258" width="24" height="4" fill="#48a874"/>
-              <rect x="621" y="54.8" width="24" height="207.2" rx="4" fill="#d0622a"><title>llama.cpp · batch 32 · 215.8 ms</title></rect><rect x="621" y="258" width="24" height="4" fill="#d0622a"/>
-              <rect x="647" y="188.8" width="24" height="73.2" rx="4" fill="#48a874"><title>L3LLM · batch 32 · 76.3 ms</title></rect><rect x="647" y="258" width="24" height="4" fill="#48a874"/>
+              <rect x="81" y="215.3" width="24" height="46.7" rx="4" fill="var(--warm)"><title>llama.cpp · batch 1 · 48.6 ms</title></rect><rect x="81" y="258" width="24" height="4" fill="var(--warm)"/>
+              <rect x="107" y="258" width="24" height="4" rx="2" fill="var(--accent)"><title>L3LLM · batch 1 · 4.2 ms</title></rect>
+              <rect x="189" y="215" width="24" height="47" rx="4" fill="var(--warm)"><title>llama.cpp · batch 2 · 49.0 ms</title></rect><rect x="189" y="258" width="24" height="4" fill="var(--warm)"/>
+              <rect x="215" y="253.9" width="24" height="8.1" rx="2" fill="var(--accent)"><title>L3LLM · batch 2 · 8.4 ms</title></rect><rect x="215" y="258" width="24" height="4" fill="var(--accent)"/>
+              <rect x="297" y="210.4" width="24" height="51.6" rx="4" fill="var(--warm)"><title>llama.cpp · batch 4 · 53.7 ms</title></rect><rect x="297" y="258" width="24" height="4" fill="var(--warm)"/>
+              <rect x="323" y="246.9" width="24" height="15.1" rx="4" fill="var(--accent)"><title>L3LLM · batch 4 · 15.7 ms</title></rect><rect x="323" y="258" width="24" height="4" fill="var(--accent)"/>
+              <rect x="405" y="183.2" width="24" height="78.8" rx="4" fill="var(--warm)"><title>llama.cpp · batch 8 · 82.1 ms</title></rect><rect x="405" y="258" width="24" height="4" fill="var(--warm)"/>
+              <rect x="431" y="238.6" width="24" height="23.4" rx="4" fill="var(--accent)"><title>L3LLM · batch 8 · 24.4 ms</title></rect><rect x="431" y="258" width="24" height="4" fill="var(--accent)"/>
+              <rect x="513" y="129" width="24" height="133" rx="4" fill="var(--warm)"><title>llama.cpp · batch 16 · 138.5 ms</title></rect><rect x="513" y="258" width="24" height="4" fill="var(--warm)"/>
+              <rect x="539" y="220" width="24" height="42" rx="4" fill="var(--accent)"><title>L3LLM · batch 16 · 43.8 ms</title></rect><rect x="539" y="258" width="24" height="4" fill="var(--accent)"/>
+              <rect x="621" y="54.8" width="24" height="207.2" rx="4" fill="var(--warm)"><title>llama.cpp · batch 32 · 215.8 ms</title></rect><rect x="621" y="258" width="24" height="4" fill="var(--warm)"/>
+              <rect x="647" y="188.8" width="24" height="73.2" rx="4" fill="var(--accent)"><title>L3LLM · batch 32 · 76.3 ms</title></rect><rect x="647" y="258" width="24" height="4" fill="var(--accent)"/>
             </g>
-            <text x="106" y="207" text-anchor="middle" font-size="11" class="mono" font-weight="600" fill="#e9ede6">11.5×</text>
-            <text x="214" y="207" text-anchor="middle" font-size="11" class="mono" font-weight="600" fill="#e9ede6">5.8×</text>
-            <text x="322" y="202" text-anchor="middle" font-size="11" class="mono" font-weight="600" fill="#e9ede6">3.4×</text>
-            <text x="430" y="175" text-anchor="middle" font-size="11" class="mono" font-weight="600" fill="#e9ede6">3.4×</text>
-            <text x="538" y="121" text-anchor="middle" font-size="11" class="mono" font-weight="600" fill="#e9ede6">3.2×</text>
-            <text x="646" y="47" text-anchor="middle" font-size="11" class="mono" font-weight="600" fill="#e9ede6">2.8×</text>
-            <text x="106" y="282" text-anchor="middle" font-size="10" class="mono" fill="#767d72">1</text>
-            <text x="214" y="282" text-anchor="middle" font-size="10" class="mono" fill="#767d72">2</text>
-            <text x="322" y="282" text-anchor="middle" font-size="10" class="mono" fill="#767d72">4</text>
-            <text x="430" y="282" text-anchor="middle" font-size="10" class="mono" fill="#767d72">8</text>
-            <text x="538" y="282" text-anchor="middle" font-size="10" class="mono" fill="#767d72">16</text>
-            <text x="646" y="282" text-anchor="middle" font-size="10" class="mono" fill="#767d72">32</text>
-            <text x="700" y="304" text-anchor="end" font-size="10" class="mono" fill="#767d72">batch size →</text>
-          </svg>
+            <text x="106" y="207" text-anchor="middle" font-size="11" class="mono" font-weight="600" fill="var(--ink)">11.5×</text>
+            <text x="214" y="207" text-anchor="middle" font-size="11" class="mono" font-weight="600" fill="var(--ink)">5.8×</text>
+            <text x="322" y="202" text-anchor="middle" font-size="11" class="mono" font-weight="600" fill="var(--ink)">3.4×</text>
+            <text x="430" y="175" text-anchor="middle" font-size="11" class="mono" font-weight="600" fill="var(--ink)">3.4×</text>
+            <text x="538" y="121" text-anchor="middle" font-size="11" class="mono" font-weight="600" fill="var(--ink)">3.2×</text>
+            <text x="646" y="47" text-anchor="middle" font-size="11" class="mono" font-weight="600" fill="var(--ink)">2.8×</text>
+            <text x="106" y="282" text-anchor="middle" font-size="10" class="mono" fill="var(--quiet)">1</text>
+            <text x="214" y="282" text-anchor="middle" font-size="10" class="mono" fill="var(--quiet)">2</text>
+            <text x="322" y="282" text-anchor="middle" font-size="10" class="mono" fill="var(--quiet)">4</text>
+            <text x="430" y="282" text-anchor="middle" font-size="10" class="mono" fill="var(--quiet)">8</text>
+            <text x="538" y="282" text-anchor="middle" font-size="10" class="mono" fill="var(--quiet)">16</text>
+            <text x="646" y="282" text-anchor="middle" font-size="10" class="mono" fill="var(--quiet)">32</text>
+            <text x="700" y="304" text-anchor="end" font-size="10" class="mono" fill="var(--quiet)">batch size →</text>
+          </svg></div>
           <p class="viz-caption">数据:论文 Table 2(a),端到端实测。batch 越大,llama.cpp 越能摊薄从内存读权重的成本,加速比从 11.5× 收窄到 2.8×——这是 ground truth,不是外推。</p>
         </div>
         <p>
@@ -649,7 +686,6 @@
       </section>
 
       <section class="band" aria-labelledby="findings-title">
-        <p class="kicker">Critical Takeaways</p>
         <h2 id="findings-title">批判性结论</h2>
         <div class="finding"><span>大头在哪</span><strong>2–11.5 倍的大数字主要来自"缓存驻留"本身;WA 分离和亚算子同步的消融各值 1.0–1.5 倍——作者消融做得坦白,加分。</strong></div>
         <div class="finding"><span>Prefill 空白</span><strong>全文只有两句话,(see §6) 是悬空引用。Agent 时代(prefill 重、并发高、输入远多于输出),"decoding 主导"的前提正在过时。</strong></div>
@@ -678,8 +714,8 @@
 
     <footer class="site-footer">
       <div class="shell footer-inner">
-        <span>L3LLM Reading Notes · 2026</span>
-        <a href="../index.html">返回 Sipeng Xie 个人主页</a>
+        <span>L3LLM 阅读笔记，2026 年</span>
+        <a href="../index.html#notes">返回 Sipeng Xie 个人主页</a>
       </div>
     </footer>
   </body>

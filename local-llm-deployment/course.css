@@ -39,19 +39,24 @@
   gap: 16px;
 }
 
-.rail-progress span,
+.rail-progress span {
+  color: var(--muted);
+  font-size: 13px;
+}
+
 .ladder-heading span,
 .api-heading span,
-.result-heading span,
+.result-heading > div > span,
 .budget-label span {
   color: var(--quiet);
-  font-size: 11px;
+  font-size: 13px;
 }
 
 .rail-progress strong,
 .ladder-heading strong,
 .api-heading strong {
-  font-size: 12px;
+  font-size: 15px;
+  font-weight: 600;
 }
 
 .progress-track,
@@ -101,13 +106,22 @@
 .module-nav button[aria-current="step"] {
   color: var(--ink);
   background: var(--accent-soft);
-  box-shadow: inset 3px 0 0 var(--accent);
+}
+
+.module-nav button[aria-current="step"] .module-nav-copy span {
+  color: var(--muted);
+}
+
+.module-nav button[aria-current="step"] .module-nav-index {
+  color: var(--accent-bright);
+  font-weight: 600;
 }
 
 .module-nav-index {
   color: var(--quiet);
-  font-family: "SFMono-Regular", Consolas, monospace;
-  font-size: 10px;
+  font-family: var(--font-mono);
+  font-size: 13px;
+  font-variant-numeric: tabular-nums;
 }
 
 .module-nav-copy {
@@ -117,16 +131,16 @@
 
 .module-nav-copy strong {
   overflow: hidden;
-  font-size: 12px;
-  font-weight: 680;
+  font-size: 15px;
+  font-weight: 600;
   text-overflow: ellipsis;
   white-space: nowrap;
 }
 
 .module-nav-copy span {
-  margin-top: 2px;
+  margin-top: 1px;
   color: var(--quiet);
-  font-size: 10px;
+  font-size: 13px;
 }
 
 .module-nav-state {
@@ -154,17 +168,21 @@
   gap: 28px;
 }
 
-.module-index {
+.module-header h3 {
   margin: 0;
-  color: var(--accent);
-  font-size: 10px;
-  font-weight: 800;
+  font-family: var(--font-display);
+  font-size: 30px;
+  font-weight: 580;
+  font-variation-settings: "opsz" 48;
+  line-height: 1.25;
+  text-wrap: balance;
 }
 
-.module-header h3 {
-  margin: 5px 0 0;
-  font-size: 28px;
-  line-height: 1.25;
+.module-index {
+  margin: 8px 0 0;
+  color: var(--accent-bright);
+  font-size: 15px;
+  font-weight: 500;
 }
 
 .completion-toggle {
@@ -173,7 +191,7 @@
   align-items: center;
   gap: 7px;
   color: var(--muted);
-  font-size: 12px;
+  font-size: 14px;
   cursor: pointer;
 }
 
@@ -198,18 +216,20 @@
   display: grid;
   grid-template-columns: 90px 1fr;
   gap: 16px;
-  border-left: 3px solid var(--warm);
+  border: 1px solid color-mix(in srgb, var(--warm) 30%, transparent);
+  border-radius: var(--radius-sm);
   background: var(--warm-soft);
 }
 
 .module-output span {
   color: var(--warm);
-  font-size: 11px;
-  font-weight: 760;
+  font-size: 13px;
+  font-weight: 600;
 }
 
 .module-output strong {
-  font-size: 14px;
+  font-size: 15px;
+  font-weight: 600;
 }
 
 .module-columns {
@@ -221,7 +241,8 @@
 
 .module-columns h4 {
   margin: 0;
-  font-size: 13px;
+  font-size: 15px;
+  font-weight: 600;
 }
 
 .module-columns ul {
@@ -236,7 +257,7 @@
   position: relative;
   padding-left: 17px;
   color: var(--muted);
-  font-size: 13px;
+  font-size: 15px;
 }
 
 .module-columns li::before {
@@ -269,7 +290,7 @@
   border: 0;
   color: var(--muted);
   background: transparent;
-  font-size: 12px;
+  font-size: 14px;
   cursor: pointer;
   transition: color 140ms ease, transform 140ms var(--ease-out);
 }
@@ -300,7 +321,7 @@
 
 .preset-row > span {
   color: var(--quiet);
-  font-size: 11px;
+  font-size: 13px;
 }
 
 .segmented-control,
@@ -318,14 +339,14 @@
 .segmented-control button,
 .runtime-tabs button,
 .snippet-tabs button {
-  min-height: 30px;
-  padding: 5px 9px;
+  min-height: 32px;
+  padding: 5px 11px;
   border: 0;
   border-radius: 5px;
   color: var(--muted);
   background: transparent;
-  font-size: 11px;
-  font-weight: 650;
+  font-size: 14px;
+  font-weight: 500;
   cursor: pointer;
   transition: color 140ms ease, background-color 140ms ease, transform 140ms var(--ease-out);
 }
@@ -336,6 +357,7 @@
   color: var(--ink);
   background: var(--surface);
   box-shadow: 0 1px 3px color-mix(in srgb, var(--ink) 8%, transparent);
+  font-weight: 600;
 }
 
 .capacity-form fieldset {
@@ -348,8 +370,8 @@
 .capacity-form legend {
   padding: 0;
   color: var(--ink);
-  font-size: 12px;
-  font-weight: 720;
+  font-size: 15px;
+  font-weight: 600;
 }
 
 .input-grid {
@@ -368,7 +390,8 @@
   display: grid;
   gap: 6px;
   color: var(--muted);
-  font-size: 10px;
+  font-size: 13px;
+  line-height: 1.4;
 }
 
 .input-grid input,
@@ -379,20 +402,20 @@
   border-radius: var(--radius-sm);
   color: var(--ink);
   background: var(--surface);
-  outline: none;
-  transition: border-color 140ms ease, box-shadow 140ms ease;
+  transition: border-color 140ms ease;
 }
 
 .input-grid input {
   height: 38px;
   padding: 7px 9px;
+  font-family: var(--font-mono);
+  font-size: 15px;
   font-variant-numeric: tabular-nums;
 }
 
 .input-grid input:focus,
 .search-box input:focus {
   border-color: var(--accent);
-  box-shadow: 0 0 0 3px color-mix(in srgb, var(--accent) 14%, transparent);
 }
 
 .capacity-result {
@@ -403,17 +426,19 @@
 .result-heading strong {
   display: block;
   margin-top: 3px;
-  font-size: 20px;
+  font-size: 21px;
+  font-weight: 600;
 }
 
 .status-badge {
   padding: 4px 8px;
   border: 1px solid color-mix(in srgb, var(--accent) 38%, var(--line));
   border-radius: 4px;
-  color: var(--accent);
+  color: var(--accent-bright);
   background: var(--accent-soft);
-  font-size: 11px;
-  font-weight: 760;
+  font-size: 13px;
+  font-weight: 600;
+  white-space: nowrap;
 }
 
 .status-badge.warning {
@@ -433,7 +458,9 @@
 }
 
 .budget-label strong {
-  font-size: 12px;
+  font-family: var(--font-mono);
+  font-size: 14px;
+  font-weight: 500;
   font-variant-numeric: tabular-nums;
 }
 
@@ -452,8 +479,8 @@
 
 .budget-row p {
   margin: 7px 0 0;
-  color: var(--quiet);
-  font-size: 11px;
+  color: var(--muted);
+  font-size: 14px;
 }
 
 .formula-note {
@@ -461,14 +488,15 @@
   padding: 12px;
   display: grid;
   gap: 5px;
-  border-left: 2px solid var(--blue);
+  border: 1px solid color-mix(in srgb, var(--blue) 30%, transparent);
+  border-radius: var(--radius-sm);
   background: var(--blue-soft);
 }
 
 .formula-note code {
   color: var(--blue);
-  font-family: "SFMono-Regular", Consolas, monospace;
-  font-size: 10px;
+  font-family: var(--font-mono);
+  font-size: 13px;
   white-space: normal;
 }
 
@@ -476,14 +504,14 @@
   margin: auto 0 0;
   padding-top: 20px;
   color: var(--muted);
-  font-size: 12px;
+  font-size: 15px;
 }
 
 .runtime-advisor {
   margin-top: 14px;
   padding: 24px;
   display: grid;
-  grid-template-columns: 0.7fr 1.3fr;
+  grid-template-columns: minmax(0, 0.7fr) minmax(0, 1.3fr);
   gap: 48px;
   border: 1px solid var(--line);
   border-radius: var(--radius);
@@ -492,13 +520,17 @@
 
 .runtime-intro h3 {
   margin: 0;
-  font-size: 23px;
+  font-family: var(--font-display);
+  font-size: 26px;
+  font-weight: 580;
+  font-variation-settings: "opsz" 48;
+  line-height: 1.3;
 }
 
 .runtime-intro > p:last-child {
   margin: 10px 0 0;
   color: var(--muted);
-  font-size: 13px;
+  font-size: 15px;
 }
 
 .runtime-tool {
@@ -513,24 +545,25 @@
 
 .runtime-result > span {
   color: var(--quiet);
-  font-size: 10px;
+  font-size: 13px;
 }
 
 .runtime-result h4 {
   margin: 3px 0 0;
-  font-size: 16px;
+  font-size: 17px;
+  font-weight: 600;
 }
 
 .runtime-result ul {
   margin: 13px 0 0;
   padding-left: 18px;
   color: var(--muted);
-  font-size: 12px;
+  font-size: 15px;
 }
 
 .runtime-result p {
   margin: 12px 0 0;
   color: var(--muted);
-  font-size: 12px;
+  font-size: 15px;
 }
 

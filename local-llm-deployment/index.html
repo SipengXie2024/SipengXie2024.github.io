@@ -7,14 +7,13 @@
       name="description"
       content="零基础本地大模型部署交互课程：先用人话理解模型、量化、运行时、上下文、KV 缓存与 API，再用六步跑通 Claude Code。"
     />
-    <meta name="theme-color" content="#111512" />
+    <meta name="theme-color" content="#10140f" />
     <title>零基础本地大模型部署 | Sipeng Xie</title>
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-    <link
-      href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,300..900;1,9..144,300..900&family=IBM+Plex+Mono:wght@400;500;600&family=IBM+Plex+Sans:wght@300;400;500;600;700&display=swap"
-      rel="stylesheet"
-    />
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400..700&amp;family=IBM+Plex+Mono:wght@400;500;600&amp;family=IBM+Plex+Sans:ital,wght@0,400;0,500;0,600;0,700;1,400&amp;family=Noto+Sans+SC:wght@400;500;700&amp;family=Noto+Serif+SC:wght@500;600;700&amp;display=swap" />
+    <link rel="stylesheet" href="../site-base.css" />
+    <link rel="icon" href="../favicon.svg" type="image/svg+xml" />
     <link rel="stylesheet" href="styles.css" />
     <link rel="stylesheet" href="beginner.css" />
     <link rel="stylesheet" href="course.css" />
@@ -30,7 +29,7 @@
           <span class="brand-mark" aria-hidden="true">SX</span>
           <span class="brand-copy">
             <strong>Local LLM Deployment Lab</strong>
-            <span>Beginner-first field guide</span>
+            <span>Sipeng Xie 的研究笔记</span>
           </span>
         </a>
         <nav class="top-nav" aria-label="页面导航">
@@ -41,7 +40,8 @@
         <div class="header-actions">
           <a class="source-link" href="course.md" download>讲义 .md</a>
           <button class="icon-button" id="themeToggle" type="button" aria-label="切换深浅色主题" title="切换主题">
-            <span aria-hidden="true">&#9728;</span>
+            <svg class="icon theme-icon-sun" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><circle cx="12" cy="12" r="4"/><path d="M12 2.5v2M12 19.5v2M4.6 4.6l1.4 1.4M18 18l1.4 1.4M2.5 12h2M19.5 12h2M4.6 19.4L6 18M18 6l1.4-1.4"/></svg>
+            <svg class="icon theme-icon-moon" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="M20 14.5A8 8 0 0 1 9.5 4a8 8 0 1 0 10.5 10.5z"/></svg>
           </button>
         </div>
       </div>
@@ -51,8 +51,8 @@
       <section class="overview" id="top">
         <div class="shell overview-grid">
           <div class="overview-copy">
-            <p class="eyebrow">BEGINNER MODE / 从零开始</p>
-            <h1>把大模型装进自己的电脑，并让 Claude Code 用上它</h1>
+            <h1><span class="phrase">把大模型装进</span><span class="phrase">自己的电脑，</span><span class="phrase">并让 Claude Code</span> <span class="phrase">用上它</span></h1>
+            <p class="byline">零基础入门，从零开始</p>
             <p class="overview-lede">
               先别管 153GiB、百万上下文和 KV 缓存。第一次学习只做一件事：找一个电脑带得动的小模型，让它说出一句话，再让 Claude Code 成功调用它。
             </p>
@@ -69,7 +69,6 @@
 
           <aside class="first-goal" aria-labelledby="first-goal-title">
             <div class="first-goal-heading">
-              <p>这门课到底在做什么？</p>
               <h2 id="first-goal-title">把四样东西接起来</h2>
             </div>
             <ol class="first-goal-flow">
@@ -89,8 +88,7 @@
       <section class="section shell" id="basics">
         <div class="section-heading beginner-heading">
           <div>
-            <p class="eyebrow">SIX WORDS FIRST</p>
-            <h2>先用生活中的东西理解六个词</h2>
+            <h2><span class="phrase">先用生活中的东西</span><span class="phrase">理解六个词</span></h2>
           </div>
           <p>点击一个词，只记住“它像什么”和“为什么与你有关”。公式和参数放到完整课程再学。</p>
         </div>
@@ -105,12 +103,11 @@
             <button role="tab" aria-selected="false" aria-controls="conceptPanel" data-concept="api">API</button>
           </div>
           <article class="concept-panel" id="conceptPanel" role="tabpanel" aria-live="polite">
-            <p id="conceptLabel">它像什么</p>
-            <h3 id="conceptAnalogy"></h3>
-            <p class="concept-explanation" id="conceptExplanation"></p>
+            <h3 id="conceptAnalogy">模型文件像一套下载到电脑里的“知识包”</h3>
+            <p class="concept-explanation" id="conceptExplanation">它包含模型学到的大量数字。文件越大，通常需要的内存越多。下载完成不代表它会自己运行，就像电影文件不会自己播放。</p>
             <div class="concept-takeaway">
               <span>第一次只需要记住</span>
-              <strong id="conceptTakeaway"></strong>
+              <strong id="conceptTakeaway">先选电脑带得动的 3B-8B 小模型，不要从 153GiB 大案例起步。</strong>
             </div>
           </article>
         </div>
@@ -120,8 +117,7 @@
         <div class="shell">
           <div class="section-heading beginner-heading">
             <div>
-              <p class="eyebrow">YOUR FIRST SUCCESS</p>
-              <h2>第一次部署，只走这六步</h2>
+              <h2><span class="phrase">第一次部署，</span><span class="phrase">只走这六步</span></h2>
             </div>
             <p>每一步只问“有没有看到成功信号”。先闭环，再回头学习容量、性能和运维。</p>
           </div>
@@ -181,8 +177,7 @@
 
       <section class="advanced-gate shell" id="advanced">
         <div>
-          <p class="eyebrow">ADVANCED COURSE</p>
-          <h2>六步能跑通之后，再进入完整课程</h2>
+          <h2><span class="phrase">六步能跑通之后，</span><span class="phrase">再进入完整课程</span></h2>
           <p>下面才会讲容量公式、量化选择、CDN 分流、性能测试、常驻服务和故障演练。</p>
         </div>
         <button class="button" id="toggleAdvanced" type="button" aria-expanded="false" aria-controls="advancedCourse">展开完整课程</button>
@@ -193,8 +188,8 @@
           <div class="case-study">
             <div class="case-heading">
               <div>
-                <p>进阶案例 / 不是新手起点</p>
                 <h2 id="case-title">DeepSeek V4 Flash / M3 Ultra</h2>
+                <p class="byline">进阶案例，不是新手起点</p>
               </div>
               <span class="case-status">实测</span>
             </div>
@@ -213,8 +208,7 @@
       <section class="section shell" id="course">
         <div class="section-heading">
           <div>
-            <p class="eyebrow">FULL COURSE MAP</p>
-            <h2>进阶：八个模块的完整交付链</h2>
+            <h2><span class="phrase">进阶：</span><span class="phrase">八个模块的完整交付链</span></h2>
           </div>
           <p>这里默认你已经跑通上面的六步。选择模块查看工程方法、交付物和验收条件。</p>
         </div>
@@ -234,8 +228,8 @@
           <article class="module-panel" aria-live="polite">
             <header class="module-header">
               <div>
-                <p class="module-index" id="moduleIndex">MODULE 01 / 60 MIN</p>
                 <h3 id="moduleTitle">需求、边界与风险</h3>
+                <p class="module-index" id="moduleIndex">第 1 模块，60 分钟</p>
               </div>
               <label class="completion-toggle">
                 <input id="moduleComplete" type="checkbox" />
@@ -269,8 +263,7 @@
         <div class="shell">
           <div class="section-heading">
             <div>
-              <p class="eyebrow">CAPACITY BUDGET</p>
-              <h2>先算容量，再谈模型大小</h2>
+              <h2><span class="phrase">先算容量，</span><span class="phrase">再谈模型大小</span></h2>
             </div>
             <p>计算使用实际权重、运行时、活跃 KV、系统保留和磁盘预算。所有输入都是预算假设，需要用实测日志替换。</p>
           </div>
@@ -286,7 +279,7 @@
               </div>
 
               <fieldset>
-                <legend>内存预算 / GiB</legend>
+                <legend>内存预算（GiB）</legend>
                 <div class="input-grid">
                   <label>总内存<input id="ramTotal" type="number" min="1" step="1" value="32" /></label>
                   <label>实际权重<input id="weights" type="number" min="0" step="0.1" value="5" /></label>
@@ -297,7 +290,7 @@
               </fieldset>
 
               <fieldset>
-                <legend>磁盘预算 / GiB</legend>
+                <legend>磁盘预算（GiB）</legend>
                 <div class="input-grid disk-inputs">
                   <label>可用空间<input id="diskFree" type="number" min="1" step="1" value="100" /></label>
                   <label>下载、构建与日志余量<input id="diskOverhead" type="number" min="0" step="0.1" value="10" /></label>
@@ -334,7 +327,6 @@
 
           <div class="runtime-advisor">
             <div class="runtime-intro">
-              <p class="eyebrow">RUNTIME ROUTE</p>
               <h3>按平台缩小运行时范围</h3>
               <p>文件格式能读取，不代表运行时支持模型架构、量化内核或目标上下文。</p>
             </div>
@@ -358,7 +350,6 @@
       <section class="section shell" id="verification">
         <div class="section-heading">
           <div>
-            <p class="eyebrow">END-TO-END ACCEPTANCE</p>
             <h2>验收必须走到真实客户端</h2>
           </div>
           <p>PID 只是第一层。逐项勾选，直到 Messages API、工具调用与 Claude Code 全部闭环。</p>
@@ -371,7 +362,7 @@
                 <span>分层验收</span>
                 <strong id="verificationProgressText">0 / 8</strong>
               </div>
-              <button class="icon-button compact" id="resetVerification" type="button" aria-label="重置验收清单" title="重置验收清单">&#8634;</button>
+              <button class="icon-button compact" id="resetVerification" type="button" aria-label="重置验收清单" title="重置验收清单"><svg class="icon" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="M4 12a8 8 0 1 0 2.4-5.7"/><path d="M4 4.5V9h4.5"/></svg></button>
             </div>
             <div class="progress-track verification-track" aria-hidden="true"><span id="verificationProgressBar"></span></div>
             <ol class="ladder-list">
@@ -392,7 +383,7 @@
                 <span>API 速查</span>
                 <strong id="snippetTitle">Messages 冒烟测试</strong>
               </div>
-              <button class="icon-button compact" id="copySnippet" type="button" aria-label="复制代码" title="复制代码">&#10697;</button>
+              <button class="icon-button compact" id="copySnippet" type="button" aria-label="复制代码" title="复制代码"><svg class="icon" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><rect x="8.5" y="8.5" width="11" height="11" rx="2"/><path d="M15.5 8.5V6.5a2 2 0 0 0-2-2h-7a2 2 0 0 0-2 2v7a2 2 0 0 0 2 2h2"/></svg></button>
             </div>
             <div class="snippet-tabs" role="tablist" aria-label="API 代码片段">
               <button role="tab" aria-selected="true" aria-controls="snippetPanel" data-snippet="probe">Probe</button>
@@ -410,11 +401,10 @@
         <div class="shell">
           <div class="section-heading troubleshooting-heading">
             <div>
-              <p class="eyebrow">TROUBLESHOOTING INDEX</p>
               <h2>按症状定位证据链</h2>
             </div>
             <label class="search-box">
-              <span class="search-icon" aria-hidden="true">/</span>
+              <span class="search-icon" aria-hidden="true"><svg class="icon" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><circle cx="11" cy="11" r="6.5"/><path d="M16 16l4 4"/></svg></span>
               <input id="troubleSearch" type="search" placeholder="搜索：404、换页、登录、工具调用…" autocomplete="off" />
             </label>
           </div>
@@ -441,29 +431,30 @@
 
       <section class="principles shell" aria-labelledby="principles-title">
         <div class="principles-heading">
-          <p class="eyebrow">FIVE WORKING PRINCIPLES</p>
-          <h2 id="principles-title">真正可迁移的是方法，不是某一组命令</h2>
+          <h2 id="principles-title"><span class="phrase">真正可迁移的是方法，</span><span class="phrase">不是某一组命令</span></h2>
         </div>
-        <ol class="principle-list">
-          <li><span>01</span><p>用实际制品和实测日志，替代对参数量的想象。</p></li>
-          <li><span>02</span><p>把上下文能力拆成模型、运行时、KV 与客户端四层。</p></li>
-          <li><span>03</span><p>按真实下载链路分流，不做粗暴的全局直连或代理。</p></li>
-          <li><span>04</span><p>把服务验收推进到真实工具调用，不停在 PID 或聊天回复。</p></li>
-          <li><span>05</span><p>配置必须可启动、可观察、可回滚，而非一次性终端会话。</p></li>
-        </ol>
+        <ul class="principle-list">
+          <li>用实际制品和实测日志，替代对参数量的想象。</li>
+          <li>把上下文能力拆成模型、运行时、KV 与客户端四层。</li>
+          <li>按真实下载链路分流，不做粗暴的全局直连或代理。</li>
+          <li>把服务验收推进到真实工具调用，不停在 PID 或聊天回复。</li>
+          <li>配置必须可启动、可观察、可回滚，而非一次性终端会话。</li>
+        </ul>
       </section>
       </div>
     </main>
 
     <footer class="site-footer">
       <div class="shell footer-inner">
-        <span>Beginner-first Local LLM Deployment Lab · 2026</span>
+        <p><span>Local LLM Deployment Lab</span><span>Sipeng Xie 的研究笔记</span><span>2026</span></p>
         <div>
           <a href="course.md">完整课程讲义</a>
-          <a href="../index.html">返回个人主页</a>
+          <a href="../index.html#notes">返回个人主页</a>
         </div>
       </div>
     </footer>
+
+    <template id="routeCopyIcons"><svg class="icon icon-copy" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><rect x="8.5" y="8.5" width="11" height="11" rx="2"/><path d="M15.5 8.5V6.5a2 2 0 0 0-2-2h-7a2 2 0 0 0-2 2v7a2 2 0 0 0 2 2h2"/></svg><svg class="icon icon-check" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="M5 12.5l4.5 4.5L19 7.5"/></svg><svg class="icon icon-alert" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><circle cx="12" cy="12" r="8.5"/><path d="M12 7.5v5.5M12 16.5v.01"/></svg></template>
 
     <script src="app.js"></script>
     <script src="route-labs.js"></script>
